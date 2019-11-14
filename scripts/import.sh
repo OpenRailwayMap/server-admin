@@ -14,8 +14,6 @@ echo "Started processing at $(date)"
 
 echo "[1/3] Downloading planet file"
 wget -O $OSM_DIR/$PLANET_FILE https://planet.openstreetmap.org/pbf/planet-latest.osm.pbf
-osmdate=$(osmconvert ${DATADIR}/planet-latest.osm.pbf --out-timestamp)
-date -u -d "$osmdate" +%s > timestamp
 
 echo "[2/3] Filtering data extract"
 $OSMIUM tags-filter -o $PLANET_FILTERED $PLANET_FILE $OSMIUM_FILTER_EXPR
