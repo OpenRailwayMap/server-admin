@@ -32,6 +32,5 @@ echo $REPLICATION_TIMESTAMP > $TIMESTAMP_FILE
 
 echo "[3/3] Prerendering tiles"
 tirex-batch --prio $TIREX_PRERENDER_QUEUE map=$TIREX_MAPS z=0-12
-cd $PROJECTPATH/renderer
 
 echo "Finished processing at $(date)"
