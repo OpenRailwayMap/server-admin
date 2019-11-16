@@ -24,11 +24,11 @@ if [ "$OSM2PGSQL_USE_FLATNODES" -eq 1 ]; then
 else
     FLATNODES_OPTION=""
 fi
-$OSM2PGSQL -d $DATABASE_NAME --merc --multi-geometry --hstore --style $OSM2PGSQL_STYLE --tag-transform $OSM2PGSQL_LUA --expire-tiles $EXPIRE_TILES_ZOOM --expire-output $EXPRIE_OUTPUT --expire-bbox-size 30000 --cache 12000 --slim $FLATNODES_OPTION $PLANET_FILTERED
+$OSM2PGSQL -d $DATABASE_NAME --merc --multi-geometry --hstore --style $OSM2PGSQL_STYLE --tag-transform $OSM2PGSQL_LUA --cache 12000 --slim $FLATNODES_OPTION $PLANET_FILTERED
 
 REPLICATION_TIMESTAMP=$($OSMIUM fileinfo -g header.option.osmosis_replication_timestamp $PLANET_FILE)
 echo "replication timestamp is $REPLICATION_TIMESTAMP"
-echo $REPLICATION_TIMESTAMP > $TIMESTAMP_FILE
+echo $REPLICATION_TIMESTAMP > $TIMESTAMP_PATH
 
 echo "[3/3] Prerendering tiles"
 tirex-batch --prio $TIREX_PRERENDER_QUEUE map=$TIREX_MAPS z=0-12
