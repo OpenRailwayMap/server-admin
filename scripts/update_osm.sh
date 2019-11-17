@@ -36,7 +36,7 @@ function apply_diff_database {
     rm $DERIVED_DIFF
 
     echo "Expiring up to $(wc -l $EXPIRE_OUTPUT) tiles"
-    cat $EXPIRE_OUTPUT | sed -e "s;^\\([0-9]\\+\\)/\\([0-9]\\+\\)/\\([0-9]\\+\\)$;map=$TIREX_MAPS x=\\2 y=\\3 z=\\1;g" | tirex-batch -p $TIREX_RERENDER_PRIO
+    sed -re "s;^([0-9]+)/([0-9]+)/([0-9]+)$;map=$TIREX_MAPS x=\\2 y=\\3 z=\\1;g" $EXPIRE_OUTPUT | tirex-batch -p $TIREX_RERENDER_PRIO
     rm $EXPIRE_OUTPUT
 }
 
@@ -49,7 +49,7 @@ if [ "$TILE_RENDERING" -ne 1 ] && [ "$ROUTING" -ne 1 ]; then
     exit 1
 fi
 
-while /bin/true; do
+while true; do
     echo "updating planet"
     while /bin/true; do
         ($PYOSMIUM_UP_TO_DATE -v --tmpdir $PLANET_UPDATE_TMP -s 2000 $PLANET_FILE; sleep 2s) && break
