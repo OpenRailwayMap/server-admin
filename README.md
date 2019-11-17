@@ -6,4 +6,4 @@ openrailwaymap.org instance.
 
 ## License
 
-The scripts are licensed unter GPLv2, the Ansible configuration under WTFPL.
+The scripts are licensed unter GNU General Public License v3.0 or later, the Ansible configuration under MIT License.

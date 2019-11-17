@@ -1,9 +1,24 @@
-#!/bin/bash
-
+#! /usr/bin/env bash
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
 # OpenRailwayMap Copyright (C) 2012 Alexander Matheisen
-# This program comes with ABSOLUTELY NO WARRANTY.
-# This is free software, and you are welcome to redistribute it under certain conditions.
-# See https://wiki.openstreetmap.org/wiki/OpenRailwayMap for details.
+# OpenRailwayMap Copyright (C) 2019 Michael Reichert
+#
+# This file is part of the OpenRailwayMap server admin tools repository
+# (https://github.com/OpenRailwayMap/server-admin).
+#
+# This program is free software: you can redistribute it and/or modify it under the terms of the
+# GNU General Public License as published by the Free Software Foundation, version 3.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+# This script does the initial data import into the tile rendering database. Configuration happens
+# in the config.cfg file which is source at the beginning of this script.
 
 set -euo pipefail
 
@@ -18,9 +33,9 @@ wget -O $PLANET_FILE https://planet.openstreetmap.org/pbf/planet-latest.osm.pbf
 echo "[2/3] Filtering data extract"
 $OSMIUM tags-filter -o $PLANET_FILTERED $PLANET_FILE $OSMIUM_FILTER_EXPR
 
-echo "[2/3] Import data into database"
-if [ "$OSM2PGSQL_USE_FLATNODES" -eq 1 ]; then
-    FLATNODES_OPTION="--flat-node $OSM2PGSQL_FLATNODES"
+echo "[3/3] Import data into database"
+if [[ -v "$OSM2PGSQL_FLATNODES" ]]; then
+    FLATNODES_OPTION="--flat-node $FLATNODES_FILE"
 else
     FLATNODES_OPTION=""
 fi
@@ -30,7 +45,4 @@ REPLICATION_TIMESTAMP=$($OSMIUM fileinfo -g header.option.osmosis_replication_ti
 echo "replication timestamp is $REPLICATION_TIMESTAMP"
 echo $REPLICATION_TIMESTAMP > $TIMESTAMP_PATH
 
-echo "[3/3] Prerendering tiles"
-tirex-batch --prio $TIREX_PRERENDER_QUEUE map=$TIREX_MAPS z=0-12
-
-echo "Finished processing at $(date)"
+echo "Finished import at $(date), please install mod_tile and Tirex now."

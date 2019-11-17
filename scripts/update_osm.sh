@@ -1,11 +1,22 @@
 #! /usr/bin/env bash
-
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
 # OpenRailwayMap Copyright (C) 2019 Michael Reichert
-# This program comes with ABSOLUTELY NO WARRANTY.
-# This is free software, and you are welcome to redistribute it under certain conditions.
-# See the LICENSE file for details.
+#
+# This file is part of the OpenRailwayMap server admin tools repository
+# (https://github.com/OpenRailwayMap/server-admin).
+#
+# This program is free software: you can redistribute it and/or modify it under the terms of the
+# GNU General Public License as published by the Free Software Foundation, version 3.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-# Script to update the tile rendering database and routing graph.
+# This script updates the tile rendering database and/or the routing graph.
 # Configuration happens in the config.cfg file which is source at the beginning of this script.
 
 # Logs are written to STDOUT which will end up in Systemd's Journal.
