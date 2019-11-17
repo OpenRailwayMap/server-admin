@@ -19,7 +19,7 @@ function apply_diff_database {
     $OSMIUM derive-changes -o $DERIVED_DIFF $PLANET_FILTERED_OLD $PLANET_FILTERED
 
     echo "apply diff"
-    $OSM2PGSQL --append -d $DATABASE --merc --multi-geometry --hstore --style $OSM2PGSQL_STYLE --tag-transform $OSM2PGSQL_LUA --expire-tiles $EXPIRE_TILES_ZOOM --expire-output $EXPIRE_OUTPUT --expire-bbox-size 30000 --cache 12000 --slim $FLATNODES_OPTION $DERIVED_DIFF
+    $OSM2PGSQL --append -d $DATABASE_NAME --merc --multi-geometry --hstore --style $OSM2PGSQL_STYLE --tag-transform $OSM2PGSQL_LUA --expire-tiles $EXPIRE_TILES_ZOOM --expire-output $EXPIRE_OUTPUT --expire-bbox-size 30000 --cache 12000 --slim $FLATNODES_OPTION $DERIVED_DIFF
 
     echo "removing applied diff"
     rm $DERIVED_DIFF
