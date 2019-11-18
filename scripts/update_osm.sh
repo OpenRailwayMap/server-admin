@@ -42,7 +42,7 @@ function apply_diff_database {
 
 
 function update_routing_graph {
-    echo "Updating the routing graph has not been implemented yet.
+    echo "Updating the routing graph has not been implemented yet."
 }
 
 if [ "$TILE_RENDERING" -ne 1 ] && [ "$ROUTING" -ne 1 ]; then
