@@ -32,10 +32,18 @@ function apply_diff_database {
     $OSMIUM derive-changes --overwrite -o $DERIVED_DIFF $PLANET_FILTERED_OLD $PLANET_FILTERED
 
     echo "apply diff"
+    if [[ -v "$OSM2PGSQL_FLATNODES" ]]; then
+        FLATNODES_OPTION="--flat-node $FLATNODES_FILE"
+    else
+        FLATNODES_OPTION=""
+    fi
     $OSM2PGSQL --append -d $DATABASE_NAME --merc --multi-geometry --hstore --style $OSM2PGSQL_STYLE --tag-transform $OSM2PGSQL_LUA --expire-tiles $EXPIRE_TILES_ZOOM --expire-output $EXPIRE_OUTPUT --expire-bbox-size 30000 --cache 12000 --slim $FLATNODES_OPTION $DERIVED_DIFF
 
     echo "removing applied diff"
     rm $DERIVED_DIFF
+
+    echo "updating materialized views"
+    psql -d $DATABASE_NAME -f $MAPSTYLE_DIR/sql/update_station_importance.sql
 
     echo "Expiring up to $(wc -l $EXPIRE_OUTPUT) tiles"
     sed -re "s;^([0-9]+)/([0-9]+)/([0-9]+)$;map=$TIREX_MAPS x=\\2 y=\\3 z=\\1;g" $EXPIRE_OUTPUT | tirex-batch -p $TIREX_RERENDER_PRIO
