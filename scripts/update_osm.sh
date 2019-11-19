@@ -53,7 +53,23 @@ fi
 while true; do
     echo "updating planet"
     while /bin/true; do
-        ($PYOSMIUM_UP_TO_DATE -v --tmpdir $PLANET_UPDATE_TMP -s 2000 $PLANET_FILE; sleep 2s) && break
+        STATUS=0
+        $PYOSMIUM_UP_TO_DATE -v --tmpdir $PLANET_UPDATE_TMP -s 2000 $PLANET_FILE || STATUS=$?
+        if [ "$STATUS" -eq 0 ]; then
+            # updates finished
+            echo "Planet up to date now."
+            break;
+        elif [ "$STATUS" -eq 3 ]; then
+            # 3 is returned if Pyosmium failed to download diff file (e.g. not published yet on download.geofabrik.de) or network issues
+            echo "$PYOSMIUM_UP_TO_DATE returned code $STATUS. Pausing update for $FAILURE_SLEEP_TIME."
+            sleep $DOWNLOAD_FAILURE_SLEEP_TIME
+            break;
+        elif [ "$STATUS" -ne 1 ]; then
+            # 3 is returned if Pyosmium failed to download diff file (e.g. not published yet on download.geofabrik.de)
+            echo "$PYOSMIUM_UP_TO_DATE failed with return code $STATUS"
+            exit 1
+        fi
+        sleep 2s
     done
 
     echo "filtering planet"
