@@ -27,7 +27,9 @@ source $(dirname ${0})/config.cfg
 
 function apply_diff_database {
     echo "derive diff"
-    $OSMIUM derive-changes -o $DERIVED_DIFF $PLANET_FILTERED_OLD $PLANET_FILTERED
+    # It is safe to call --overwrite because the .osc.gz file will only be deleted if its
+    # application onto the database succeeded.
+    $OSMIUM derive-changes --overwrite -o $DERIVED_DIFF $PLANET_FILTERED_OLD $PLANET_FILTERED
 
     echo "apply diff"
     $OSM2PGSQL --append -d $DATABASE_NAME --merc --multi-geometry --hstore --style $OSM2PGSQL_STYLE --tag-transform $OSM2PGSQL_LUA --expire-tiles $EXPIRE_TILES_ZOOM --expire-output $EXPIRE_OUTPUT --expire-bbox-size 30000 --cache 12000 --slim $FLATNODES_OPTION $DERIVED_DIFF
