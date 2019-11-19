@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: MIT
+- hosts: all
+  remote_user: root
+
+  tasks:
+  - name: Disable SSH login without public key
+    lineinfile:
+      path: /etc/ssh/sshd_config
+      regexp: '^#? *PasswordAuthentication yes'
+      line: 'PasswordAuthentication no'
+    notify:
+      - reload ssh
+
+  - name: Install fail2ban
+    apt:
+      name: fail2ban
+
+  - name: Customise fail2ban
+    copy:
+      dest: '/etc/fail2ban/jail.local'
+      mode: 0644
+      owner: root
+      group: root
+      content: |
+          [DEFAULT]
+          bantime = 20m
+          findtime = 10m
+          maxretry = 15
+          [sshd]
+          enabled = true
+    notify:
+      - reload fail2ban
+
+  handlers:
+    - name: reload ssh
+      systemd:
+        name: ssh
+        state: reloaded
+
+    - name: reload fail2ban
+      systemd:
+        name: fail2ban
+        state: reloaded

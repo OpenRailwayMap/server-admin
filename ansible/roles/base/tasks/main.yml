@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: MIT
+- hosts: all
+  remote_user: root
+
+  tasks:
+  - name: Create user accounts
+    user:
+      name: "{{ item.name }}"
+      groups: sudo
+      password: ""
+      shell: "/bin/bash"
+      update_password: on_create
+    loop: "{{ users }}"
+
+  - name: Add SSH public key
+    authorized_key:
+      user: "{{ item.name }}"
+      key: "{{ item.ssh_public_key }}"
+    loop: "{{ users }}"
+
+  - name: Install sudo
+    apt:
+      name: sudo
+
+  - name: Install some other utility packages
+    apt:
+      name: [htop, screen, time]
