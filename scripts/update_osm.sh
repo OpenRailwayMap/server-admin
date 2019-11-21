@@ -46,7 +46,7 @@ function apply_diff_database {
     psql -d $DATABASE_NAME -f $MAPSTYLE_DIR/sql/update_station_importance.sql
 
     echo "Expiring up to $(wc -l $EXPIRE_OUTPUT) tiles"
-    sed -re "s;^([0-9]+)/([0-9]+)/([0-9]+)$;map=$TIREX_MAPS x=\\2 y=\\3 z=\\1;g" $EXPIRE_OUTPUT | tirex-batch -p $TIREX_RERENDER_PRIO
+    sed -re "s;^([0-9]+)/([0-9]+)/([0-9]+)$;map=$TIREX_MAPS x=\\2 y=\\3 z=\\1;g" $EXPIRE_OUTPUT | tirex-batch -f exists -p $TIREX_RERENDER_PRIO
     rm $EXPIRE_OUTPUT
 }
 
