@@ -37,7 +37,12 @@ function apply_diff_database {
     else
         FLATNODES_OPTION=""
     fi
-    $OSM2PGSQL --append -d $DATABASE_NAME --merc --multi-geometry --hstore --style $OSM2PGSQL_STYLE --tag-transform $OSM2PGSQL_LUA --expire-tiles $EXPIRE_TILES_ZOOM --expire-output $EXPIRE_OUTPUT --expire-bbox-size 30000 --cache 12000 --slim $FLATNODES_OPTION $DERIVED_DIFF
+    if [[ -v "$OSM2PGSQL_NUMBER_PROCESSES" ]]; then
+        NUMBER_PROCESSES_OPTION="--number-processes $OSM2PGSQL_NUMBER_PROCESSES"
+    else
+        NUMBER_PROCESSES_OPTION=""
+    fi
+    $OSM2PGSQL --append -d $DATABASE_NAME --merc --multi-geometry --hstore --style $OSM2PGSQL_STYLE --tag-transform $OSM2PGSQL_LUA --expire-tiles $EXPIRE_TILES_ZOOM --expire-output $EXPIRE_OUTPUT --expire-bbox-size 30000 --cache 12000 --slim $FLATNODES_OPTION $NUMBER_PROCESSES_OPTION $DERIVED_DIFF
 
     echo "removing applied diff"
     rm $DERIVED_DIFF
