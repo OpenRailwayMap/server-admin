@@ -78,7 +78,7 @@ while true; do
         elif [ "$STATUS" -eq 3 ]; then
             # 3 is returned if Pyosmium failed to download diff file (e.g. not published yet on download.geofabrik.de) or network issues
             echo "$PYOSMIUM_UP_TO_DATE returned code $STATUS. Pausing update for $FAILURE_SLEEP_TIME."
-            sleep $DOWNLOAD_FAILURE_SLEEP_TIME
+            sleep $FAILURE_SLEEP_TIME
             break;
         elif [ "$STATUS" -ne 1 ]; then
             # 3 is returned if Pyosmium failed to download diff file (e.g. not published yet on download.geofabrik.de)
