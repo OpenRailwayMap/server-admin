@@ -51,6 +51,8 @@ Not all steps are full automatised. You have to do the following steps yourself:
 * The Mapnik XML file is not build by Ansible. Build it on your computer or in your home directory
   on the server.
 
+Building the dependencies and the Mapnik XML files is explained below.
+
 The general order of the playbooks is:
 
 * base
@@ -60,7 +62,9 @@ The general order of the playbooks is:
 * tileserver_step2
 * Start bulk rendering of tiles on zoom levels 0 to 12 manually using
   `tirex-batch --prio 15 map=standard,maxspeed,signals z=0-12 bbox=-180,-80,180,80`
+* website
 
+## Building Dependencies
 ### Build mod_tile
 
 ```sh
@@ -111,6 +115,13 @@ carto signals.mm > signals.xml
 cp project.xml maxspeed.xml signals.xml /root/packages`
 ```
 
+## Porting to other Linux distributions
+
+If you consider porting this to other Linux distributions, you might have to change the following things:
+
+* Replace `apache` by `httpd` in a couple of paths and change the location of the Apache configuration files for VirtualHosts.
+* Replace the default location of the document roots (defaults to `/var/www/*` in Debian but other distributions use other paths, e.g. `/srv/http/` on Arch Linux)
+* Change the PostgreSQL version
 
 ## License
 
