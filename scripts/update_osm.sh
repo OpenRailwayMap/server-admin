@@ -25,6 +25,8 @@ set -euo pipefail
 
 source $(dirname ${0})/config.cfg
 
+export OSMIUM_POOL_THREADS=3
+
 function apply_diff_database {
     echo "derive diff"
     # It is safe to call --overwrite because the .osc.gz file will only be deleted if its
@@ -48,7 +50,7 @@ function apply_diff_database {
     rm $DERIVED_DIFF
 
     echo "updating materialized views"
-    psql -d $DATABASE_NAME -f $MAPSTYLE_DIR/sql/update_station_importance.sql
+    psql -v ON_ERROR_STOP=1 --echo-errors -d $DATABASE_NAME -f $MAPSTYLE_DIR/sql/update_station_importance.sql
 
     echo "Expiring up to $(wc -l $EXPIRE_OUTPUT) tiles"
     $PYTHON $MERGE_TILES -z $EXPIRE_TILES_ZOOM $EXPIRE_OUTPUT | sed -re "s;^([0-9]+)/([0-9]+)/([0-9]+)$;map=$TIREX_MAPS x=\\2 y=\\3 z=\\1;g" | tirex-batch -f exists -p $TIREX_RERENDER_PRIO
