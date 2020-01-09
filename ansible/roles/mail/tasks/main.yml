@@ -1,0 +1,141 @@
+# SPDX-License-Identifier: MIT
+- hosts: all
+  remote_user: root
+
+  tasks:
+    - name: Install Postfix
+      apt:
+        name: [postfix, postfix-pcre, postgrey]
+
+    - name: set /etc/mailname
+      copy:
+        dest: /etc/mailname
+        owner: root
+        group: root
+        mode: 0644
+        content: |
+          {{ inventory_hostname }}
+
+  #    - name: Ensure that Postfix and Postgrey do not run
+  #      systemd:
+  #        name: '{{ item }}'
+  #        state: stopped
+  #      loop:
+  #        - postfix
+  #        - postgrey
+
+    - name: Generate our own DH parameters, see http://www.postfix.org/postconf.5.html#smtp_tls_policy_maps for details
+      openssl_dhparam:
+        size: 2048
+        mode: 0640
+        owner: root
+        group: root
+        path: /etc/postfix/dh2048.pem
+
+    - name: 'virtual_alias_map and bad_senders'
+      include_tasks: write_and_hash.yml
+      loop:
+        - virtual_alias_map
+        - bad_senders
+
+    - name: Write /etc/postfix/main.cf
+      template:
+        dest: /etc/postfix/main.cf
+        src: main.cf
+        owner: root
+        group: root
+        mode: 0644
+      notify:
+        - systemctl reload postfix
+
+    - name: Write /etc/postfix/master.cf
+      copy:
+        dest: /etc/postfix/master.cf
+        src: master.cf
+        owner: root
+        group: root
+        mode: 0644
+      notify:
+        - systemctl restart postfix
+
+    - name: Write header checks for simple spam filtering to /etc/postfix/header_checks and Postscreen IP blacklist
+      copy:
+        dest: '/etc/postfix/{{ item }}'
+        owner: root
+        group: root
+        mode: 0644
+        src: '{{ item }}'
+      loop:
+        - 'postscreen_access.cidr'
+        - 'header_checks.pcre'
+      notify:
+        - systemctl reload postfix
+
+    - name: Install Amavis from APT
+      apt:
+        name: [amavisd-new, amavisd-milter]
+
+  #    - name: Ensure that Amavis does not run
+  #      systemd:
+  #        name: '{{ item }}'
+  #        state: stopped
+  #      loop:
+  #        - amavisd-new
+  #        - amavisd-milter
+
+    - name: Write custom Amavis configuration to /etc/amavis/conf.d/50-user
+      copy:
+        dest: /etc/amavis/conf.d/50-user
+        src: 50-user
+        owner: root
+        group: root
+        mode: 0644
+      notify:
+        - systemctl restart amavisd-new
+
+    - name: Add Symlink /var/spool/postfix/amavis -> /var/run/amavis for chroot-ed Postfix
+      file:
+        dest: /var/spool/postfix/amavis
+        src: /var/run/amavis
+        owner: root
+        group: root
+        state: link
+
+    - name: Install Spamassassin
+      apt:
+        name: spamassassin
+
+    - name: Write Spamassassin configuration to /etc/spamassassin/local.cf
+      copy:
+        dest: /etc/spamassassin/local.cf
+        src: local.cf
+        owner: root
+        group: root
+        mode: 0644
+      notify:
+        - systemctl restart amavisd-new
+
+    - name: systemctl start amavisd-new amavisd-milter postfix
+      systemd:
+        name: '{{ item }}'
+        state: started
+      loop:
+        - amavisd-new
+        - amavisd-milter
+        - postfix
+        - postgrey
+
+
+  handlers:
+    - name: systemctl reload postfix
+      systemd:
+        name: postfix
+        state: reloaded
+    - name: systemctl restart postfix
+      systemd:
+        name: postfix
+        state: restarted
+    - name: systemctl restart amavisd-new
+      systemd:
+        name: amavisd-new
+        state: restarted

@@ -1,0 +1,201 @@
+- hosts: all
+  tasks:
+  - name: 'Install Munin'
+    apt:
+      name: [munin-node]
+
+  - name: Install some dependencies for Munin plugins
+    apt:
+      name: [libwww-perl, libcache-cache-perl]
+
+  - name: Add user munin to group sslkeyaccess
+    user:
+      append: yes
+      name: munin
+      groups: ['sslkeyaccess']
+
+  - name: Enable additional Munin plugins
+    file:
+      src: '/usr/share/munin/plugins/{{ item.dest }}'
+      dest: '/etc/munin/plugins/{{ item.name }}'
+      state: link
+      owner: root
+      group: root
+    loop: '{{ munin_node_plugins }}'
+    notify:
+      - systemd restart munin-node
+
+  #  - name: Create /etc/munin/munin-conf.d
+  #    file:
+  #      path: '/etc/munin/munin-conf.d'
+  #      state: directory
+  #      owner: root
+  #      group: root
+
+  - name: TLS configuration for Munin node
+    blockinfile:
+      path: '/etc/munin/munin-node.conf'
+      block: |
+        tls enabled
+        tls_verify_certificate yes
+        tls_private_key /etc/letsencrypt/{{ ssl_domain }}/domain.key
+        tls_certificate /etc/letsencrypt/{{ ssl_domain }}/{{ ssl_domain }}.crt
+
+  - name: Include plugin configuration into node configuration
+    lineinfile:
+      path: /etc/munin/munin-node.conf
+      regexp: '^#? *includedir /etc/munin/plugin-conf.d'
+      line: 'includedir /etc/munin/plugin-conf.d'
+
+  ## We do not use cidr_allow due to https://github.com/munin-monitoring/munin/issues/1177 and use pure regular expressions instead
+  - name: Allow connections from brennerle.michreichert.de
+    lineinfile:
+      path: /etc/munin/munin-node.conf
+      regexp: '^#? *allow ^{{ item|replace(".", "\\\\.") }}\\$ *$'
+      line: 'allow ^{{ item|replace(".", "\\.") }}$'
+    with_list: '{{ accept_from }}'
+    notify:
+      - systemd restart munin-node
+
+  #  - name: 'Allow access from specified IP addresses on port 4949 (Munin)'
+  #    ufw:
+  #      rule: allow
+  #      port: '4949'
+  #      proto: tcp
+  #      comment: 'Allow connections on port 4949 from {{ item }}'
+  #      src: '{{ item }}'
+  #    with_list: '{{ accept_from }}'
+
+        #  - name: Configure munin-node
+        #    copy:
+        #      dest: /etc/munin/munin-conf.d/node.conf
+        #      owner: root
+        #      group: root
+        #      mode: 0644
+        #      content: |
+        #        host_name {{ ansible_facts['nodename'] }}
+        #        host *
+        #        ipv *
+
+  - name: Configure Apache Munin plugin and Apache for it
+    when: '"apache_accesses" in munin_node_plugins|map(attribute="name")'
+    block:
+      - name: Enable Apache modules server-status
+        apache2_module:
+          name: 'status'
+          state: present
+        notify:
+          - systemd restart apache
+
+      - name: Configure Munin Apache plugin
+        copy:
+          dest: '/etc/munin/plugin-conf.d/zzz-apache_plugins'
+          owner: root
+          group: root
+          mode: 0644
+          content: |
+              [apache_*]
+                env.url http://localhost:%d/server-status?auto
+                env.ports 80
+        notify:
+          - systemd restart munin-node
+
+      - name: Configure Apache virtual host for server-status Munin Apache plugin
+        template:
+          src: apache_server_status.conf
+          dest: '/etc/apache2/sites-available/localhost.conf'
+          owner: root
+          group: root
+          mode: 0644
+        register: apache_virtual_host_step
+
+      - name: Enable Apache VirtualHost configuration for server-status
+        shell:
+          cmd: 'a2ensite localhost.conf'
+          chdir: /etc/apache2/sites-available
+        when: apache_virtual_host_step.changed
+        notify:
+          - systemd reload apache2
+
+  - name: Configure Munin ip_ plugin
+    when: munin_node_ip_plugin
+    block:
+      - name: General configuration of Munin ip_ plugin
+        copy:
+          dest: '/etc/munin/plugin-conf.d/zzz-ip_.conf'
+          owner: root
+          group: root
+          mode: 0644
+          content: |
+            [ip_*]
+              user root
+        notify:
+          - systemd restart munin-node
+
+      - name: Configure Munin ip_ plugin for IPv4
+        copy:
+          dest: '/etc/munin/plugin-conf.d/zzz-ip_{{ item|replace(".", "_") }}.conf'
+          owner: root
+          group: root
+          mode: 0644
+          content: |
+            [ip_{{ item }}]
+              env.hostname {{ ansible_facts['nodename'] }}
+        with_list: '{{ ansible_all_ipv4_addresses }}'
+        notify:
+          - systemd restart munin-node
+
+      - name: Configure Munin ip_ plugin for IPv6
+        copy:
+          dest: '/etc/munin/plugin-conf.d/zzz-ip_{{ item|replace(":", "_") }}.conf'
+          owner: root
+          group: root
+          mode: 0644
+          content: |
+            [ip_{{ item }}]
+              env.hostname {{ ansible_facts['nodename'] }}
+        with_list: '{{ ansible_all_ipv6_addresses }}'
+        notify:
+          - systemd restart munin-node
+
+      - name: Enable Munin ip_ plugin for each IPv4 addresses
+        file:
+          src: '/usr/share/munin/plugins/ip_'
+          dest: '/etc/munin/plugins/ip_{{ item }}'
+          state: link
+          owner: root
+          group: root
+        with_list: '{{ ansible_all_ipv4_addresses }}'
+
+      - name: Enable Munin ip_ plugin for each IPv6 addresses
+        file:
+          src: '/usr/share/munin/plugins/ip_'
+          dest: '/etc/munin/plugins/ip_{{ item }}'
+          state: link
+          owner: root
+          group: root
+        with_list: '{{ ansible_all_ipv6_addresses }}'
+
+  - name: Install Tirex plugin for Munin
+    apt:
+      deb: '/root/packages/tirex-munin-plugin_0.6.1_amd64.deb'
+
+  - name: systemctl start munin-node
+    systemd:
+      name: munin-node
+      state: started
+      enabled: yes
+
+  handlers:
+  - name: 'systemd restart munin-node'
+    systemd:
+      name: munin-node
+      state: restarted
+  - name: 'systemd reload apache2'
+    systemd:
+      name: apache2
+      state: reloaded
+  - name: 'systemd restart apache2'
+    systemd:
+      name: apache2
+      state: restarted

@@ -1,0 +1,4 @@
+# Spamassassin configuration /etc/spamassassin/local.cf
+
+# Disable Bayesian classifier (default: 1)
+use_bayes 0

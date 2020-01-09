@@ -1,0 +1,16 @@
+# header checks to filter out spam
+# no compilation required, use as following in main.cf:
+# header_checks = pcre:/etc/postfix/header_checks 
+
+# weeklyosm.us logo spam came from phplist.com mass emailing service on 2019-02-28
+/^Receviced: .*phplist\.com/ REJECT "mass emailing service sending spam according to their own defintion in campaign domaindesign1.hosted.phplist.com"
+# weeklyosm.us domain owner spam, added 2019-06-28
+/^Subject: .*Final Notice of Domain Listing/ REJECT "spam"
+
+/^Subject: $/ REJECT email subject header missing -- please provide a descriptive subject for all emails
+/^Subject: RE.?$/i REJECT Spam -- insufficient subject provided
+
+/^Subject: ?$/     REJECT missing subject
+/^Subject: System macht Deutsche B[üu]rger reich/i    REJECT spam
+/^From: "Hohle der L[oö]wen"/i  REJECT spam sender
+/^From: "Neues Start-Up/i       REJECT spam sender

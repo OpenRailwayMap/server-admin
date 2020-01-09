@@ -15,7 +15,7 @@
     user:
       name: osmimport
       shell: '/usr/sbin/nologin'
-      home: ' {{ osm_data_dir }}'
+      home: '{{ osm_data_dir }}'
       comment: 'OSM data import user'
       password: '*'
       system: yes
@@ -96,7 +96,7 @@
     git:
       dest: '{{ tileserver_script_dir }}'
       repo: https://github.com/OpenRailwayMap/server-admin.git
-      version: 2c82bdc3b26cb05682be8ad03df257352f16f3a6
+      version: 6cda6665b268e50e6264b09ea02f8b8f0a830793
 
   - name: Write Systemd Unit file
     copy:
@@ -139,7 +139,7 @@
     git:
       dest: '{{ cartocss_dir }}'
       repo: https://github.com/OpenRailwayMap/OpenRailwayMap-CartoCSS.git
-      version: 7227863b597c9273bff4f96c1ce610028b54fc7f
+      version: fb27b356e77f2579de37e1fcc5ff9cdd128c9bae
 
   - debug: {msg: 'Please build the map styles manually using Carto and run the OSM data import script. Then continue with the playbook for step 2.'}
 

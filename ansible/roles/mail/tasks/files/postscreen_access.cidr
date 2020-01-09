@@ -1,0 +1,26 @@
+# List of blacklisted IP ranges. Emails by these servers will not be accepted.
+
+# China Unicom Hebei province network
+101.75.203.0/24 REJECT Thanks, I don't need Chinese spam.
+
+# myLoc managed IT AG, Germany
+5.104.107.0/24   REJECT myLoc spam clients not welcome here
+5.104.110.0/24   REJECT myLoc spam clients not welcome here
+5.199.128.0/20   REJECT myLoc spam clients not welcome here
+46.228.199.0/24  REJECT myLoc spam clients not welcome here
+62.141.43.0/24   REJECT myLoc spam clients not welcome here
+62.141.44.0/23   REJECT myLoc spam clients not welcome here
+62.141.46.0/24   REJECT myLoc spam clients not welcome here
+78.31.64.0/21    REJECT myLoc spam clients not welcome here
+81.30.158.0/24   REJECT myLoc spam clients not welcome here
+89.163.128.0/17  REJECT myLoc spam clients not welcome here
+91.215.168.0/22  REJECT myLoc spam clients not welcome here
+213.202.192.0/18 REJECT myLoc spam clients not welcome here
+217.79.181.0/24  REJECT myLoc spam clients not welcome here
+217.79.182.0/23  REJECT myLoc spam clients not welcome here
+
+# domain spam
+173.244.184.67   REJECT spam client
+
+# Dieter Bohlen spam, Plus Server GmbH
+62.75.206.135    REJECT too much spam by this client

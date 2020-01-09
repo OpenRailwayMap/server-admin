@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: MIT
+- name: 'Create {{ item }}'
+  copy:
+    dest: '/etc/postfix/{{ item }}'
+    owner: root
+    group: root
+    mode: 0644
+    src: virtual_alias_map
+  register: map_result
+
+- name: Run postmap if required on virtual_alias_map
+  shell:
+    cmd: 'postmap hash:/etc/postfix/{{ item }}'
+    chdir: /etc/postfix
+  when: map_result.changed
+  register: postmap_result
+
+- name: Reload Postfix because postmap was executed
+  systemd:
+    name: postfix
+    state: reloaded
+  when: postmap_result.changed

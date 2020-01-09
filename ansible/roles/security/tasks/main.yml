@@ -31,6 +31,46 @@
     notify:
       - reload fail2ban
 
+  - name: Install ufw
+    apt:
+      name: ufw
+
+  - name: 'ufw: allow SSH, HTTP and HTTPS'
+    ufw:
+      comment: 'allow {{ item.comment }}'
+      rule: allow
+      name: '{{ item.protocol }}'
+    loop:
+      - {'comment': 'SSH', 'protocol': 'OpenSSH'}
+      - {'comment': 'HTTP+HTTPS', 'protocol': 'WWW Full'}
+      - {'comment': 'SMTP', 'protocol': 'SMTP'}
+
+  - name: 'ufw: allow Munin'
+    ufw:
+      comment: 'allow Munin'
+      rule: allow
+      port: '4949'
+      proto: tcp
+
+  - name: 'ufw: default deny'
+    ufw:
+      default: 'reject'
+
+  - name: 'ufw enable'
+    ufw:
+      state: enabled
+
+  - name: 'Install unattended-upgrades'
+    apt:
+      name: [unattended-upgrades, apt-listchanges]
+
+  - name: 'Set email address for notifications by unattened-upgrade'
+    lineinfile:
+      path: /etc/apt/apt.conf.d/50unattended-upgrades
+      regexp: '^Unattended-Upgrade::Mail "[^"]+";'
+      line: 'Unattended-Upgrade::Mail "admin@openrailwaymap.org";'
+
+
   handlers:
     - name: reload ssh
       systemd:

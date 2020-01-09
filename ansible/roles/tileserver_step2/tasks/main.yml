@@ -4,16 +4,17 @@
 
   tasks:
     #TODO handle recreation of existing views if schema changes
-  - name: Create database functions and views for the map style
-    become: true
-    become_user: postgres
-    postgresql_query:
-      db: '{{ osm_dbname }}'
-      path_to_script: '{{ cartocss_dir}}/sql/{{ item }}'
-    loop:
-      - functions.sql
-      - osm_carto_views.sql
-      - get_station_importance.sql
+    #  - name: Create database functions and views for the map style
+    #    become: true
+    #    become_user: osmimport
+    #    postgresql_query:
+    #      db: '{{ osm_dbname }}'
+    #      login_user: osmimport
+    #      path_to_script: '{{ cartocss_dir}}/sql/{{ item }}'
+    #    loop:
+    #      - functions.sql
+    #      - osm_carto_views.sql
+    #      - get_station_importance.sql
 
   - name: 'GRANT SELECT ON ALL TABLES IN SCHEMA public TO tirex'
     become: true
@@ -37,8 +38,17 @@
       - 'project.xml'
       - 'maxspeed.xml'
       - 'signals.xml'
+    tags:
+      - install_map_styles
     notify:
       - systemd reload tirex-backend-manager
+
+  - name: Enable Apache module mod_ssl
+    apache2_module:
+      name: ssl
+      state: present
+    notify:
+      - systemd restart apache2
 
   - name: Create /var/www/tiles to avoid a2dismod and a2dissite (and their counterparts) return status code != 0 due to missing document root
     file:
@@ -248,3 +258,7 @@
       systemd:
         name: apache2
         state: reloaded
+    - name: systemd restart apache2
+      systemd:
+        name: apache2
+        state: restarted

@@ -1,0 +1,35 @@
+use strict;
+
+# Communication with Amavis happens via a Unix socket using the AM.PDP protocol.
+# amavisd-milter takes the emails from Postfix via the Milter interface and translates them to the
+# AM.PDP protocol.
+
+$protocol = "AM.PDP";
+$unix_socketname = "/var/run/amavis/amavisd.sock";
+$inet_socket_port = undef;
+
+# List of our domains
+@local_domains_maps = ( [".$mydomain"] );
+
+# Disable DKIM verification
+# Enabling it would reduce the score for emails with a valid DKIM signature but spammers add them
+# to their messages as well.
+$enable_dkim_verification = 0;
+
+# Enable spam checking
+@bypass_spam_checks_maps = (\%bypass_spam_checks, \@bypass_spam_checks_acl, \$bypass_spam_checks_re);
+# write information about spam score into the header (i.e. always)
+$sa_tag_level_deflt = -999;
+# minimum score threshold to mark an email as spam
+$sa_tag2_level_deflt = 6.2;
+# trigger action final_spam_destiny for emails with at least this score
+$sa_kill_level_deflt = 6.9;
+# Do not write something like ***SPAM*** into the subject
+$sa_spam_subject_tag = undef;
+# Do not move spam to quarantine
+$spam_quarantine_to = undef;
+# Reject emails recognized as spam
+$final_spam_destiny = D_REJECT;
+
+#------------ Do not modify anything below this line -------------
+1;  # ensure a defined return

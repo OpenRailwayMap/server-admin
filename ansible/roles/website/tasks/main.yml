@@ -1,0 +1,224 @@
+# SPDX-License-Identifier: MIT
+- hosts: all
+  remote_user: root
+
+  tasks:
+  - name: Install required packages from APT
+    apt:
+      # package nodejs-legacy is not needed with Debian >= 10 because the nodejs package contains a symlink /usr/bin/nodejs
+      name: [postgresql-common, php-gettext, unzip, zip, python3-pip, npm, nodejs, wget, php-pgsql, libapache2-mod-php, apache2, python3-pil, python3-cairo, python3-ply]
+
+  - name: Install pojson from Pip
+    pip:
+      executable: pip3
+      name: pojson
+      state: present
+
+  - name: Create directory for Git repository
+    file:
+      path: '{{ website_dir }}'
+      owner: root
+      group: root
+      state: directory
+
+  - name: Clone Git repository of the website
+    git:
+      dest: '{{ website_dir }}'
+      repo: https://github.com/Nakaner/OpenRailwayMap.git
+      # We need to call it with force:yes because our database layout requires to overwrite api/config.json
+      force: yes
+      version: mapcss-converter-python3
+
+  - name: 'OpenRailwayMap API: Change database table prefix'
+    lineinfile:
+      backrefs: yes
+      path: '{{ website_dir }}/api/config.json' 
+      regexp: '{{ item.regex }}'
+      line: '{{ item.replacement }}'
+    loop:
+      - {'regex': '^(\s*"prefix": *")openrailwaymap("\s*,\s*)$', 'replacement': '\1openrailwaymap_api\2'}
+      - {'regex': '^(\s*"database": *")openrailwaymap("\s*,\s*)$', 'replacement': '\1gis\2'}
+
+  - name: Create database views and indexes for the API
+    become: true
+    become_user: osmimport
+    postgresql_query:
+      login_user: osmimport
+      db: '{{ osm_dbname }}'
+      query: '{{ lookup("file", "files/api_views_and_indexes.sql") }}'
+
+  - name: Download and install Leaflet and its plugins
+    make:
+      chdir: '{{ website_dir }}' 
+      target: install-deps
+
+  - name: Build MapCSS styles, JOSM presets and locales
+    make:
+      chdir: '{{ website_dir }}/{{ item }}' 
+      target: all
+    loop:
+      - 'josm-presets'
+      - 'styles'
+      - 'locales'
+
+  - name: Create database extension PostGIS-Topology and PostGIS-SFCGAL
+    become: true
+    become_user: postgres
+    postgresql_ext:
+      db: '{{ osm_dbname }}'
+      name: '{{ item }}'
+    loop: 
+      - 'postgis_topology'
+      - 'postgis_sfcgal'
+
+  - name: Create system user openrailwaymap to run the API
+    user:
+      name: openrailwaymap
+      shell: '/usr/sbin/nologin'
+      home: '{{ openrailwaymap_user_home }}'
+      comment: 'OpenRailwayMap API user'
+      password: '*'
+      system: yes
+
+  - name: Create log directory for API
+    file:
+      state: directory
+      path: /var/log/orm-api
+      owner: openrailwaymap
+      group: adm
+      mode: 0750
+
+  - debug: {msg: 'On Debian, the authentication method md5 is enabled for all users connecting from localhost via TCP/IP to any local database. Modify pg_hba.conf if your database is configured differently.'}
+
+  - name: Create a random password
+    set_fact:
+      api_postgresql_password: "{{ lookup('password', '/dev/null length=12') }}"
+
+  - name: Create database user openrailwaymap for the API
+    become: true
+    become_user: postgres
+    postgresql_user:
+      name: openrailwaymap
+      db: 'postgres'
+      encrypted: yes
+      password: '{{ api_postgresql_password }}'
+    notify:
+      - systemd restart orm-api
+
+  - name: Store database password for user openrailwaymap
+    copy:
+      dest: '{{ openrailwaymap_user_home }}/.pgpass'
+      owner: openrailwaymap
+      group: openrailwaymap
+      mode: 0600
+      content: |
+        localhost:5432:{{ osm_dbname }}:openrailwaymap:{{ api_postgresql_password }}
+    notify:
+      - systemd restart orm-api
+
+  - name: 'GRANT SELECT ON ALL TABLES IN SCHEMA public TO openrailwaymap'
+    become: true
+    become_user: postgres
+    postgresql_privs:
+      role: openrailwaymap 
+      type: table
+      objs: ALL_IN_SCHEMA
+      privs: 'SELECT'
+      database: '{{ osm_dbname }}'
+
+  - name: Change PostgreSQL version in the Systemd unit file of the API
+    lineinfile:
+      path: '{{ website_dir }}/api/orm-api.service' 
+      regexp: '{{ item.regex }}'
+      line: '{{ item.replacement }}'
+    loop:
+      - {'regex': '^Requires=postgresql-9.6.service$', 'replacement': 'Requires=postgresql.service'}
+      - {'regex': '^After=postgresql-9.6.service$', 'replacement': 'After=postgresql.service'}
+
+  - name: Install Rsyslogd configuration for the API
+    become: yes
+    make:
+      chdir: '{{ website_dir }}/api' 
+      target: install-rsyslog
+    notify:
+      - systemd restart rsyslog
+
+  - name: Build and install Systemd unit file of the API
+    become: yes
+    make:
+      chdir: '{{ website_dir }}/api' 
+      target: install-systemd
+    notify:
+      - systemd daemon-reload
+
+  - name: 'Install API (npm)'
+    npm:
+      path: '{{ website_dir }}/api'
+    notify:
+      - systemd restart orm-api
+
+  - name: systemd start and enable orm-api.service
+    systemd:
+      daemon_reload: yes
+      name: orm-api
+      enabled: yes
+      state: started
+
+  - name: Enable Apache modules proxy, proxy_http, headers and rewrite
+    apache2_module:
+      name: '{{ item }}'
+      state: present
+    loop:
+      - 'proxy'
+      - 'proxy_http'
+      - 'headers'
+      - 'rewrite'
+    notify:
+      - systemd restart apache2
+
+  - name: Add website and API VirtualHost configuration of Apache
+    template:
+      src: '{{ item }}'
+      dest: '/etc/apache2/sites-available/{{ item }}'
+      owner: root
+      group: root
+      mode: 0664
+    loop:
+      - 'www.openrailwaymap.org.inc'
+      - 'www.openrailwaymap.org.conf'
+      - 'api.openrailwaymap.org.inc'
+      - 'api.openrailwaymap.org.conf'
+    notify:
+      - systemd reload apache2
+
+  - name: Enable Apache VirtualHost configuration for API and website
+    shell:
+      cmd: 'a2ensite {{ item }}'
+      chdir: /etc/apache2/sites-available
+    loop:
+      - www.openrailwaymap.org.conf
+      - api.openrailwaymap.org.conf
+    notify:
+      - systemd reload apache2
+
+
+  handlers:
+    - name: systemd daemon-reload
+      systemd:
+        daemon_reload: yes
+    - name: systemd restart rsyslog
+      systemd:
+        name: rsyslog
+        state: restarted
+    - name: systemd restart orm-api
+      systemd:
+        name: orm-api
+        state: restarted
+    - name: systemd reload apache2
+      systemd:
+        name: apache2
+        state: reloaded
+    - name: systemd restart apache2
+      systemd:
+        name: apache2
+        state: restarted
