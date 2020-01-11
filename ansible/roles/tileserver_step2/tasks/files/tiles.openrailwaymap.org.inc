@@ -9,7 +9,7 @@ ServerAlias openrailwaymap2019.michreichert.de
 ServerAdmin info@openrailwaymap.org
 
 DocumentRoot /var/www/tiles
-LogLevel info
+LogLevel info tile:warn
 ModTileRenderdSocketName /var/lib/tirex/modtile.sock
 ModTileTileDir           /var/lib/tirex/tiles
 AddTileConfig            /standard standard
@@ -24,3 +24,6 @@ Alias "/.well-known/acme-challenge/" "/var/lib/acme/challenges/"
 <location /.well-known/acme-challenge/>
     Require all granted
 </location>
+
+ErrorLog /var/log/apache2/tiles.openrailwaymap.org.error.log
+CustomLog /var/log/apache2/tiles.openrailwaymap.org.access.log combined
