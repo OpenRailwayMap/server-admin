@@ -11,6 +11,7 @@ Header set Access-Control-Allow-Origin "*"
     Require all granted
 </location>
 
+ProxyPass /.well-known !
 Alias "/.well-known/acme-challenge/" "/var/lib/acme/challenges/"
 <location /.well-known/acme-challenge/>
     Require all granted

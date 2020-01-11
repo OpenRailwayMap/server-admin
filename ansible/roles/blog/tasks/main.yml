@@ -1,0 +1,64 @@
+# SPDX-License-Identifier: MIT
+- hosts: all
+  remote_user: root
+
+  tasks:
+  - name: Install required packages from APT
+    apt:
+      name: [libapache2-mod-php, apache2]
+
+  - name: Create directory for Git repository
+    file:
+      path: '{{ blog.directory }}'
+      owner: root
+      group: root
+      state: directory
+
+  - name: Clone Git repository of the blog
+    git:
+      dest: '{{ blog.directory }}'
+      repo: https://github.com/OpenRailwayMap/openrailwaymap-blog.git
+      # We need to call it with force:yes because our database layout requires to overwrite api/config.json
+      force: yes
+      version: master
+
+  - name: Enable Apache module php
+    apache2_module:
+      name: '{{ item }}'
+      state: present
+    loop:
+      - 'php7.3'
+    notify:
+      - systemd restart apache2
+
+  - name: Add blog VirtualHost configuration of Apache
+    template:
+      src: '{{ item }}'
+      dest: '/etc/apache2/sites-available/{{ item }}'
+      owner: root
+      group: root
+      mode: 0664
+    loop:
+      - 'blog.openrailwaymap.org.inc'
+      - 'blog.openrailwaymap.org.conf'
+    register: apache_virtualhost_files
+    notify:
+      - systemd reload apache2
+
+  - name: Enable Apache VirtualHost configuration for API and website
+    when: apache_virtualhost_files.changed
+    shell:
+      cmd: 'a2ensite blog.openrailwaymap.org.conf'
+      chdir: /etc/apache2/sites-available
+    notify:
+      - systemd reload apache2
+
+  handlers:
+    - name: systemd reload apache2
+      systemd:
+        name: apache2
+        state: reloaded
+    - name: systemd restart apache2
+      systemd:
+        name: apache2
+        state: restarted
