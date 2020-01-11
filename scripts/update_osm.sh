@@ -106,7 +106,7 @@ while true; do
 
     REPLICATION_TIMESTAMP=$($OSMIUM fileinfo -g header.option.osmosis_replication_timestamp $PLANET_FILE)
     echo "replication timestamp is $REPLICATION_TIMESTAMP"
-    echo $REPLICATION_TIMESTAMP > $TIMESTAMP_PATH
+    date --date="$REPLICATION_TIMESTAMP" +%s > $TIMESTAMP_PATH
 
     sleep $SLEEP_TIME
 done
