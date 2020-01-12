@@ -155,7 +155,7 @@
     include_tasks: '../../../includes/redirect-and-acme-challenge-includes.yml'
 
   - name: Add tileserver configuration for Apache virtualhost
-    copy:
+    template:
       src: '{{ item }}'
       dest: '/etc/apache2/sites-available/{{ item }}'
       owner: root
