@@ -37,15 +37,19 @@
       path: '/etc/munin/munin-node.conf'
       block: |
         tls enabled
-        tls_verify_certificate yes
+        tls_verify_certificate no
         tls_private_key /etc/letsencrypt/{{ ssl_domain }}/domain.key
         tls_certificate /etc/letsencrypt/{{ ssl_domain }}/{{ ssl_domain }}.crt
+    notify:
+      - systemd restart munin-node
 
   - name: Include plugin configuration into node configuration
     lineinfile:
       path: /etc/munin/munin-node.conf
       regexp: '^#? *includedir /etc/munin/plugin-conf.d'
       line: 'includedir /etc/munin/plugin-conf.d'
+    notify:
+      - systemd restart munin-node
 
   ## We do not use cidr_allow due to https://github.com/munin-monitoring/munin/issues/1177 and use pure regular expressions instead
   - name: Allow connections from brennerle.michreichert.de
@@ -166,6 +170,8 @@
           owner: root
           group: root
         with_list: '{{ ansible_all_ipv4_addresses }}'
+        notify:
+          - systemd restart munin-node
 
       - name: Enable Munin ip_ plugin for each IPv6 addresses
         file:
@@ -175,10 +181,14 @@
           owner: root
           group: root
         with_list: '{{ ansible_all_ipv6_addresses }}'
+        notify:
+          - systemd restart munin-node
 
   - name: Install Tirex plugin for Munin
     apt:
       deb: '/root/packages/tirex-munin-plugin_0.6.1_amd64.deb'
+    notify:
+      - systemd restart munin-node
 
   - name: systemctl start munin-node
     systemd:
