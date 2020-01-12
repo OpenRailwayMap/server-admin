@@ -25,13 +25,11 @@ set -euo pipefail
 
 source $(dirname ${0})/config.cfg
 
-export OSMIUM_POOL_THREADS=3
-
 function apply_diff_database {
     echo "derive diff"
     # It is safe to call --overwrite because the .osc.gz file will only be deleted if its
     # application onto the database succeeded.
-    OSMIUM_POOL_THREADS=3 $OSMIUM derive-changes --overwrite -o $DERIVED_DIFF $PLANET_FILTERED_OLD $PLANET_FILTERED
+    $OSMIUM derive-changes --overwrite -o $DERIVED_DIFF $PLANET_FILTERED_OLD $PLANET_FILTERED
 
     echo "apply diff"
     if [[ -v "$OSM2PGSQL_FLATNODES" ]]; then
@@ -72,7 +70,7 @@ while true; do
     echo "updating planet"
     while /bin/true; do
         STATUS=0
-        OSMIUM_POOL_THREADS=3 $PYOSMIUM_UP_TO_DATE -v --tmpdir $PLANET_UPDATE_TMP -s 2000 $PLANET_FILE || STATUS=$?
+        $PYOSMIUM_UP_TO_DATE -v --tmpdir $PLANET_UPDATE_TMP -s 2000 $PLANET_FILE || STATUS=$?
         if [ "$STATUS" -eq 0 ]; then
             # updates finished
             echo "Planet up to date now."
@@ -94,7 +92,7 @@ while true; do
     if [ -f "$PLANET_FILTERED" ]; then
         mv $PLANET_FILTERED $PLANET_FILTERED_OLD
     fi
-    OSMIUM_POOL_THREADS=3 $OSMIUM tags-filter -o $PLANET_FILTERED $PLANET_FILE $OSMIUM_FILTER_EXPR
+    $OSMIUM tags-filter -o $PLANET_FILTERED $PLANET_FILE $OSMIUM_FILTER_EXPR
 
     if [ "$TILE_RENDERING" = 1 ]; then
         apply_diff_database
