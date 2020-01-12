@@ -8,6 +8,13 @@
     apt:
       name: [libwww-perl, libcache-cache-perl]
 
+  - name: Install Tirex plugin for Munin
+    when: munin.tirex_enabled
+    apt:
+      deb: '/root/packages/tirex-munin-plugin_0.6.1_amd64.deb'
+    notify:
+      - systemd restart munin-node
+
   - name: Add user munin to group sslkeyaccess
     user:
       append: yes
@@ -81,6 +88,27 @@
         #        host *
         #        ipv *
 
+  - name: Configure PostgreSQL Munin plugin and PostgreSQL for it
+    when: '"postgres_users" in munin_node_plugins|map(attribute="name")'
+    block:
+      - name: Install Perl module DBD::Pg
+        apt:
+          name: libdbd-pg-perl
+
+      - name: Configure Munin PostgreSQL plugin
+        copy:
+          dest: /etc/munin/plugin-conf.d/zzz-postgres
+          owner: root
+          group: root
+          mode: 0644
+          content: |
+            [postgres_*]
+              user postgres
+              env.PGUSER postgres
+              env.PGPORT 5432
+        notify:
+          - systemd restart munin-node
+
   - name: Configure Apache Munin plugin and Apache for it
     when: '"apache_accesses" in munin_node_plugins|map(attribute="name")'
     block:
@@ -124,18 +152,6 @@
   - name: Configure Munin ip_ plugin
     when: munin_node_ip_plugin
     block:
-      - name: General configuration of Munin ip_ plugin
-        copy:
-          dest: '/etc/munin/plugin-conf.d/zzz-ip_.conf'
-          owner: root
-          group: root
-          mode: 0644
-          content: |
-            [ip_*]
-              user root
-        notify:
-          - systemd restart munin-node
-
       - name: Configure Munin ip_ plugin for IPv4
         copy:
           dest: '/etc/munin/plugin-conf.d/zzz-ip_{{ item|replace(".", "_") }}.conf'
@@ -144,6 +160,7 @@
           mode: 0644
           content: |
             [ip_{{ item }}]
+              user root
               env.hostname {{ ansible_facts['nodename'] }}
         with_list: '{{ ansible_all_ipv4_addresses }}'
         notify:
@@ -184,11 +201,68 @@
         notify:
           - systemd restart munin-node
 
-  - name: Install Tirex plugin for Munin
-    apt:
-      deb: '/root/packages/tirex-munin-plugin_0.6.1_amd64.deb'
-    notify:
-      - systemd restart munin-node
+  - name: Steps for the Munin Tirex plugin
+    when: munin.tirex_enabled
+    block:
+      - name: 'Create Systemd unit for tirex-tiledir-check@.service'
+        copy:
+          owner: root
+          group: root
+          mode: 0644
+          dest: /etc/systemd/system/tirex-tiledir-check@.service
+          content: |
+            [Unit]
+            Description=Create Tirex tile directory statistics for map %I
+
+            [Service]
+            Type=oneshot
+            User=tirex
+            ExecStart=/usr/bin/tirex-tiledir-check --stats=/var/lib/tirex/stats/tiles-%i.stats %i
+            Nice=+2
+        notify:
+          - systemd daemon-reload
+
+      - name: 'Create Systemd timer for tirex-tiledir-check@.timer'
+        copy:
+          owner: root
+          group: root
+          mode: 0644
+          dest: /etc/systemd/system/tirex-tiledir-check@.timer
+          content: |
+            [Unit]
+            Description=Tirex tile directory statistics for map %I
+
+            [Timer]
+            OnCalendar=*-*-* 1:30
+            Unit=tirex-tiledir-check@%i.service
+
+            [Install]
+            WantedBy=default.target
+        notify:
+          - systemd daemon-reload
+
+      - name: Enable and start tirex-tiledir-check@.timer
+        systemd:
+          name: 'tirex-tiledir-check@{{ item }}.timer'
+          enabled: yes
+          state: started
+        loop:
+          - standard
+          - maxspeed
+          - signals
+
+      - name: Configure Tirex plugins
+        copy:
+          dest: '/etc/munin/plugin-conf.d/zzz-tirex.conf'
+          owner: root
+          group: root
+          mode: 0644
+          content: |
+            [tirex-*]
+              env.TIREX_CONFIGFILE /etc/tirex/tirex.conf
+        with_list: '{{ ansible_all_ipv4_addresses }}'
+        notify:
+          - systemd restart munin-node
 
   - name: systemctl start munin-node
     systemd:
@@ -209,3 +283,6 @@
     systemd:
       name: apache2
       state: restarted
+  - name: 'systemd daemon-reload'
+    systemd:
+      daemon-reload: yes
