@@ -23,28 +23,26 @@ echo "Requesting certificate"
 CERT_FILENAME=$DOMAIN-$TODAY.crt
 sudo -u acme bash $ACME_TINY_DIR/request_certificate.sh $DOMAIN " " > $ACME_WORKING_DIR/$CERT_FILENAME || { echo 'requesting certificate failed' ; exit 1; }
 
-# move certificate to /etc/letsencrypt/live/
-cp $ACME_WORKING_DIR/$CERT_FILENAME $LETSENCRYPT_ETC/$DOMAIN-$TODAY-fullchain.pem
-mv $ACME_WORKING_DIR/$CERT_FILENAME $LETSENCRYPT_ETC
+# move certificate to the directory where the certificates are stored
+mv $ACME_WORKING_DIR/$CERT_FILENAME $LETSENCRYPT_ETC/$DOMAIN-$TODAY-fullchain.pem
 
-# build certificate with full chain
-echo "Building fullchaing certificates"
+# set ownership and permissions
+echo "Set ownership and permissions"
 chmod 644 $LETSENCRYPT_ETC/$DOMAIN-$TODAY-fullchain.pem
 chown root:root $LETSENCRYPT_ETC/$DOMAIN-$TODAY-fullchain.pem
 
 # change symlinks
 echo "Updating symlinks"
-ln -s $LETSENCRYPT_ETC/$CERT_FILENAME $LETSENCRYPT_ETC/$DOMAIN.crt.new
+#ln -s $LETSENCRYPT_ETC/$CERT_FILENAME $LETSENCRYPT_ETC/$DOMAIN.crt.new
 ln -s $LETSENCRYPT_ETC/$DOMAIN-$TODAY-fullchain.pem $LETSENCRYPT_ETC/$DOMAIN-chain.crt.new
 
 # move these symlinks on the old ones
-mv $LETSENCRYPT_ETC/$DOMAIN.crt.new $LETSENCRYPT_ETC/$DOMAIN.crt
 mv $LETSENCRYPT_ETC/$DOMAIN-chain.crt.new $LETSENCRYPT_ETC/$DOMAIN-chain.crt
-mv $LETSENCRYPT_ETC/$DOMAIN-privkey-chain.pem.new $LETSENCRYPT_ETC/$DOMAIN-privkey-chain.pem
 
 # reload services
-echo "Reload Apache"
+echo "Reload Apache and Postfix"
 systemctl reload apache2.service
+systemctl reload postfix.service
 
 # clean up
 rm $ACME_WORKING_DIR/domain.csr
