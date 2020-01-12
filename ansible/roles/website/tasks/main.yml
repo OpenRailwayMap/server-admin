@@ -172,9 +172,12 @@
       - 'proxy'
       - 'proxy_http'
       - 'headers'
-      - 'rewrite'
     notify:
       - systemd restart apache2
+
+  - name: Ensure that files included by Apache configuration are present
+    when: "'letsencrypt' in group_names"
+    include_tasks: '../../../includes/redirect-and-acme-challenge-includes.yml'
 
   - name: Add website and API VirtualHost configuration of Apache
     template:

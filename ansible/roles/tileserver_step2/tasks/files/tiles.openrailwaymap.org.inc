@@ -20,10 +20,5 @@ ModTileMissingRequestTimeout 90
 ModTileMaxLoadOld 4
 ModTileMaxLoadMissing 8
 
-Alias "/.well-known/acme-challenge/" "/var/lib/acme/challenges/"
-<location /.well-known/acme-challenge/>
-    Require all granted
-</location>
-
 ErrorLog /var/log/apache2/tiles.openrailwaymap.org.error.log
 CustomLog /var/log/apache2/tiles.openrailwaymap.org.access.log combined

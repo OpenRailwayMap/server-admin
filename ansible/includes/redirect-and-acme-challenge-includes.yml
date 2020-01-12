@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: MIT
+- name: Enable Apache module rewrite
+  apache2_module:
+    name: 'rewrite'
+    state: present
+  notify:
+    - systemd restart apache2
+
+- name: 'Apache2 ACME challenges: configuration file for inclusion'
+  copy:
+    dest: '/etc/apache2/sites-available/letsencrypt-acme-challenges.inc'
+    owner: root
+    group: root
+    mode: 0644
+    content: |
+      Alias "/.well-known/acme-challenge/" "/var/lib/acme/challenges/"
+      <Directory /var/lib/acme/challenges>
+          Require all granted
+      </Directory>
+  notify:
+    - systemd reload apache2
+
+- name: 'Apache2 redirect 80 → 443: configuration file for inclusion'
+  copy:
+    dest: '/etc/apache2/sites-available/redirect-http.inc'
+    owner: root
+    group: root
+    mode: 0644
+    content: |
+      RewriteEngine On
+      RewriteCond %{REQUEST_URI} !^/.well-known/acme-challenge
+      RewriteCond %{HTTPS} off
+      RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+  notify:
+    - systemd reload apache2
