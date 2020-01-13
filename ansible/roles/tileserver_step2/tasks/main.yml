@@ -181,6 +181,25 @@
     notify:
       - systemd reload apache2
 
+  - name: Configure Apache2 MaxRequestWorkers
+    copy:
+      dest: /etc/apache2/conf-available/max_request_workers.conf
+      owner: root
+      group: root
+      mode: 0644
+      content: |
+        MaxRequestWorkers {{ apache2.max_request_workers }}
+    register: max_request_workers_result
+    when: apache2.max_request_workers is defined
+
+  - name: Enable /etc/apache2/conf-available/max_request_workers.conf
+    shell:
+      cmd: a2enconf max_request_workers.conf
+      chdir: /etc/apache2/conf-available
+    when: max_request_workers_result.changed
+    notify:
+      - systemd reload apache2
+
   - name: Create Tirex configuration for all map styles
     copy:
       dest: '/etc/tirex/renderer/mapnik/{{ item.stylename }}.conf'
