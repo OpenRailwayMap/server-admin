@@ -32,7 +32,7 @@
     RewriteRule ^/imprint$ /imprint-en.html [L,R=307]
 
     ErrorLog {{ apache2_logdir }}/{{ website_hostname }}.error.log
-    LogLevel info
+    LogLevel info ssl:warn
     CustomLog {{ apache2_logdir }}/{{ website_hostname }}.access.log combined
 
     DirectoryIndex index.php

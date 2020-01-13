@@ -22,5 +22,5 @@ ProxyPass / http://localhost:9002/
 ProxyPassReverse / http://localhost:9002/
 
 ErrorLog {{ apache2_logdir }}/api.openrailwaymap.org.error.log
-LogLevel info
+LogLevel info ssl:warn
 CustomLog {{ apache2_logdir }}/api.openrailwaymap.org.access.log combined

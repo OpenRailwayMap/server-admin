@@ -9,7 +9,7 @@ ServerAlias openrailwaymap2019.michreichert.de
 ServerAdmin info@openrailwaymap.org
 
 DocumentRoot /var/www/tiles
-LogLevel info tile:warn
+LogLevel info tile:warn ssl:warn
 ModTileRenderdSocketName /var/lib/tirex/modtile.sock
 ModTileTileDir           /var/lib/tirex/tiles
 AddTileConfig            /standard standard
