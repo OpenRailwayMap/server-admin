@@ -79,6 +79,8 @@
       cron:
         name: 'LetsEncrypt certificate renewal'
         day: '14'
+        minute: '34'
+        hour: '4'
         job: '/bin/bash /opt/acme-scripts/new_certificate.sh'
         user: root
 
