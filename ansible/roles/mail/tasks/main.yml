@@ -122,6 +122,103 @@
         - systemctl restart amavis
         - systemctl restart amavisd-milter
 
+    - name: Install OpenDKIM
+      block:
+        - name: Install OpenDKIM from APT
+          apt:
+            name: [opendkim, opendkim-tools]
+
+        - name: Write /etc/opendkim.conf
+          copy:
+            src: opendkim.conf
+            dest: /etc/opendkim.conf
+            owner: root
+            group: root
+            mode: 0644
+          notify:
+            - systemctl restart opendkim
+
+        - name: Ensure correct permissions on /etc/opendkim
+          file:
+            state: directory
+            path: /etc/opendkim
+            owner: root
+            group: root
+            mode: 0755
+
+        - name: Ensure correct permissions on /etc/opendkim/keys
+          file:
+            state: directory
+            path: /etc/opendkim/keys
+            owner: root
+            group: opendkim
+            mode: 0750
+          notify:
+            - systemctl restart opendkim
+
+        - name: Create OpenDKIM key
+          shell:
+            chdir: /etc/opendkim
+            cmd: 'opendkim-genkey --selector=2020 --bits=2048 --directory=keys'
+            creates: /etc/opendkim/keys/2020.private
+          register: opendkim_key_creation
+
+        - name: Make OpenDKIM key readable for user opendkim
+          when: opendkim_key_creation.changed
+          file:
+            path: '/etc/opendkim/{{ item }}'
+            owner: opendkim
+            group: root
+            mode: 0600
+          loop:
+            - '2020.private'
+            - '2020.txt'
+
+        - name: Print public OpenDKIM key
+          when: opendkim_key_creation.changed
+          block:
+            - slurp:
+                src: /etc/opendkim/keys/2020.txt
+              register: opendkim_public_key
+            - debug:
+                msg: 'Please publish the following DNS entry with your public DKIM key:\n{{ opendkim.public_key }}'
+
+        - name: Write /etc/opendkim/keytable
+          copy:
+            dest: /etc/opendkim/keytable
+            owner: root
+            group: root
+            mode: 0644
+            content: |
+              default    %:2020:/etc/opendkim/keys/2020.private
+          notify:
+            - systemctl restart opendkim
+
+        - name: Write /etc/opendkim/signingtable
+          copy:
+            dest: /etc/opendkim/signingtable
+            owner: root
+            group: root
+            mode: 0644
+            content: |
+              *@openrailwaymap.org default
+          notify:
+            - systemctl restart opendkim
+
+        - name: Create /var/spool/postfix/opendkim
+          file:
+            path: /var/spool/postfix/opendkim
+            owner: opendkim
+            group: opendkim
+            mode: 0755
+            state: directory
+
+    - name: Add Postfix to opendkim group
+      user:
+        append: yes
+        name: postfix
+        groups: opendkim
+
     - name: Install Spamassassin
       apt:
         name: spamassassin
@@ -277,4 +374,8 @@
     - name: systemctl restart amavisd-milter
       systemd:
         name: amavisd-milter
+        state: restarted
+    - name: systemctl restart opendkim
+      systemd:
+        name: opendkim
         state: restarted

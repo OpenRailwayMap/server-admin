@@ -51,17 +51,12 @@ recipient_delimiter = +
 inet_interfaces = all
 inet_protocols = all
 
-# Filter mail with Amavis (via amavisd-milter)
+# Filter mail with Amavis (via amavisd-milter), sign emails submitted from localhost with correct domain
 milter_default_action = accept
 milter_protocol = 2
-smtpd_milters = unix:amavis/amavis.sock
-#smtpd_milters = unix:amavis/amavis.sock,
-#                unix:opendkim/opendkim.sock
-#non_smtpd_milters = unix:opendkim/opendkim.sock
-
-# add OpenDKIM signatures
-milter_default_action = accept
-#non_smtpd_milters = unix:opendkim/opendkim.sock
+smtpd_milters = unix:amavis/amavis.sock,
+                unix:opendkim/opendkim.sock
+non_smtpd_milters = unix:opendkim/opendkim.sock
 
 # Restriction controlling access to the Postfix SMTP server
 # Their purpose is to reject clients where reverse DNS fails
