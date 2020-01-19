@@ -5,7 +5,7 @@
     owner: root
     group: root
     mode: 0644
-    src: virtual_alias_map
+    src: '{{ item }}'
   register: map_result
 
 - name: Run postmap if required on virtual_alias_map
