@@ -89,6 +89,15 @@
   #        - amavisd-new
   #        - amavisd-milter
 
+    - name: Create directory for Amavis where to place the socke of the Milter
+      file:
+        path: /var/spool/postfix/amavis
+        owner: amavis
+        group: amavis
+        recurse: no
+        mode: 0755
+        state: directory
+
     - name: Write custom Amavis configuration to /etc/amavis/conf.d/50-user
       copy:
         dest: /etc/amavis/conf.d/50-user
@@ -97,15 +106,21 @@
         group: root
         mode: 0644
       notify:
-        - systemctl restart amavisd-new
+        - systemctl restart amavis
 
-    - name: Add Symlink /var/spool/postfix/amavis -> /var/run/amavis for chroot-ed Postfix
-      file:
-        dest: /var/spool/postfix/amavis
-        src: /var/run/amavis
-        owner: root
-        group: root
-        state: link
+    - name: Configure socket path for Amavisd-milter which is accessible by chroot-ed Postfix
+      lineinfile:
+        path: /etc/default/amavisd-milter
+        regexp: '{{ item.regexp }}'
+        line: '{{ item.line }}'
+      loop:
+        - {'regexp': '^#?MILTERSOCKET=/var/spool/postfix/amavis/amavis.sock', 'line': 'MILTERSOCKET=/var/spool/postfix/amavis/amavis.sock'}
+        - {'regexp': '^#?MILTERSOCKETOWNER="postfix:postfix"', 'line': 'MILTERSOCKETOWNER=postfix:postfix'}
+        - {'regexp': '^#?MILTERSOCKETMODE="0660"', 'line': 'MILTERSOCKETMODE="0660"'}
+      notify:
+        - systemctl daemon-reload
+        - systemctl restart amavis
+        - systemctl restart amavisd-milter
 
     - name: Install Spamassassin
       apt:
@@ -214,20 +229,23 @@
         group: root
         mode: 0644
       notify:
-        - systemctl restart amavisd-new
+        - systemctl restart amavis
 
-    - name: systemctl start amavisd-new amavisd-milter postfix
+    - name: systemctl start amavis amavisd-milter postfix
       systemd:
         name: '{{ item }}'
         state: started
       loop:
-        - amavisd-new
+        - amavis
         - amavisd-milter
         - postfix
         - postgrey
 
 
   handlers:
+    - name: systemctl daemon-reload
+      systemd:
+        daemon_reload: yes
     - name: systemctl reload apache2
       systemd:
         name: apache2
@@ -252,7 +270,11 @@
       systemd:
         name: mailman
         state: restarted
-    - name: systemctl restart amavisd-new
+    - name: systemctl restart amavis
       systemd:
-        name: amavisd-new
+        name: amavis
+        state: restarted
+    - name: systemctl restart amavisd-milter
+      systemd:
+        name: amavisd-milter
         state: restarted

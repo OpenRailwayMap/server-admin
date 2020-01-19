@@ -54,7 +54,8 @@ inet_protocols = all
 # Filter mail with Amavis (via amavisd-milter)
 milter_default_action = accept
 milter_protocol = 2
-smtpd_milters = unix:amavis/amavis.sock,
+smtpd_milters = unix:amavis/amavis.sock
+#smtpd_milters = unix:amavis/amavis.sock,
 #                unix:opendkim/opendkim.sock
 #non_smtpd_milters = unix:opendkim/opendkim.sock
 

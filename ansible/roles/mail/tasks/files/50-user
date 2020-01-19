@@ -5,7 +5,6 @@ use strict;
 # AM.PDP protocol.
 
 $protocol = "AM.PDP";
-$unix_socketname = "/var/run/amavis/amavisd.sock";
 $inet_socket_port = undef;
 
 # List of our domains
