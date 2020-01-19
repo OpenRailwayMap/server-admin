@@ -1,16 +1,16 @@
 # SPDX-License-Identifier: MIT
 - name: 'Create {{ item }}'
   copy:
-    dest: '/etc/postfix/{{ item }}'
+    dest: '{{ item.dest }}'
     owner: root
     group: root
     mode: 0644
-    src: '{{ item }}'
+    src: '{{ item.src }}'
   register: map_result
 
 - name: Run postmap if required on virtual_alias_map
   shell:
-    cmd: 'postmap hash:/etc/postfix/{{ item }}'
+    cmd: '{{ item.cmd }} hash:{{ item.dest }}'
     chdir: /etc/postfix
   when: map_result.changed
   register: postmap_result

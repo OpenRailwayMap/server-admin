@@ -7,6 +7,12 @@
       apt:
         name: [postfix, postfix-pcre, postgrey]
 
+    - name: Add localhost.localdomain to Postgrey whitelist
+      lineinfile:
+        path: /etc/postgrey/whitelist_clients
+        regexp: '^localhost.localdomain$'
+        line: 'localhost.localdomain'
+
     - name: set /etc/mailname
       copy:
         dest: /etc/mailname
@@ -35,8 +41,8 @@
     - name: 'virtual_alias_map and bad_senders'
       include_tasks: write_and_hash.yml
       loop:
-        - virtual_alias_map
-        - bad_senders
+        - {'src': 'virtual_alias_map', 'dest': '/etc/postfix/virtual_alias_map', 'cmd': 'postalias'}
+        - {'src': 'bad_senders', 'dest': '/etc/postfix/bad_senders', 'cmd': 'postmap'}
 
     - name: Write /etc/postfix/main.cf
       template:
@@ -105,6 +111,101 @@
       apt:
         name: spamassassin
 
+    - name: Mailman 2 setup
+      when: mail.mailman2
+      block:
+        - name: 'Create entries in Debconf database for Mailman 2 setup'
+          shell:
+            cmd: 'debconf-set-selections'
+            stdin: |
+              mailman mailman/site_languages multiselect en
+              mailman mailman/used_languages  string
+              mailman mailman/default_server_language select  en
+              mailman mailman/queue_files_present select abort installation
+              mailman mailman/create_site_list note
+        - name: 'Install Mailman 2'
+          apt:
+            name: mailman
+
+        - name: 'Modify Mailman 2 configuration'
+          lineinfile:
+            path: /etc/mailman/mm_cfg.py
+            regexp: "^{{ item.key }} *="
+            line: "{{ item.key }} = '{{ item.value }}'"
+          loop:
+            - {'key': 'DEFAULT_URL_HOST', 'value': 'lists.openrailwaymap.org'}
+            - {'key': 'DEFAULT_EMAIL_HOST', 'value': 'openrailwaymap.org'}
+            - {'key': 'DEFAULT_URL_PATTERN', 'value': 'https://%s/mailman/'}
+          notify:
+            - systemctl restart mailman
+
+        - name: Copy sitelist.cfg
+          copy:
+            src: sitelist.cfg
+            dest: /etc/mailman/sitelist.cfg
+            owner: root
+            group: root
+            mode: 0644
+
+        - name: Create and hash aliases file for Mailman mailing lists
+          include_tasks: write_and_hash.yml
+          loop:
+            - {'src': 'mailman_aliases', 'dest': '/etc/mailman/aliases', 'cmd': 'postalias'}
+
+        - name: Set permissions on directories in /var/lib/mailman properly
+          file:
+            path: '{{ item.path }}'
+            owner: '{{ item.owner }}'
+            group: '{{ item.group }}'
+            recurse: '{{ item.recurse }}'
+            state: directory
+          loop:
+            - {'path': '/var/lib/mailman/', 'owner': root, 'group': list, recurse: yes}
+            - {'path': '/var/lib/mailman/archives/private', 'owner': 'list', 'group': list, recurse: yes}
+            - {'path': '/var/lib/mailman/archives', 'owner': 'www-data', 'group': list, recurse: no}
+            - {'path': '/var/lib/mailman/archives/private', 'owner': 'www-data', 'group': list, recurse: yes}
+            - {'path': '/var/lib/mailman/archives/public', 'owner': 'root', 'group': list, recurse: yes}
+            - {'path': '/var/lib/mailman/data', 'owner': 'list', 'group': list, recurse: yes}
+            - {'path': '/var/lib/mailman/spam', 'owner': 'root', 'group': list, recurse: yes}
+
+        - name: Enable Apache module CGI
+          apache2_module:
+            name: cgi
+            state: present
+          notify:
+            - systemctl restart apache2
+
+        - name: Add VirtualHost configuration of Apache
+          template:
+            src: '{{ item }}'
+            dest: '/etc/apache2/sites-available/{{ item }}'
+            owner: root
+            group: root
+            mode: 0664
+          loop:
+            - 'mailman.conf'
+            - 'mailman.inc'
+          register: apache_conf
+          notify:
+            - systemctl reload apache2
+
+        - name: Enable Apache VirtualHost configuration
+          when: apache_conf.changed
+          shell:
+            cmd: 'a2ensite mailman.conf'
+            chdir: /etc/apache2/sites-available
+          notify:
+            - systemctl reload apache2
+
+        - debug:
+            msg: 'Run "newlist mailman" as root to create a first mailing list, or copy data from old server to /var/lib/mailman/'
+
+        - name: Start Mailman
+          systemd:
+            name: mailman
+            state: started
+            enabled: yes
+
     - name: Write Spamassassin configuration to /etc/spamassassin/local.cf
       copy:
         dest: /etc/spamassassin/local.cf
@@ -127,6 +228,14 @@
 
 
   handlers:
+    - name: systemctl reload apache2
+      systemd:
+        name: apache2
+        state: reloaded
+    - name: systemctl restart apache2
+      systemd:
+        name: apache2
+        state: restarted
     - name: systemctl reload postfix
       systemd:
         name: postfix
@@ -134,6 +243,14 @@
     - name: systemctl restart postfix
       systemd:
         name: postfix
+        state: restarted
+    - name: systemctl restart postgrey
+      systemd:
+        name: postgrey
+        state: restarted
+    - name: systemctl restart mailman
+      systemd:
+        name: mailman
         state: restarted
     - name: systemctl restart amavisd-new
       systemd:
