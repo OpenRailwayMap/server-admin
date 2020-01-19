@@ -24,7 +24,7 @@
     ScriptAlias /subscribe /usr/lib/cgi-bin/mailman/subscribe
     ScriptAlias /mailman/ /usr/lib/cgi-bin/mailman/
     
-    RedirectMatch ^/mailman[/]*$ https://{{ mail.http_hostname }}/mailman/listinfo
+    RedirectMatch ^/mailman[/]*$ /mailman/listinfo
     RedirectMatch ^/$ /listinfo
     
     ErrorLog {{ apache2_logdir }}/{{ mail.http_hostname }}.error.log
