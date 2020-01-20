@@ -24,3 +24,6 @@
 
 # Dieter Bohlen spam, Plus Server GmbH
 62.75.206.135    REJECT too much spam by this client
+
+# spam "investment opportunity"
+220.117.241.232  REJECT too much spam by this client
