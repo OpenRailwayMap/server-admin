@@ -1,0 +1,46 @@
+mailman3	mailman3/app-password-confirm	password	
+mailman3	mailman3/config_hyperkitty	boolean true
+mailman3	mailman3/database-type	select	pgsql
+mailman3	mailman3/db/app-user	string	mailman3
+mailman3	mailman3/db/basepath	string	/var/lib/mailman3/data
+mailman3	mailman3/db/dbname	string	mailman3
+mailman3	mailman3/dbconfig-install	boolean	true
+mailman3	mailman3/dbconfig-reinstall	boolean	false
+mailman3	mailman3/dbconfig-remove	boolean	true
+mailman3	mailman3/dbconfig-upgrade	boolean	true
+mailman3	mailman3/install-error	select	abort
+mailman3	mailman3/internal/reconfiguring	boolean	false
+mailman3	mailman3/internal/skip-preseed	boolean	false
+mailman3	mailman3/missing-db-package-error	select	abort
+mailman3	mailman3/mysql/admin-pass	password	
+mailman3	mailman3/mysql/admin-user	string	
+mailman3	mailman3/mysql/app-pass	password	
+mailman3	mailman3/mysql/method	select	Unix socket
+mailman3	mailman3/password-confirm	password	
+mailman3	mailman3/pgsql/admin-pass	password	
+mailman3	mailman3/pgsql/admin-user	string	postgres
+mailman3	mailman3/pgsql/app-pass	password	
+mailman3	mailman3/pgsql/authmethod-admin	select	peer
+mailman3	mailman3/pgsql/authmethod-user	select	peer
+mailman3	mailman3/pgsql/changeconf	boolean	false
+mailman3	mailman3/pgsql/manualconf	note	
+mailman3	mailman3/pgsql/method	select	Unix socket
+mailman3	mailman3/purge	boolean	false
+mailman3	mailman3/remote/host	select	localhost
+mailman3	mailman3/remote/newhost	string	localhost
+mailman3	mailman3/remote/port	string	
+mailman3	mailman3/remove-error	select	abort
+mailman3	mailman3/upgrade-backup	boolean	true
+mailman3	mailman3/upgrade-error	select	abort
+
+mailman3-web	mailman3-web/database-type	select	pgsql
+mailman3-web	mailman3-web/db/app-user	string	mailman3web@localhost
+mailman3-web	mailman3-web/db/dbname	string	mailman3web
+mailman3-web	mailman3-web/emailname	string	openrailwaymap.org
+mailman3-web	mailman3-web/nginx-choice	note	
+mailman3-web	mailman3-web/pgsql/authmethod-admin	select	ident
+mailman3-web	mailman3-web/pgsql/authmethod-user	select	ident
+mailman3-web	mailman3-web/pgsql/changeconf	boolean	false
+mailman3-web	mailman3-web/pgsql/method	select	Unix socket
+mailman3-web	mailman3-web/remote/host	select	localhost
+mailman3-web	mailman3-web/remove-error	select	abort
