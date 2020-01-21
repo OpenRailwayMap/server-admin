@@ -280,6 +280,27 @@
             - {'path': '/var/lib/mailman/data', 'owner': 'list', 'group': list, recurse: yes}
             - {'path': '/var/lib/mailman/spam', 'owner': 'root', 'group': list, recurse: yes}
 
+        - debug:
+            msg: 'Run "newlist mailman" as root to create a first mailing list, or copy data from old server to /var/lib/mailman/'
+
+        - name: Start Mailman
+          systemd:
+            name: mailman
+            state: started
+            enabled: yes
+
+    - name: Mailman 3 setup
+      when: mail.mailman3
+      block:
+        - name: 'Create entries in Debconf database for Mailman 3 setup'
+          shell:
+            cmd: 'debconf-set-selections'
+            stdin: "{{ lookup('file', 'mailman3_debconf_settings') }}"
+
+        - name: Install Mailman 3 packages from APT
+          apt:
+            name: [mailman3-full, lynx, postgresql]
+
         - name: Enable Apache module CGI
           apache2_module:
             name: cgi
@@ -309,37 +330,19 @@
           notify:
             - systemctl reload apache2
 
-        - debug:
-            msg: 'Run "newlist mailman" as root to create a first mailing list, or copy data from old server to /var/lib/mailman/'
-
-        - name: Start Mailman
-          systemd:
-            name: mailman
-            state: started
-            enabled: yes
-
-    - name: Mailman 3 setup
-      when: mail.mailman3
-      block:
-        - name: 'Create entries in Debconf database for Mailman 3 setup'
-          shell:
-            cmd: 'debconf-set-selections'
-            stdin: "{{ lookup('file', 'mailman3_debconf_settings') }}"
-
-        - name: Install Mailman 3 packages from APT
-          apt:
-            name: [mailman3-full, lynx, postgresql]
-
         - name: Enable peer authentication for PostgreSQL for user mailman3
           postgresql_pg_hba:
             contype: local
-            databases: 'mailman3'
+            databases: '{{ item.db }}'
             dest: '/etc/postgresql/{{ pg_version }}/main/pg_hba.conf'
-            method: peer
-            users: 'mailman3'
+            method: md5
+            users: '{{ item.user }}'
             mode: 0640
             owner: postgres
             group: postgres
+          loop:
+            - {'user': 'www-data', 'db': 'mailman3web'}
+            - {'user': 'lists', 'db': 'mailman3'}
           notify:
             - systemctl reload postgresql
 
@@ -350,7 +353,7 @@
             line: '{{ item.line }}'
           loop:
             - {'regexp': '^#?site_owner: ', 'line': 'site_owner: info@openrailwaymap.org'}
-            - {'regexp': '^#?url: postgres://', 'line': 'url: postgres://mailman3@:5432/mailman3'}
+              #- {'regexp': '^#?url: postgres://', 'line': 'url: postgres://mailman3@:5432/mailman3'}
 
         - name: Modify /etc/mailman3/mailman-web.py
           replace:
@@ -360,7 +363,7 @@
           loop:
             - {'regexp': "^ADMINS = \\(\\n( *)\\('[^']*', '[^']*'\\), *\\n\\)", 'line': "ADMINS = (\\n    ('OpenRailwayMap Mailman Admin', 'info@openrailwaymap.org')\\n)"}
             - {'regexp': "^    #? *'django.contrib.admindocs', *$", 'line': "    'django.contrib.admindocs',"}
-            - {'regexp': "^#? *SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')", 'line': "SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')"}
+            - {'regexp': "^#? *SECURE_PROXY_SSL_HEADER = \\('HTTP_X_FORWARDED_PROTO', 'https'\\)", 'line': "SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')"}
             - {'regexp': "^#? *SESSION_COOKIE_SECURE =.[^\n]*$", 'line': "SESSION_COOKIE_SECURE = True"}
             - {'regexp': "^#? *SECURE_CONTENT_TYPE_NOSNIFF =.[^\n]*$", 'line': "SECURE_CONTENT_TYPE_NOSNIFF = True"}
             - {'regexp': "^#? *SECURE_BROWSER_XSS_FILTER =.[^\n]*$", 'line': "SECURE_BROWSER_XSS_FILTER = True"}
@@ -368,9 +371,21 @@
             - {'regexp': "^#? *CSRF_COOKIE_HTTPONLY =.[^\n]*$", 'line': "CSRF_COOKIE_HTTPONLY = True"}
             - {'regexp': "^#? *X_FRAME_OPTIONS =.[^\n]*$", 'line': "X_FRAME_OPTIONS = 'DENY'"}
             - {'regexp': "^#? *EMAILNAME =.[^\n]*$", 'line': "EMAILNAME = 'openrailwaymap.org'"}
-              #- {'regexp': "^        'ENGINE': 'django.db.backends.sqlite3',", 'line': "#        'ENGINE': 'django.db.backends.sqlite3',"}
-              #- {'regexp': "^        '#ENGINE': 'django.db.backends.postgresql_psycopg2',", 'line': "        'ENGINE': 'django.db.backends.postgresql_psycopg2',"}
-          #'ENGINE': 'django.db.backends.postgresql_psycopg2',", *$", 'line': "    'django.contrib.admindocs',"}
+            - {'regexp': "^#?( *)'HOST': '[^']+',[^\n]*$", 'line': "\\1'HOST': '',"}
+
+        - name: Enable Mailman3 UWSGI app
+          file:
+            src: /etc/mailman3/uwsgi.ini
+            dest: /etc/uwsgi/apps-enabled/mailman3.ini
+            state: link
+            owner: root
+            group: root
+
+        - name: Change URL for Hyperkitty to get emails from (add authentication)
+          lineinfile:
+            path: /etc/mailman3/mailman-hyperkitty.cfg
+            regexp: '^base_url: .*$'
+            line: 'base_url: https://127.0.0.1/mailman3/hyperkitty/'
 
 
 
