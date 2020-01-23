@@ -373,6 +373,16 @@
             - {'regexp': "^#? *EMAILNAME =.[^\n]*$", 'line': "EMAILNAME = 'openrailwaymap.org'"}
             - {'regexp': "^#?( *)'HOST': '[^']+',[^\n]*$", 'line': "\\1'HOST': '',"}
 
+        - name: Change Postorius site name
+          become: yes
+          become_user: www-data
+          postgresql_query:
+            db: mailman3web
+            login_user: www-data
+            query: "UPDATE django_site SET domain = 'lists.openrailwaymap.org', name = 'openrailwaymap.org' WHERE domain = 'example.com';"
+          notify:
+            - systemctl restart mailman3-web
+
         - name: Enable Mailman3 UWSGI app
           file:
             src: /etc/mailman3/uwsgi.ini
@@ -441,6 +451,10 @@
     - name: systemctl restart mailman
       systemd:
         name: mailman
+        state: restarted
+    - name: systemctl restart mailman3-web
+      systemd:
+        name: mailman3-web
         state: restarted
     - name: systemctl restart amavis
       systemd:
