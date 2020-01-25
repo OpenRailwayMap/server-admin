@@ -27,3 +27,6 @@
 
 # spam "investment opportunity"
 220.117.241.232  REJECT too much spam by this client
+
+# AS21100, Green Floid LLC, weight reduction spam from multiple IPs
+195.123.216.0/21 REJECT spam network
