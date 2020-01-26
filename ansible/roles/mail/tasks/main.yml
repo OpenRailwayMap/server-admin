@@ -353,7 +353,19 @@
             line: '{{ item.line }}'
           loop:
             - {'regexp': '^#?site_owner: ', 'line': 'site_owner: info@openrailwaymap.org'}
-              #- {'regexp': '^#?url: postgres://', 'line': 'url: postgres://mailman3@:5432/mailman3'}
+          notify:
+            - systemctl restart mailman3
+
+        - name: 'Mailman 3: set default encoding to utf-8'
+          blockinfile:
+            path: /etc/mailman3/mailman.cfg
+            block: |
+              [language.master]
+              description: English (USA)
+              charset: utf-8
+              enabled: yes
+          notify:
+            - systemctl restart mailman3
 
         - name: Modify /etc/mailman3/mailman-web.py
           replace:
@@ -372,6 +384,8 @@
             - {'regexp': "^#? *X_FRAME_OPTIONS =.[^\n]*$", 'line': "X_FRAME_OPTIONS = 'DENY'"}
             - {'regexp': "^#? *EMAILNAME =.[^\n]*$", 'line': "EMAILNAME = 'openrailwaymap.org'"}
             - {'regexp': "^#?( *)'HOST': '[^']+',[^\n]*$", 'line': "\\1'HOST': '',"}
+          notify:
+            - systemctl restart mailman3-web
 
         - name: Change Postorius site name
           become: yes
@@ -451,6 +465,10 @@
     - name: systemctl restart mailman
       systemd:
         name: mailman
+        state: restarted
+    - name: systemctl restart mailman3
+      systemd:
+        name: mailman3
         state: restarted
     - name: systemctl restart mailman3-web
       systemd:
