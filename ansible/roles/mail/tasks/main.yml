@@ -297,9 +297,16 @@
             cmd: 'debconf-set-selections'
             stdin: "{{ lookup('file', 'mailman3_debconf_settings') }}"
 
-        - name: Install Mailman 3 packages from APT
+        - name: Install packages of Mailman 3 dependencies from APT
           apt:
-            name: [mailman3-full, lynx, postgresql]
+            name: [lynx, postgresql]
+
+        - name: Install our self-build Mailman 3 packages
+          apt:
+            deb: '/root/packages/{{ item }}'
+          loop:
+            - 'mailman3_3.2.1-3_all.deb'
+            - 'mailman3-full_3.2.1-3_all.deb'
 
         - name: Enable Apache module CGI
           apache2_module:

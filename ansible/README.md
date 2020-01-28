@@ -64,7 +64,18 @@ The general order of the playbooks is:
   `tirex-batch --prio 15 map=standard,maxspeed,signals z=0-12 bbox=-180,-80,180,80`
 * website
 
-## Building Dependencies
+## Building Packages
+
+The tile server setup requires a couple of Debian packages which are not available in the Debian repositories.
+You have to build them yourself.
+
+The Mailman 3 setup works with the packages from Debian repositories but lists.openrailwaymap.org
+runs with self-built packages of Mailman 3.2.1-3 which include a couple of patches fixing encoding
+and programming bugs. The Git repository with these packages is available
+[here](https://github.com/fossgis/mailman3-debian). See the
+[changelog](https://github.com/fossgis/mailman3-debian/blob/debian-3.2.1-3/debian/changelog) for
+details.
+
 ### Build mod_tile
 
 ```sh
@@ -114,6 +125,18 @@ carto maxspeed.mm > maxspeed.xml
 carto signals.mm > signals.xml
 cp project.xml maxspeed.xml signals.xml /root/packages`
 ```
+
+### Build Mailman 3
+
+```sh
+sudo apt build-dep mailman3 mailman3-full
+git clone https://github.com/fossgis/mailman3-debian.git
+cd mailman3-debian
+git checkout tags/openrailwaymap/3.2.1-3
+dpkg-buildpackage -us -uc -b
+```
+
+You will find the built packages in the parent directory. Copy them to `/root/packages`.
 
 ## Porting to other Linux distributions
 
