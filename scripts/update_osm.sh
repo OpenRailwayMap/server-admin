@@ -66,45 +66,41 @@ if [ "$TILE_RENDERING" -ne 1 ] && [ "$ROUTING" -ne 1 ]; then
     exit 1
 fi
 
-while true; do
-    echo "updating planet"
-    while /bin/true; do
-        STATUS=0
-        $PYOSMIUM_UP_TO_DATE -v --tmpdir $PLANET_UPDATE_TMP -s 2000 $PLANET_FILE || STATUS=$?
-        if [ "$STATUS" -eq 0 ]; then
-            # updates finished
-            echo "Planet up to date now."
-            break;
-        elif [ "$STATUS" -eq 3 ]; then
-            # 3 is returned if Pyosmium failed to download diff file (e.g. not published yet on download.geofabrik.de) or network issues
-            echo "$PYOSMIUM_UP_TO_DATE returned code $STATUS. Pausing update for $FAILURE_SLEEP_TIME."
-            sleep $FAILURE_SLEEP_TIME
-            break;
-        elif [ "$STATUS" -ne 1 ]; then
-            # 3 is returned if Pyosmium failed to download diff file (e.g. not published yet on download.geofabrik.de)
-            echo "$PYOSMIUM_UP_TO_DATE failed with return code $STATUS"
-            exit 1
-        fi
-        sleep 2s
-    done
-
-    echo "filtering planet"
-    if [ -f "$PLANET_FILTERED" ]; then
-        mv $PLANET_FILTERED $PLANET_FILTERED_OLD
+echo "updating planet"
+while /bin/true; do
+    STATUS=0
+    $PYOSMIUM_UP_TO_DATE -v --tmpdir $PLANET_UPDATE_TMP -s 2000 $PLANET_FILE || STATUS=$?
+    if [ "$STATUS" -eq 0 ]; then
+        # updates finished
+        echo "Planet up to date now."
+        break;
+    elif [ "$STATUS" -eq 3 ]; then
+        # 3 is returned if Pyosmium failed to download diff file (e.g. not published yet on download.geofabrik.de) or network issues
+        echo "$PYOSMIUM_UP_TO_DATE returned code $STATUS. Pausing update for $FAILURE_SLEEP_TIME."
+        sleep $FAILURE_SLEEP_TIME
+        break;
+    elif [ "$STATUS" -ne 1 ]; then
+        # 3 is returned if Pyosmium failed to download diff file (e.g. not published yet on download.geofabrik.de)
+        echo "$PYOSMIUM_UP_TO_DATE failed with return code $STATUS"
+        exit 1
     fi
-    $OSMIUM tags-filter -o $PLANET_FILTERED $PLANET_FILE $OSMIUM_FILTER_EXPR
-
-    if [ "$TILE_RENDERING" = 1 ]; then
-        apply_diff_database
-    fi
-
-    if [ "$ROUTING" = 1 ]; then
-        update_routing_graph
-    fi
-
-    REPLICATION_TIMESTAMP=$($OSMIUM fileinfo -g header.option.osmosis_replication_timestamp $PLANET_FILE)
-    echo "replication timestamp is $REPLICATION_TIMESTAMP"
-    date --date="$REPLICATION_TIMESTAMP" +%s > $TIMESTAMP_PATH
-
-    sleep $SLEEP_TIME
+    sleep 2s
 done
+
+echo "filtering planet"
+if [ -f "$PLANET_FILTERED" ]; then
+    mv $PLANET_FILTERED $PLANET_FILTERED_OLD
+fi
+$OSMIUM tags-filter -o $PLANET_FILTERED $PLANET_FILE $OSMIUM_FILTER_EXPR
+
+if [ "$TILE_RENDERING" = 1 ]; then
+    apply_diff_database
+fi
+
+if [ "$ROUTING" = 1 ]; then
+    update_routing_graph
+fi
+
+REPLICATION_TIMESTAMP=$($OSMIUM fileinfo -g header.option.osmosis_replication_timestamp $PLANET_FILE)
+echo "replication timestamp is $REPLICATION_TIMESTAMP"
+date --date="$REPLICATION_TIMESTAMP" +%s > $TIMESTAMP_PATH
