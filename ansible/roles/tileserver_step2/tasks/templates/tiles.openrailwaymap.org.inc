@@ -5,7 +5,6 @@ ServerAlias a.tiles.openrailwaymap.org
 ServerAlias b.tiles.openrailwaymap.org
 ServerAlias c.tiles.openrailwaymap.org
 ServerAlias tiles.buegelfalte.openrailwaymap.org
-ServerAlias openrailwaymap2019.michreichert.de
 ServerAdmin info@openrailwaymap.org
 
 DocumentRoot /var/www/tiles
