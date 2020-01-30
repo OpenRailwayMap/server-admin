@@ -8,7 +8,7 @@
       path: /nvme/postgresql
       owner: postgres
       group: postgres
-      mode: 0755
+      mode: 0700
       state: directory
     register: postgres_directory
 
