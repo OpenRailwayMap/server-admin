@@ -3,9 +3,31 @@
   remote_user: michael
 
   tasks:
+  - name: Create /nvme/postgresql for fast PostgreSQL tablespace
+    file:
+      path: /nvme/postgresql
+      owner: postgres
+      group: postgres
+      mode: 0755
+      state: directory
+    register: postgres_directory
+
   - name: Install database packages using apt 
     apt:
       name: [postgresql, postgis]
+
+  - name: Start PostgreSQL
+    systemd:
+      name: postgresql
+      state: started
+
+  - name: Create PostgreSQL tablespace on NVME
+    become: yes
+    become_user: postgres
+    postgresql_tablespace:
+      name: nvme
+      owner: postgres
+      location: /nvme/postgresql
 
   - name: Install pyscopg2 because it is a dependency for Ansible's PostgreSQL module
     apt:
@@ -46,6 +68,7 @@
       encoding: "utf-8"
       state: present
       owner: osmimport
+      tablespace: nvme
 
   - name: Create database extension PostGIS and Hstore
     become: true
