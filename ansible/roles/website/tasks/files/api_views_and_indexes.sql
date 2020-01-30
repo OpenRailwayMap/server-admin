@@ -42,6 +42,12 @@ CREATE OR REPLACE VIEW openrailwaymap_api_polygon AS
     FROM planet_osm_polygon
     WHERE railway IS NOT NULL;
 
+CREATE OR REPLACE VIEW openrailwaymap_api_ways AS
+  SELECT
+      id,
+      nodes
+    FROM planet_osm_ways;
+
 CREATE INDEX IF NOT EXISTS planet_osm_point_hstore_gist_idx
   ON planet_osm_point
   USING GIST(get_tags_hstore(railway, name, tags));
