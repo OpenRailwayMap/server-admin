@@ -119,9 +119,9 @@
     git:
       dest: '{{ tileserver_script_dir }}'
       repo: https://github.com/OpenRailwayMap/server-admin.git
-      version: 29e9b5551c977873b438e699219022933a5fc521
+      version: d4d86e919a9cac9d03af225bc1305f272e3c6e19
 
-  - name: Write Systemd Unit file
+  - name: Write Systemd Unit file for update-data
     copy:
       dest: '/etc/systemd/system/update-data.service'
       mode: 0644
@@ -134,7 +134,7 @@
         Requires=postgresql.service tirex-master.service
 
         [Service]
-        Type=simple
+        Type=oneshot
         ExecStart=/bin/bash {{ tileserver_script_dir }}/scripts/update_osm.sh
         User=osmimport
         Group=users
@@ -142,9 +142,25 @@
         StandardError=journal
         SyslogIdentifier=update_osm
         Nice=+1
+    notify:
+      - systemd daemon-reload
+
+  - name: Write Systemd Timer for update-data.timer
+    copy:
+      dest: '/etc/systemd/system/update-data.timer'
+      mode: 0644
+      owner: root
+      group: root
+      content: |
+        [Unit]
+        Description=Update OSM data and apply diff to database
+
+        [Timer]
+        OnCalendar=*-*-* 2,5,7,13,17,20,23:05
+        Unit=update-data.service
 
         [Install]
-        WantedBy=multi-user.target
+        WantedBy=default.target
     notify:
       - systemd daemon-reload
 

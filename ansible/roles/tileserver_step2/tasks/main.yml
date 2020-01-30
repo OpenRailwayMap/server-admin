@@ -257,11 +257,10 @@
       enabled: yes
       state: started
 
-  - name: systemd start update-data.service
+  - name: systemd enable update-data.timer
     systemd:
-      name: update-data
+      name: update-data.timer
       enabled: yes
-      state: started 
 
   - debug: {msg: 'Tirex is ready to render tiles now. Please start bulk-rendering of tiles on zoom levels 0 to 12 using the following command:\ntirex-batch --prio 15 map=standard,maxspeed,signals z=0-12 bbox=-180,-80,180,80'}
 
