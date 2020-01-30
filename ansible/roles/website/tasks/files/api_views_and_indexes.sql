@@ -1,15 +1,16 @@
 -- We have to create the indexes on a function because PostgreSQL does not support indexes on views
-CREATE OR REPLACE FUNCTION get_tags_hstore(railway TEXT, name TEXT, tags HSTORE)
+CREATE OR REPLACE FUNCTION public.get_tags_hstore(railway TEXT, name TEXT, tags HSTORE)
     RETURNS HSTORE AS $$
 BEGIN
+  -- See https://stackoverflow.com/questions/21909417/pgundefinedobject-error-type-hstore-does-not-exist-but-it-does/21910573#21910573
   IF railway IS NOT NULL AND name IS NOT NULL THEN
-    RETURN hstore(ARRAY['railway', 'name'], ARRAY[railway, name]) || tags;
+    RETURN public.hstore(ARRAY['railway'::text, 'name'::text], ARRAY[railway, name]) OPERATOR(public.||) tags;
   END IF;
   IF railway IS NOT NULL THEN
-    RETURN hstore('railway', railway) || tags;
+    RETURN public.hstore('railway'::text, railway) OPERATOR(public.||) tags;
   END IF;
   IF name IS NOT NULL THEN
-    RETURN hstore('name', name) || tags;
+    RETURN public.hstore('name'::text, name) OPERATOR(public.||) tags;
   END IF;
   RETURN tags;
 END;
