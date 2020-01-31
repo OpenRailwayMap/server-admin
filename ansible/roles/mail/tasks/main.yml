@@ -307,6 +307,7 @@
           loop:
             - 'mailman3_3.2.1-3_all.deb'
             - 'mailman3-full_3.2.1-3_all.deb'
+            - 'python3-django-hyperkitty_1.2.2-2_all.deb'
 
         - name: Enable Apache module CGI
           apache2_module:
