@@ -375,6 +375,14 @@
           notify:
             - systemctl restart mailman3
 
+        - name: 'Mailman 3: Disable Gravatar'
+          lineinfile:
+            path: /etc/mailman3/mailman-web.py
+            regexp: '^(# ?)?GRAVATAR_DISABLED = .*$'
+            line: 'GRAVATAR_DISABLED = True'
+          notify:
+            - systemctl restart mailman3-web
+
         - name: Modify /etc/mailman3/mailman-web.py
           replace:
             path: /etc/mailman3/mailman-web.py
