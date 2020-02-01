@@ -405,10 +405,10 @@
 
         - name: Change Postorius site name
           become: yes
-          become_user: www-data
+          become_user: postgres
           postgresql_query:
             db: mailman3web
-            login_user: www-data
+            login_user: postgres
             query: "UPDATE django_site SET domain = 'lists.openrailwaymap.org', name = 'openrailwaymap.org' WHERE domain = 'example.com';"
           notify:
             - systemctl restart mailman3-web
