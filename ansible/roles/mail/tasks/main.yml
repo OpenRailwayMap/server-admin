@@ -306,8 +306,10 @@
             deb: '/root/packages/{{ item }}'
           loop:
             - 'mailman3_3.2.1-3_all.deb'
-            - 'mailman3-full_3.2.1-3_all.deb'
+            - 'python3-django-mailman3_1.3.0-2_all.deb'
             - 'python3-django-hyperkitty_1.2.2-2_all.deb'
+            - 'python3-django-postorius_1.2.4-2_all.deb'
+            - 'mailman3-full_3.2.1-3_all.deb'
 
         - name: Enable Apache module CGI
           apache2_module:
@@ -375,11 +377,30 @@
           notify:
             - systemctl restart mailman3
 
+        - name: 'Hyperkitty/Postorius: set links to imprint and privacy policy'
+          blockinfile:
+            path: /etc/mailman3/mailman-web.py
+            block: |
+              FOOTER_LINKS = [
+                  {
+                      'url': 'https://www.openrailwaymap.org/imprint-en.html',
+                      'text': 'Imprint/Privacy Policy',
+                      'translations': {
+                          'de': 'Impressum/Datenschutzerklärung'
+                      }
+                  },
+              ]
+
+          notify:
+            - systemctl restart mailman3-web
+
         - name: 'Mailman 3: Disable Gravatar'
           lineinfile:
             path: /etc/mailman3/mailman-web.py
-            regexp: '^(# ?)?GRAVATAR_DISABLED = .*$'
-            line: 'GRAVATAR_DISABLED = True'
+            regexp: '{{ item.regexp }}'
+            line: '{{ item.line }}'
+          loop:
+            - {'regexp': '^(# ?)?GRAVATAR_DISABLED = .*$', 'line': 'GRAVATAR_DISABLED = True'}
           notify:
             - systemctl restart mailman3-web
 
