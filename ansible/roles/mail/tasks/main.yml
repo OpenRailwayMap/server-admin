@@ -381,6 +381,7 @@
           blockinfile:
             path: /etc/mailman3/mailman-web.py
             block: |
+              # Footer links
               FOOTER_LINKS = [
                   {
                       'url': 'https://www.openrailwaymap.org/imprint-en.html',
@@ -390,7 +391,6 @@
                       }
                   },
               ]
-
           notify:
             - systemctl restart mailman3-web
 
@@ -421,8 +421,22 @@
             - {'regexp': "^#? *X_FRAME_OPTIONS =.[^\n]*$", 'line': "X_FRAME_OPTIONS = 'DENY'"}
             - {'regexp': "^#? *EMAILNAME =.[^\n]*$", 'line': "EMAILNAME = 'openrailwaymap.org'"}
             - {'regexp': "^#?( *)'HOST': '[^']+',[^\n]*$", 'line': "\\1'HOST': '',"}
+            - {'regexp': "^#?(    +)#? *'allauth.socialaccount.providers.github', *$", 'line': "\\1'allauth.socialaccount.providers.github',"}
           notify:
             - systemctl restart mailman3-web
+
+              #        # It is likely that running a migration is not necessary.
+              #        - name: 'Run django-admin migrate'
+              #          become: yes
+              #          become_user: 'www-data'
+              #          django_manage:
+              #            app_path: '/usr/share/mailman3-web/'
+              #            python_path: '/usr/share/mailman3-web'
+              #            command: 'migrate'
+              #              # settings imports settings_local at the end of the file
+              #            settings: 'settings'
+              #          notify:
+              #            - systemctl restart mailman3-web
 
         - name: Change Postorius site name
           become: yes
