@@ -305,8 +305,9 @@
           apt:
             deb: '/root/packages/{{ item }}'
           loop:
+            - 'python3-django-allauth_0.40.0+ds-3_all.deb'
             - 'mailman3_3.2.1-3_all.deb'
-            - 'python3-django-mailman3_1.3.0-2_all.deb'
+            - 'python3-django-mailman3_1.3.0-3_all.deb'
             - 'python3-django-hyperkitty_1.2.2-2_all.deb'
             - 'python3-django-postorius_1.2.4-2_all.deb'
             - 'mailman3-full_3.2.1-3_all.deb'
@@ -381,6 +382,7 @@
           blockinfile:
             path: /etc/mailman3/mailman-web.py
             block: |
+              INSTALLED_APPS = INSTALLED_APPS + tuple(['allauth.socialaccount.providers.openstreetmap'])
               # Footer links
               FOOTER_LINKS = [
                   {
@@ -424,6 +426,15 @@
             - {'regexp': "^#?(    +)#? *'allauth.socialaccount.providers.github', *$", 'line': "\\1'allauth.socialaccount.providers.github',"}
           notify:
             - systemctl restart mailman3-web
+
+        # The OpenStreetMap logo is not installed because it is not included in the Mailman 3 source code.
+        - name: Copy OpenStreetMap logo
+          copy:
+            src: openstreetmap.png
+            dest: /var/lib/mailman3/web/static/django-mailman3/img/login/
+            mode: 0644
+            owner: root
+            group: root
 
               #        # It is likely that running a migration is not necessary.
               #        - name: 'Run django-admin migrate'
