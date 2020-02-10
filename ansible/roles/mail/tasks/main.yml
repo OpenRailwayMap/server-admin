@@ -471,7 +471,7 @@
           lineinfile:
             path: /etc/mailman3/mailman-hyperkitty.cfg
             regexp: '^base_url: .*$'
-            line: 'base_url: https://127.0.0.1/mailman3/hyperkitty/'
+            line: 'base_url: http://127.0.0.1/mailman3/hyperkitty/'
 
 
 
