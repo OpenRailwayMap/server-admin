@@ -283,11 +283,11 @@
         - debug:
             msg: 'Run "newlist mailman" as root to create a first mailing list, or copy data from old server to /var/lib/mailman/'
 
-        - name: Start Mailman
+        - name: Stop and disable Mailman 2
           systemd:
             name: mailman
-            state: started
-            enabled: yes
+            state: stopped
+            enabled: no
 
     - name: Mailman 3 setup
       when: mail.mailman3
