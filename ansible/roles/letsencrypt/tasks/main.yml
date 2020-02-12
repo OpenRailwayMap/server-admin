@@ -78,7 +78,7 @@
     - name: Create cronjob for SSL certificate renewal
       cron:
         name: 'LetsEncrypt certificate renewal'
-        day: '14'
+        day: '10'
         minute: '34'
         hour: '4'
         job: '/bin/bash /opt/acme-scripts/new_certificate.sh'
