@@ -16,6 +16,30 @@
     #      - osm_carto_views.sql
     #      - get_station_importance.sql
 
+  - name: Create indexes to boost up rendering
+    become: true
+    become_user: postgres
+    postgresql_idx:
+      db: '{{ osm_dbname }}'
+      idxname: '{{ item.name }}'
+      idxtype: gist
+      columns: way
+      cond: '{{ item.where }}'
+      table: '{{ item.table }}'
+    loop:
+      - name: 'openrailwaymap_line_all_but_ab_raz_prop'
+        where: "railway IN ('rail', 'tram', 'light_rail', 'subway', 'narrow_gauge', 'disused', 'construction')"
+        table: planet_osm_line
+      - name: 'openrailwaymap_line_low'
+        where: "railway = 'rail' AND tags->'usage' IN ('main', 'branch') AND tags->'service' IS NULL"
+        table: planet_osm_line
+      - name: 'openrailwaymap_line_med'
+        where: "railway = 'rail' AND tags->'usage' = 'main' AND tags->'service' IS NULL"
+        table: planet_osm_line
+      - name: 'openrailwaymap_electrification_signals'
+        where: "railway = 'signal' AND tags ? 'railway:signal:electricity'"
+        table: planet_osm_line
+
   - name: 'GRANT SELECT ON ALL TABLES IN SCHEMA public TO tirex'
     become: true
     become_user: postgres
