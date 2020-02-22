@@ -14,9 +14,9 @@
 
   - name: Add SSH public key
     authorized_key:
-      user: "{{ item.name }}"
-      key: "{{ item.ssh_public_key }}"
-    loop: "{{ users }}"
+      user: "{{ item.0.name }}"
+      key: "{{ item.1 }}"
+    loop: "{{ users|subelements('ssh_public_keys') }}"
 
   - name: Install sudo
     apt:
