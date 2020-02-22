@@ -38,6 +38,7 @@
       - 'project.xml'
       - 'maxspeed.xml'
       - 'signals.xml'
+      - 'electrification.xml'
     tags:
       - install_map_styles
     notify:
@@ -226,6 +227,7 @@
       - {'stylename': 'standard', 'filename': 'project.xml'}
       - {'stylename': 'maxspeed', 'filename': 'maxspeed.xml'}
       - {'stylename': 'signals', 'filename': 'signals.xml'}
+      - {'stylename': 'electrification', 'filename': 'electrification.xml'}
     notify:
       - systemd reload tirex-backend-manager
       - systemd reload tirex-master
@@ -241,6 +243,7 @@
       - standard
       - maxspeed
       - signals
+      - electrification
     notify:
       - systemd reload tirex-backend-manager
       - systemd reload tirex-master
