@@ -17,6 +17,11 @@
     apt:
       name: [postgresql, postgis]
 
+  - name: Install helpful packages for map style debugging
+    when: tileserver.development_tools
+    apt:
+      name: nik4
+
   - name: Start PostgreSQL
     systemd:
       name: postgresql
