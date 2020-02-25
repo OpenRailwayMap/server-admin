@@ -17,8 +17,10 @@
     # redirect people following links into the somehow correct direction
     RedirectMatch ^/listinfo$ /mailman3
 
-    RewriteEngine On
-    RewriteRule "^/mailman/listinfo/([^/]+)/?$" "/mailman3/postorius/lists/$1.openrailwaymap.org/" [R=302]
+    <Location /mailman>
+        RewriteEngine On
+        RewriteRule "^/mailman/listinfo/([^/]+)/?$" "/mailman3/postorius/lists/$1.openrailwaymap.org/" [R=302]
+    </Location>
     
     ErrorLog {{ apache2_logdir }}/{{ mail.http_hostname }}.error.log
     LogLevel info ssl:warn tile:warn
