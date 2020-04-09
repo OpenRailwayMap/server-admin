@@ -166,7 +166,7 @@
         - name: Make OpenDKIM key readable for user opendkim
           when: opendkim_key_creation.changed
           file:
-            path: '/etc/opendkim/{{ item }}'
+            path: '/etc/opendkim/keys/{{ item }}'
             owner: opendkim
             group: root
             mode: 0600
