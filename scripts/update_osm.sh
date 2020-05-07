@@ -31,6 +31,13 @@ function apply_diff_database {
     # application onto the database succeeded.
     $OSMIUM derive-changes --overwrite -o $DERIVED_DIFF $PLANET_FILTERED_OLD $PLANET_FILTERED
 
+    if [ -f "$LAST_DERIVED_DIFF" ]; then
+        echo "merging with diff produced for the last but unsuccessful update"
+	$OSMIUM merge-changes -s -o "$DERIVED_DIFF_TMP" "$LAST_DERIVED_DIFF" "$DERIVED_DIFF"
+	mv "$DERIVED_DIFF_TMP" "$DERIVED_DIFF"
+	rm "$LAST_DERIVED_DIFF"
+    fi
+
     echo "apply diff"
     if [[ -v "$OSM2PGSQL_FLATNODES" ]]; then
         FLATNODES_OPTION="--flat-node $FLATNODES_FILE"
@@ -42,18 +49,24 @@ function apply_diff_database {
     else
         NUMBER_PROCESSES_OPTION=""
     fi
-    $OSM2PGSQL --append -d $DATABASE_NAME --merc --multi-geometry --hstore --style $OSM2PGSQL_STYLE --tag-transform $OSM2PGSQL_LUA --expire-tiles $EXPIRE_TILES_ZOOM --expire-output $EXPIRE_OUTPUT --expire-bbox-size 30000 --cache 12000 --slim $FLATNODES_OPTION $NUMBER_PROCESSES_OPTION $DERIVED_DIFF
+    OSM2PGSQL_RETURNCODE=0
+    $OSM2PGSQL --append -d $DATABASE_NAME --merc --multi-geometry --hstore --style $OSM2PGSQL_STYLE --tag-transform $OSM2PGSQL_LUA --expire-tiles $EXPIRE_TILES_ZOOM --expire-output $EXPIRE_OUTPUT --expire-bbox-size 30000 --cache 12000 --slim $FLATNODES_OPTION $NUMBER_PROCESSES_OPTION $DERIVED_DIFF || OSM2PGSQL_RETURNCODE=$?
 
-    echo "removing applied diff"
-    rm $DERIVED_DIFF
+    if [ "$OSM2PGSQL_RETURNCODE" -gt 0 ] ;
+        echo "Osm2pgsql failed with return code $OSM2PGSQL_RETURNCODE, storing diff file in $LAST_DERIVED_DIFF"
+        mv "$DERIVED_DIFF" "$LAST_DERIVED_DIFF"
+    else
+        echo "removing applied diff"
+        rm $DERIVED_DIFF
 
-    echo "updating materialized views"
-    psql -v ON_ERROR_STOP=1 --echo-errors -d $DATABASE_NAME -f $MAPSTYLE_DIR/sql/update_station_importance.sql
+        echo "updating materialized views"
+        psql -v ON_ERROR_STOP=1 --echo-errors -d $DATABASE_NAME -f $MAPSTYLE_DIR/sql/update_station_importance.sql
 
-    echo "Expiring up to $(wc -l $EXPIRE_OUTPUT) tiles"
-    $PYTHON $MERGE_TILES -z $EXPIRE_TILES_ZOOM $EXPIRE_OUTPUT | sed -re "s;^([0-9]+)/([0-9]+)/([0-9]+)$;map=$TIREX_MAPS x=\\2 y=\\3 z=\\1;g" | tirex-batch -f exists -p $TIREX_RERENDER_PRIO
-    rm $EXPIRE_OUTPUT
-    echo "Submitted expired tiles to Tirex"
+        echo "Expiring up to $(wc -l $EXPIRE_OUTPUT) tiles"
+        $PYTHON $MERGE_TILES -z $EXPIRE_TILES_ZOOM $EXPIRE_OUTPUT | sed -re "s;^([0-9]+)/([0-9]+)/([0-9]+)$;map=$TIREX_MAPS x=\\2 y=\\3 z=\\1;g" | tirex-batch -f exists -p $TIREX_RERENDER_PRIO
+        rm $EXPIRE_OUTPUT
+        echo "Submitted expired tiles to Tirex"
+    fi
 }
 
 
