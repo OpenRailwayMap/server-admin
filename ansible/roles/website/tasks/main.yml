@@ -38,6 +38,7 @@
     loop:
       - {'regex': '^(\s*"prefix": *")openrailwaymap("\s*,\s*)$', 'replacement': '\1openrailwaymap_api\2'}
       - {'regex': '^(\s*"database": *")openrailwaymap("\s*,\s*)$', 'replacement': '\1gis\2'}
+      - {'regex': '^(\s*"maxPoolSize": *")[^"]+("\s*,\s*)$', 'replacement': '\116\2'}
 
   - name: Create database views and indexes for the API
     become: true

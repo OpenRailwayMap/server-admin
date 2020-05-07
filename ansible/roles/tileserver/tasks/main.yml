@@ -124,7 +124,7 @@
     git:
       dest: '{{ tileserver_script_dir }}'
       repo: https://github.com/OpenRailwayMap/server-admin.git
-      version: d4d86e919a9cac9d03af225bc1305f272e3c6e19
+      version: a77a201cc43faf92f19fda34fb5591d72b961513
 
   - name: Write Systemd Unit file for update-data
     copy:
