@@ -52,7 +52,7 @@ function apply_diff_database {
     OSM2PGSQL_RETURNCODE=0
     $OSM2PGSQL --append -d $DATABASE_NAME --merc --multi-geometry --hstore --style $OSM2PGSQL_STYLE --tag-transform $OSM2PGSQL_LUA --expire-tiles $EXPIRE_TILES_ZOOM --expire-output $EXPIRE_OUTPUT --expire-bbox-size 30000 --cache 12000 --slim $FLATNODES_OPTION $NUMBER_PROCESSES_OPTION $DERIVED_DIFF || OSM2PGSQL_RETURNCODE=$?
 
-    if [ "$OSM2PGSQL_RETURNCODE" -gt 0 ] ;
+    if [ "$OSM2PGSQL_RETURNCODE" -gt 0 ] ; then
         echo "Osm2pgsql failed with return code $OSM2PGSQL_RETURNCODE, storing diff file in $LAST_DERIVED_DIFF"
         mv "$DERIVED_DIFF" "$LAST_DERIVED_DIFF"
     else
