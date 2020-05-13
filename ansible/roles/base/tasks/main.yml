@@ -18,10 +18,17 @@
       key: "{{ item.1 }}"
     loop: "{{ users|subelements('ssh_public_keys') }}"
 
+  - name: Add SSH public keys to root for users with root permissions
+    when: item.0.root
+    authorized_key:
+      user: "root"
+      key: "{{ item.1 }}"
+    loop: "{{ users|subelements('ssh_public_keys') }}"
+
   - name: Install sudo
     apt:
       name: sudo
 
   - name: Install some other utility packages
     apt:
-      name: [htop, screen, time]
+      name: [htop, screen, time, goaccess]
