@@ -20,5 +20,11 @@ ModTileMissingRequestTimeout 90
 ModTileMaxLoadOld 4
 ModTileMaxLoadMissing 8
 
+# Tile throttling for abusers
+ModTileEnableTileThrottling On
+ModTileEnableTileThrottlingXForward 0
+ModTileThrottlingTiles 10000 1
+ModTileThrottlingRenders 128 0.2
+
 ErrorLog /var/log/apache2/tiles.openrailwaymap.org.error.log
 CustomLog /var/log/apache2/tiles.openrailwaymap.org.access.log combined
