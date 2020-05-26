@@ -24,10 +24,10 @@
   - name: Clone Git repository of the website
     git:
       dest: '{{ website_dir }}'
-      repo: https://github.com/Nakaner/OpenRailwayMap.git
+      repo: https://github.com/OpenRailwayMap/OpenRailwayMap.git
       # We need to call it with force:yes because our database layout requires to overwrite api/config.json
       force: yes
-      version: mapcss-converter-python3
+      version: master
 
   - name: 'OpenRailwayMap API: Change database table prefix'
     lineinfile:
