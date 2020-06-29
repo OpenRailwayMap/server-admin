@@ -26,5 +26,12 @@ ModTileEnableTileThrottlingXForward 0
 ModTileThrottlingTiles 10000 1
 ModTileThrottlingRenders 128 0.2
 
+<Location />
+    <RequireAll>
+        Require all granted
+        Require not ip 5.35.80.253
+    </RequireAll>
+</Location>
+
 ErrorLog /var/log/apache2/tiles.openrailwaymap.org.error.log
 CustomLog /var/log/apache2/tiles.openrailwaymap.org.access.log combined
