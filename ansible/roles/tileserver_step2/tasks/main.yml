@@ -59,7 +59,7 @@
       group: root
       mode: 0744
     loop:
-      - 'project.xml'
+      - 'standard.xml'
       - 'maxspeed.xml'
       - 'signals.xml'
       - 'electrification.xml'
@@ -248,7 +248,7 @@
           scalefactor=2.0
           buffersize=50
     loop:
-      - {'stylename': 'standard', 'filename': 'project.xml'}
+      - {'stylename': 'standard', 'filename': 'standard.xml'}
       - {'stylename': 'maxspeed', 'filename': 'maxspeed.xml'}
       - {'stylename': 'signals', 'filename': 'signals.xml'}
       - {'stylename': 'electrification', 'filename': 'electrification.xml'}
