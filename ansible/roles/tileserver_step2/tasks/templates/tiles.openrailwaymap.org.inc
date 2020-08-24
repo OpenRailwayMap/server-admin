@@ -26,6 +26,8 @@ ModTileEnableTileThrottlingXForward 0
 ModTileThrottlingTiles 10000 1
 ModTileThrottlingRenders 128 0.2
 
+Header set Access-Control-Allow-Origin "*"
+
 <Location />
     <RequireAll>
         Require all granted
