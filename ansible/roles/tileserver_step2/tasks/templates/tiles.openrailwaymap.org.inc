@@ -37,5 +37,9 @@ Header set Access-Control-Allow-Origin "*"
     </RequireAll>
 </Location>
 
+RewriteEngine on
+RewriteCond "%{HTTP_USER_AGENT}" "railon.vonatDroid"
+RewriteRule "." "-" [F]
+
 ErrorLog {{ apache2_logdir }}/{{ tileserver.hostname }}.error.log
 CustomLog {{ apache2_logdir }}/{{ tileserver.hostname }}.access.log combined
