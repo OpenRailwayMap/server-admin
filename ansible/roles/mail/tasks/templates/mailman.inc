@@ -52,7 +52,10 @@
 		Require not ip 179.43.128.0/18
 		# AS16276, OVH, not known for good abuse handling, sorry for VPN users using this hoster
 		Require not ip 51.38.0.0/16
+		Require not ip 51.68.212.0/22
+                Require not ip 51.77.148.0/22
 		Require not ip 51.91.0.0/16
+                Require not ip 51.195.100.0/22
                 Require not ip 51.210.0.0/16
 		Require not ip 145.239.0.0/16
 
