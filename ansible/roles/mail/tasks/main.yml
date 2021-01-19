@@ -299,7 +299,7 @@
 
         - name: Install packages of Mailman 3 dependencies from APT
           apt:
-            name: [lynx, postgresql]
+            name: [lynx, postgresql, python3-django, python3-django-captcha]
 
         - name: Install our self-build Mailman 3 packages
           apt:
@@ -382,7 +382,8 @@
           blockinfile:
             path: /etc/mailman3/mailman-web.py
             block: |
-              INSTALLED_APPS = INSTALLED_APPS + tuple(['allauth.socialaccount.providers.openstreetmap'])
+              INSTALLED_APPS = INSTALLED_APPS + tuple(['allauth.socialaccount.providers.openstreetmap', 'captcha'])
+              ACCOUNT_SIGNUP_FORM_CLASS = 'django_mailman3.forms.AllAuthSignupForm'
               # Footer links
               FOOTER_LINKS = [
                   {
