@@ -5,7 +5,7 @@
   tasks:
   - name: Install required packages from APT
     apt:
-      name: [libapache2-mod-php, apache2]
+      name: [libapache2-mod-php, apache2, php-xml]
 
   - name: Create directory for Git repository
     file:

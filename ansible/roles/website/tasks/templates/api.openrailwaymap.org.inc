@@ -11,11 +11,9 @@ Header set Access-Control-Allow-Origin "*"
     Require all granted
 </location>
 
+{% if 'letsencrypt' in group_names %}
 ProxyPass /.well-known !
-Alias "/.well-known/acme-challenge/" "/var/lib/acme/challenges/"
-<location /.well-known/acme-challenge/>
-    Require all granted
-</location>
+{% endif %}
 
 ProxyPreserveHost On
 ProxyPass / http://localhost:9002/

@@ -4,11 +4,6 @@
     ServerAlias {{ host_alias }}
     {% endfor %}
 
-    Alias "/.well-known/acme-challenge/" "/var/lib/acme/challenges/"
-    <location /.well-known/acme-challenge/>
-        Require all granted
-    </location>
-
     <Directory {{ website_dir }}>
         AllowOverride None
     </Directory>

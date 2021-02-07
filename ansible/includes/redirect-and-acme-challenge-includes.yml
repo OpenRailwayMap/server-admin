@@ -17,8 +17,12 @@
       <Directory /var/lib/acme/challenges>
           Require all granted
       </Directory>
+      <location /.well-known/acme-challenge/>
+          Require all granted
+      </location>
   notify:
     - systemd reload apache2
+  when: "'letsencrypt' in group_names"
 
 - name: 'Apache2 redirect 80 → 443: configuration file for inclusion'
   copy:
@@ -33,3 +37,4 @@
       RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
   notify:
     - systemd reload apache2
+  when: "'letsencrypt' in group_names"
