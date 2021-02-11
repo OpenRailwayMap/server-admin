@@ -4,17 +4,17 @@
 
   tasks:
     #TODO handle recreation of existing views if schema changes
-    #  - name: Create database functions and views for the map style
-    #    become: true
-    #    become_user: osmimport
-    #    postgresql_query:
-    #      db: '{{ osm_dbname }}'
-    #      login_user: osmimport
-    #      path_to_script: '{{ cartocss_dir}}/sql/{{ item }}'
-    #    loop:
-    #      - functions.sql
-    #      - osm_carto_views.sql
-    #      - get_station_importance.sql
+  - name: Create database functions and views for the map style
+    become: true
+    become_user: osmimport
+    postgresql_query:
+      db: '{{ osm_dbname }}'
+      login_user: osmimport
+      path_to_script: '{{ cartocss_dir}}/sql/{{ item }}'
+    loop:
+      - functions.sql
+      - osm_carto_views.sql
+      - get_station_importance.sql
 
   - name: Create indexes to boost up rendering
     become: true

@@ -184,7 +184,7 @@
     git:
       dest: '{{ cartocss_dir }}'
       repo: https://github.com/OpenRailwayMap/OpenRailwayMap-CartoCSS.git
-      version: ee70ed8c9ad77541c9a89294946cdec1ea7bf1d1
+      version: dbd054a43fa95eb08574a75e4cd15f2226996a50
 
   - debug: {msg: 'Please build the map styles manually using Carto and run the OSM data import script. Then continue with the playbook for step 2.'}
 
