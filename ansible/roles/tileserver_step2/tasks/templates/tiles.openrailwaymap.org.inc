@@ -17,6 +17,7 @@ AddTileConfig            /standard standard
 AddTileConfig            /maxspeed maxspeed
 AddTileConfig            /signals signals
 AddTileConfig            /electrification electrification
+Redirect permanent       /electrified /electrification
 ModTileRequestTimeout 0
 ModTileMissingRequestTimeout 90
 ModTileMaxLoadOld 4
