@@ -1,14 +1,16 @@
-# destination location of this file: /etc/apache2/sites-available
-
-ServerName tiles.openrailwaymap.org
-ServerAlias a.tiles.openrailwaymap.org
-ServerAlias b.tiles.openrailwaymap.org
-ServerAlias c.tiles.openrailwaymap.org
-ServerAlias tiles.buegelfalte.openrailwaymap.org
+ServerName {{ tileserver.hostname }}
+{% for host_alias in tileserver.hostname_aliases -%}
+ServerAlias {{ host_alias }}
+{% endfor %}
 ServerAdmin info@openrailwaymap.org
 
 DocumentRoot /var/www/tiles
+{% if 'letsencrypt' in group_names %}
 LogLevel info tile:warn ssl:warn
+{% else %}
+LogLevel info tile:warn
+{% endif %}
+
 ModTileRenderdSocketName /var/lib/tirex/modtile.sock
 ModTileTileDir           /var/lib/tirex/tiles
 AddTileConfig            /standard standard
@@ -35,5 +37,5 @@ Header set Access-Control-Allow-Origin "*"
     </RequireAll>
 </Location>
 
-ErrorLog /var/log/apache2/tiles.openrailwaymap.org.error.log
-CustomLog /var/log/apache2/tiles.openrailwaymap.org.access.log combined
+ErrorLog {{ apache2_logdir }}/{{ tileserver.hostname }}.error.log
+CustomLog {{ apache2_logdir }}/{{ tileserver.hostname }}.access.log combined

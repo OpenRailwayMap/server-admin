@@ -74,6 +74,7 @@
       state: present
     notify:
       - systemd restart apache2
+    when: "'letsencrypt' in group_names"
 
   - name: Create /var/www/tiles to avoid a2dismod and a2dissite (and their counterparts) return status code != 0 due to missing document root
     file:
