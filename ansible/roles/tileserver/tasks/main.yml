@@ -3,6 +3,14 @@
   remote_user: michael
 
   tasks:
+  - name: Install database packages using apt
+    apt:
+      name: [postgresql, postgis]
+
+  - name: Install pyscopg2 because it is a dependency for Ansible's PostgreSQL module
+    apt:
+      name: python3-psycopg2
+
   - name: Create /nvme/postgresql for fast PostgreSQL tablespace
     file:
       path: /nvme/postgresql
@@ -11,10 +19,6 @@
       mode: 0700
       state: directory
     register: postgres_directory
-
-  - name: Install database packages using apt 
-    apt:
-      name: [postgresql, postgis]
 
   - name: Install helpful packages for map style debugging
     when: tileserver.development_tools
@@ -33,10 +37,6 @@
       name: nvme
       owner: postgres
       location: /nvme/postgresql
-
-  - name: Install pyscopg2 because it is a dependency for Ansible's PostgreSQL module
-    apt:
-      name: python3-psycopg2
 
   - name: Create system user osmimport
     user:
@@ -81,7 +81,7 @@
     postgresql_ext:
       db: '{{ osm_dbname }}'
       name: '{{ item }}'
-    loop: 
+    loop:
       - 'postgis'
       - 'hstore'
 
@@ -96,7 +96,7 @@
       owner: postgres
       group: postgres
     notify:
-      - systemctl reload postgresql
+      - systemd reload postgresql
 
   - name: Create database user for tile rendering
     become: true
