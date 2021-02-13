@@ -20,5 +20,7 @@ ProxyPass / http://localhost:9002/
 ProxyPassReverse / http://localhost:9002/
 
 ErrorLog {{ apache2_logdir }}/api.openrailwaymap.org.error.log
+{% if 'letsencrypt' in group_names %}
 LogLevel info ssl:warn
+{% endif %}
 CustomLog {{ apache2_logdir }}/api.openrailwaymap.org.access.log combined

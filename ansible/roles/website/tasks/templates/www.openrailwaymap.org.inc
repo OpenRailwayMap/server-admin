@@ -27,7 +27,9 @@
     RewriteRule ^/imprint$ /imprint-en.html [L,R=307]
 
     ErrorLog {{ apache2_logdir }}/{{ website_hostname }}.error.log
+{% if 'letsencrypt' in group_names %}
     LogLevel info ssl:warn
+{% endif %}
     CustomLog {{ apache2_logdir }}/{{ website_hostname }}.access.log combined
 
     DirectoryIndex index.php
