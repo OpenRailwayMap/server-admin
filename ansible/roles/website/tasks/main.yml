@@ -6,7 +6,7 @@
   - name: Install required packages from APT
     apt:
       # package nodejs-legacy is not needed with Debian >= 10 because the nodejs package contains a symlink /usr/bin/nodejs
-      name: [postgresql-common, php-gettext, unzip, zip, python3-pip, npm, nodejs, wget, php-pgsql, libapache2-mod-php, apache2, python3-pil, python3-cairo, python3-ply]
+      name: [postgresql-common, php-gettext, unzip, zip, python3-pip, npm, nodejs, wget, php-pgsql, php-fpm, apache2, python3-pil, python3-cairo, python3-ply]
 
   - name: Install pojson from Pip
     pip:
@@ -32,7 +32,7 @@
   - name: 'OpenRailwayMap API: Change database table prefix'
     lineinfile:
       backrefs: yes
-      path: '{{ website_dir }}/api/config.json' 
+      path: '{{ website_dir }}/api/config.json'
       regexp: '{{ item.regex }}'
       line: '{{ item.replacement }}'
     loop:
@@ -50,12 +50,12 @@
 
   - name: Download and install Leaflet and its plugins
     make:
-      chdir: '{{ website_dir }}' 
+      chdir: '{{ website_dir }}'
       target: install-deps
 
   - name: Build MapCSS styles, JOSM presets and locales
     make:
-      chdir: '{{ website_dir }}/{{ item }}' 
+      chdir: '{{ website_dir }}/{{ item }}'
       target: all
     loop:
       - 'josm-presets'
@@ -68,7 +68,7 @@
     postgresql_ext:
       db: '{{ osm_dbname }}'
       name: '{{ item }}'
-    loop: 
+    loop:
       - 'postgis_topology'
       - 'postgis_sfcgal'
 
@@ -121,7 +121,7 @@
     become: true
     become_user: postgres
     postgresql_privs:
-      role: openrailwaymap 
+      role: openrailwaymap
       type: table
       objs: ALL_IN_SCHEMA
       privs: 'SELECT'
@@ -129,7 +129,7 @@
 
   - name: Change PostgreSQL version in the Systemd unit file of the API
     lineinfile:
-      path: '{{ website_dir }}/api/orm-api.service' 
+      path: '{{ website_dir }}/api/orm-api.service'
       regexp: '{{ item.regex }}'
       line: '{{ item.replacement }}'
     loop:
@@ -139,7 +139,7 @@
   - name: Install Rsyslogd configuration for the API
     become: yes
     make:
-      chdir: '{{ website_dir }}/api' 
+      chdir: '{{ website_dir }}/api'
       target: install-rsyslog
     notify:
       - systemd restart rsyslog
@@ -147,7 +147,7 @@
   - name: Build and install Systemd unit file of the API
     become: yes
     make:
-      chdir: '{{ website_dir }}/api' 
+      chdir: '{{ website_dir }}/api'
       target: install-systemd
     notify:
       - systemd daemon-reload

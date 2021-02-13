@@ -5,7 +5,7 @@
   tasks:
   - name: Install required packages from APT
     apt:
-      name: [libapache2-mod-php, apache2, php-xml]
+      name: [php-fpm, apache2, php-xml]
 
   - name: Create directory for Git repository
     file:
@@ -22,14 +22,22 @@
       force: yes
       version: master
 
-  - name: Enable Apache module php
+  - name: Enable Apache modules for php-fpm
     apache2_module:
       name: '{{ item }}'
       state: present
     loop:
-      - 'php7.3'
+      - 'proxy_fcgi'
+      - 'setenvif'
     notify:
       - systemd restart apache2
+
+  - name: Enable php-fpm
+    shell:
+      cmd: a2enconf php7.3-fpm
+      chdir: /etc/apache2/conf-available
+    notify:
+      - systemd reload apache2
 
   - name: Add blog VirtualHost configuration of Apache
     template:
