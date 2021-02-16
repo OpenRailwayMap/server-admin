@@ -29,10 +29,25 @@
       force: yes
       version: master
 
+  - name: Create directory for API Git repository
+    file:
+      path: '{{ api_dir }}'
+      owner: root
+      group: root
+      state: directory
+
+  - name: Clone Git repository of the API
+    git:
+      dest: '{{ api_dir }}'
+      repo: https://github.com/mmoll/openrailwaymap-node-api.git
+      # We need to call it with force:yes because our database layout requires to overwrite config.json
+      force: yes
+      version: master
+
   - name: 'OpenRailwayMap API: Change database table prefix'
     lineinfile:
       backrefs: yes
-      path: '{{ website_dir }}/api/config.json'
+      path: '{{ api_dir }}/config.json'
       regexp: '{{ item.regex }}'
       line: '{{ item.replacement }}'
     loop:
@@ -129,7 +144,7 @@
 
   - name: Change PostgreSQL version in the Systemd unit file of the API
     lineinfile:
-      path: '{{ website_dir }}/api/orm-api.service'
+      path: '{{ api_dir }}/orm-api.service'
       regexp: '{{ item.regex }}'
       line: '{{ item.replacement }}'
     loop:
@@ -139,7 +154,7 @@
   - name: Install Rsyslogd configuration for the API
     become: yes
     make:
-      chdir: '{{ website_dir }}/api'
+      chdir: '{{ api_dir }}'
       target: install-rsyslog
     notify:
       - systemd restart rsyslog
@@ -147,14 +162,14 @@
   - name: Build and install Systemd unit file of the API
     become: yes
     make:
-      chdir: '{{ website_dir }}/api'
+      chdir: '{{ api_dir }}'
       target: install-systemd
     notify:
       - systemd daemon-reload
 
   - name: 'Install API (npm)'
     npm:
-      path: '{{ website_dir }}/api'
+      path: '{{ api_dir }}'
     notify:
       - systemd restart orm-api
 
