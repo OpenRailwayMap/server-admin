@@ -17,9 +17,6 @@
       <Directory /var/lib/acme/challenges>
           Require all granted
       </Directory>
-      <location /.well-known/acme-challenge/>
-          Require all granted
-      </location>
   notify:
     - systemd reload apache2
   when: "'letsencrypt' in group_names"
