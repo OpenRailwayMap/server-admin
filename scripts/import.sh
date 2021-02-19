@@ -43,6 +43,6 @@ $OSM2PGSQL -d $DATABASE_NAME --merc --multi-geometry --hstore --style $OSM2PGSQL
 
 REPLICATION_TIMESTAMP=$($OSMIUM fileinfo -g header.option.osmosis_replication_timestamp $PLANET_FILE)
 echo "replication timestamp is $REPLICATION_TIMESTAMP"
-echo $REPLICATION_TIMESTAMP > $TIMESTAMP_PATH
+date --date="$REPLICATION_TIMESTAMP" +%s > $TIMESTAMP_PATH
 
 echo "Finished import at $(date), please install mod_tile and Tirex now."
