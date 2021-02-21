@@ -128,12 +128,52 @@ cp project.xml maxspeed.xml signals.xml /root/packages`
 
 ### Build Mailman 3
 
+Our setup of Mailman 3 includes a couple of patches to comply with German
+law, protect users' privacy and bug fixes w.r.t. handling non-ASCII
+characters. This includes customizable links for imprint and privacy
+policy, a disabled Gravatar support. In addition, the signup form has got
+a captcha to prevent subscription spam which harms the reputation of our
+mail server.
+
+Therefore, you have to build some Mailman 3 packages yourself:
+
 ```sh
 sudo apt build-dep mailman3 mailman3-full
 git clone https://github.com/fossgis/mailman3-debian.git
 cd mailman3-debian
 git checkout tags/openrailwaymap/3.2.1-3
 dpkg-buildpackage -us -uc -b
+for PKG_NAME in django-allauth-debian mailman-suite django_mailman3-debian hyperkitty-debian postorius-debian mailman3-debian ; do
+git clone https://github.com/Nakaner/django-allauth-debian.git
+cd django-allauth-debian
+git checkout tags/openrailwaymap/0.40.0+ds-3
+dpkg-buildpackage -us -uc -b -rfakeroot
+cd ..
+git clone https://github.com/Nakaner/mailman-suite.git
+cd mailman-suite
+git checkout tags/openrailwaymap/0+20180916-11
+dpkg-buildpackage -us -uc -b -rfakeroot
+cd ..
+git clone https://github.com/Nakaner/django_mailman3-debian.git
+cd django_mailman3-debian
+git checkout tags/openrailwaymap/1.3.0-4
+dpkg-buildpackage -us -uc -b -rfakeroot
+cd ..
+git clone https://github.com/Nakaner/hyperkitty-debian.git
+cd hyperkitty-debian
+git checkout tags/openrailwaymap/1.2.2-2
+dpkg-buildpackage -us -uc -b -rfakeroot
+cd ..
+git clone https://github.com/Nakaner/postorius-debian.git
+cd postorius-debian
+git checkout tags/openrailwaymap/1.2.4-2
+dpkg-buildpackage -us -uc -b -rfakeroot
+cd ..
+git clone https://github.com/Nakaner/mailman3-debian.git
+cd mailman3-debian
+git checkout tags/openrailwaymap/3.2.1-3
+dpkg-buildpackage -us -uc -b -rfakeroot
+cd ..
 ```
 
 You will find the built packages in the parent directory. Copy them to `/root/packages`.
@@ -145,6 +185,7 @@ If you consider porting this to other Linux distributions, you might have to cha
 * Replace `apache` by `httpd` in a couple of paths and change the location of the Apache configuration files for VirtualHosts.
 * Replace the default location of the document roots (defaults to `/var/www/*` in Debian but other distributions use other paths, e.g. `/srv/http/` on Arch Linux)
 * Change the PostgreSQL version
+* Mailman setup is heavily customized to Debian. This Ansible role is only helpful as a rough guide or for Debian-like distributions.
 
 ## License
 
