@@ -299,7 +299,7 @@
 
         - name: Install packages of Mailman 3 dependencies from APT
           apt:
-            name: [lynx, postgresql, python3-django, python3-django-captcha]
+            name: [lynx, postgresql, python3-django, python3-django-captcha, sox, flite]
 
         - name: Install our self-build Mailman 3 packages
           apt:
@@ -307,10 +307,11 @@
           loop:
             - 'python3-django-allauth_0.40.0+ds-3_all.deb'
             - 'mailman3_3.2.1-3_all.deb'
-            - 'python3-django-mailman3_1.3.0-3_all.deb'
+            - 'python3-django-mailman3_1.3.0-4_all.deb'
             - 'python3-django-hyperkitty_1.2.2-2_all.deb'
             - 'python3-django-postorius_1.2.4-2_all.deb'
             - 'mailman3-full_3.2.1-3_all.deb'
+            - 'mailman3-web_0+20180916-11_all.deb'
 
         - name: Enable Apache module CGI
           apache2_module:
@@ -383,7 +384,10 @@
             path: /etc/mailman3/mailman-web.py
             block: |
               INSTALLED_APPS = INSTALLED_APPS + tuple(['allauth.socialaccount.providers.openstreetmap', 'captcha'])
-              ACCOUNT_SIGNUP_FORM_CLASS = 'django_mailman3.forms.AllAuthSignupForm'
+              ACCOUNT_SIGNUP_FORM_CLASS = 'django_mailman3.forms.CaptchaSignupForm'
+              import shutil
+              CAPTCHA_FLITE_PATH = shutil.which('flite')
+              CAPTCHA_SOX_PATH = shutil.which('sox')
               # Footer links
               FOOTER_LINKS = [
                   {
