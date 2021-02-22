@@ -139,39 +139,32 @@ Therefore, you have to build some Mailman 3 packages yourself:
 
 ```sh
 sudo apt build-dep mailman3 mailman3-full
-git clone https://github.com/fossgis/mailman3-debian.git
+git clone --branch openrailwaymap/3.2.1-3 https://github.com/fossgis/mailman3-debian.git
 cd mailman3-debian
-git checkout tags/openrailwaymap/3.2.1-3
 dpkg-buildpackage -us -uc -b
 for PKG_NAME in django-allauth-debian mailman-suite django_mailman3-debian hyperkitty-debian postorius-debian mailman3-debian ; do
-git clone https://github.com/Nakaner/django-allauth-debian.git
+git clone --branch openrailwaymap/0.40.0+ds-3 https://github.com/Nakaner/django-allauth-debian.git
 cd django-allauth-debian
-git checkout tags/openrailwaymap/0.40.0+ds-3
 dpkg-buildpackage -us -uc -b -rfakeroot
 cd ..
-git clone https://github.com/Nakaner/mailman-suite.git
+git clone --branch openrailwaymap/0+20180916-11 https://github.com/Nakaner/mailman-suite.git
 cd mailman-suite
-git checkout tags/openrailwaymap/0+20180916-11
 dpkg-buildpackage -us -uc -b -rfakeroot
 cd ..
-git clone https://github.com/Nakaner/django_mailman3-debian.git
+git clone --branch openrailwaymap/1.3.0-4 https://github.com/Nakaner/django_mailman3-debian.git
 cd django_mailman3-debian
-git checkout tags/openrailwaymap/1.3.0-4
 dpkg-buildpackage -us -uc -b -rfakeroot
 cd ..
-git clone https://github.com/Nakaner/hyperkitty-debian.git
+git clone --branch openrailwaymap/1.2.2-2 https://github.com/Nakaner/hyperkitty-debian.git
 cd hyperkitty-debian
-git checkout tags/openrailwaymap/1.2.2-2
 dpkg-buildpackage -us -uc -b -rfakeroot
 cd ..
-git clone https://github.com/Nakaner/postorius-debian.git
+git clone --branch openrailwaymap/1.2.4-2 https://github.com/Nakaner/postorius-debian.git
 cd postorius-debian
-git checkout tags/openrailwaymap/1.2.4-2
 dpkg-buildpackage -us -uc -b -rfakeroot
 cd ..
-git clone https://github.com/Nakaner/mailman3-debian.git
+git clone --branch openrailwaymap/3.2.1-3 https://github.com/Nakaner/mailman3-debian.git
 cd mailman3-debian
-git checkout tags/openrailwaymap/3.2.1-3
 dpkg-buildpackage -us -uc -b -rfakeroot
 cd ..
 ```
