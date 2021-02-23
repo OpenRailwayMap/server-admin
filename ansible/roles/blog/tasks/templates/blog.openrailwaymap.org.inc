@@ -9,6 +9,7 @@
     </Directory>
 
     AddType application/json .json
+    ProxyPassMatch "^/(.*\.php)$" "unix:/run/php/php7.3-fpm.sock|fcgi://localhost/var/www/blog/"
 
     ErrorLog {{ apache2_logdir }}/{{ blog.hostname }}.error.log
     LogLevel info
