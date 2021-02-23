@@ -5,7 +5,7 @@
   tasks:
   - name: Install required packages from APT
     apt:
-      name: [libapache2-mod-php, apache2, php-xml]
+      name: [php-fpm, apache2, php-xml]
 
   - name: Create directory for Git repository
     file:
@@ -22,14 +22,47 @@
       force: yes
       version: master
 
-  - name: Enable Apache module php
+  - name: Enable/Disable Apache modules
     apache2_module:
-      name: '{{ item }}'
-      state: present
+      name: '{{ item.name }}'
+      state: '{{ item.state }}'
     loop:
-      - 'php7.3'
+      - name: 'proxy_fcgi'
+        state: 'present'
+      - name: 'setenvif'
+        state: 'present'
+      - name: 'php7.3'
+        state: 'absent'
+      - name: 'mpm_prefork'
+        state: 'absent'
+      - name: 'mpm_event'
+        state: 'present'
     notify:
       - systemd restart apache2
+
+  - name: Enable default configuration for php-fpm
+    shell:
+      cmd: a2enconf php7.3-fpm
+      chdir: /etc/apache2/conf-available
+    notify:
+      - systemd reload apache2
+
+  - name: Configure php-fmp pool
+    replace:
+      path: /etc/php/7.3/fpm/pool.d/www.conf
+      regexp: '{{ item.regexp }}'
+      replace: '{{ item.line }}'
+    loop:
+      - regexp: '^;? *pm\.max_children =.*$'
+        line: 'pm.max_children = 50'
+      - regexp: '^;? *pm\.start_servers =.*$'
+        line: 'pm.start_servers = 6'
+      - regexp: '^;? *pm\.min_spare_servers =.*$'
+        line: 'pm.min_spare_servers = 3'
+      - regexp: '^;? *pm\.max_spare_servers =.*$'
+        line: 'pm.max_spare_servers = 6'
+    notify:
+      - systemd restart php-fpm
 
   - name: Add blog VirtualHost configuration of Apache
     template:
@@ -61,4 +94,8 @@
     - name: systemd restart apache2
       systemd:
         name: apache2
+        state: restarted
+    - name: systemd restart php-fpm
+      systemd:
+        name: php7.3-fpm.service
         state: restarted

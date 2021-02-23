@@ -33,3 +33,4 @@
     CustomLog {{ apache2_logdir }}/{{ website_hostname }}.access.log combined
 
     DirectoryIndex index.php
+    ProxyPassMatch "^/(.*\.php)$" "unix:/run/php/php7.3-fpm.sock|fcgi://localhost/var/www/www.openrailwaymap.org/"
