@@ -139,10 +139,6 @@ Therefore, you have to build some Mailman 3 packages yourself:
 
 ```sh
 sudo apt build-dep mailman3 mailman3-full
-git clone --branch openrailwaymap/3.2.1-3 https://github.com/fossgis/mailman3-debian.git
-cd mailman3-debian
-dpkg-buildpackage -us -uc -b
-for PKG_NAME in django-allauth-debian mailman-suite django_mailman3-debian hyperkitty-debian postorius-debian mailman3-debian ; do
 git clone --branch openrailwaymap/0.40.0+ds-3 https://github.com/Nakaner/django-allauth-debian.git
 cd django-allauth-debian
 dpkg-buildpackage -us -uc -b -rfakeroot
