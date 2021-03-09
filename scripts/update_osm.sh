@@ -56,16 +56,16 @@ function apply_diff_database {
         echo "Osm2pgsql failed with return code $OSM2PGSQL_RETURNCODE, storing diff file in $LAST_DERIVED_DIFF"
         mv "$DERIVED_DIFF" "$LAST_DERIVED_DIFF"
     else
-        echo "removing applied diff"
-        rm $DERIVED_DIFF
-
         echo "updating materialized views"
         psql -v ON_ERROR_STOP=1 --echo-errors -d $DATABASE_NAME -f $MAPSTYLE_DIR/sql/update_station_importance.sql
 
-        echo "Expiring up to $(wc -l $EXPIRE_OUTPUT) tiles"
-        $PYTHON $MERGE_TILES -z $EXPIRE_TILES_ZOOM $EXPIRE_OUTPUT | sed -re "s;^([0-9]+)/([0-9]+)/([0-9]+)$;map=$TIREX_MAPS x=\\2 y=\\3 z=\\1;g" | tirex-batch -f exists -p $TIREX_RERENDER_PRIO
-        rm $EXPIRE_OUTPUT
+	echo "Expiring tiles (You can use tirex-status to inspect the queue)"
+	$PYTHON $(dirname ${0})/expire-tiles-single.py --min $EXPIRE_TILES_ZOOM_MIN --max $EXPIRE_TILES_ZOOM_MAX --db-params "dbname=$DATABASE_NAME" --map standard --map electrification --map signals --map maxspeed $DERIVED_DIFF | \
+            tirex-batch -f exists -p $TIREX_RERENDER_PRIO
         echo "Submitted expired tiles to Tirex"
+
+        echo "removing applied diff"
+        rm $DERIVED_DIFF
     fi
 }
 
