@@ -37,6 +37,8 @@
         state: 'absent'
       - name: 'mpm_event'
         state: 'present'
+      - name: 'http2'
+        state: 'present'
     notify:
       - systemd restart apache2
 
