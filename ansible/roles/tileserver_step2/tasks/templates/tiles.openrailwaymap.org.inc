@@ -41,6 +41,8 @@ Header set Access-Control-Allow-Origin "*"
 RewriteEngine on
 RewriteCond "%{HTTP_USER_AGENT}" "railon.vonatDroid"
 RewriteRule "." "-" [F]
+RewriteCond "%{HTTP_USER_AGENT}" "SynxHealthTest"
+RewriteRule "." "-" [R=429,L]
 
 ErrorLog {{ apache2_logdir }}/{{ tileserver.hostname }}.error.log
 CustomLog {{ apache2_logdir }}/{{ tileserver.hostname }}.access.log combined
