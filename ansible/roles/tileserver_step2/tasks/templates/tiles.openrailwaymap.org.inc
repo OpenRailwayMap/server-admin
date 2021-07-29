@@ -39,10 +39,18 @@ Header set Access-Control-Allow-Origin "*"
 </Location>
 
 RewriteEngine on
+
+# Lacking attribution and high traffic
 RewriteCond "%{HTTP_USER_AGENT}" "railon.vonatDroid"
 RewriteRule "." "-" [F]
-RewriteCond "%{HTTP_USER_AGENT}" "SynxHealthTest"
-RewriteRule "." "-" [R=429,L]
+
+# Generic Android user agent
+RewriteCond "%{HTTP_USER_AGENT}" "^Dalvik/[0-9.]+ \(Linux; U; Android"
+RewriteRule "." "-" [F]
+
+# Monitoring tool doing test requests every second for three map styles, Deutsche Bahn IP
+# RewriteCond "%{HTTP_USER_AGENT}" "SynxHealthTest"
+# RewriteRule "." "-" [R=429,L]
 
 ErrorLog {{ apache2_logdir }}/{{ tileserver.hostname }}.error.log
 CustomLog {{ apache2_logdir }}/{{ tileserver.hostname }}.access.log combined
