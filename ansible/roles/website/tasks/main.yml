@@ -5,8 +5,22 @@
   tasks:
   - name: Install required packages from APT
     apt:
-      # package nodejs-legacy is not needed with Debian >= 10 because the nodejs package contains a symlink /usr/bin/nodejs
-      name: [postgresql-common, locales-all, unzip, zip, python3-pip, npm, nodejs, wget, php-pgsql, php-fpm, apache2, python3-pil, python3-cairo, python3-ply]
+      name:
+        - postgresql-common
+        - locales-all
+        - unzip
+        - zip
+        - python3-pip
+        - npm
+        - nodejs
+        - wget
+        - php-pgsql
+        - php-fpm
+        - apache2
+        - python3-pil
+        - python3-cairo
+        - python3-ply
+        - gettext
 
   - name: Install pojson from Pip
     pip:
