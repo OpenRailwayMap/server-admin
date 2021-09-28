@@ -26,6 +26,9 @@
     RewriteCond %{HTTP:Accept-Language} [,;]en[-,;].*$ [NC]
     RewriteRule ^/imprint$ /imprint-en.html [L,R=307]
 
+    # redirect blog to blog vhost
+    RewriteRule ^/blog(.*)$ https://blog.openrailwaymap.org$1 [R=301,NC,L]
+
     ErrorLog {{ apache2_logdir }}/{{ website_hostname }}.error.log
 {% if 'letsencrypt' in group_names %}
     LogLevel info ssl:warn
