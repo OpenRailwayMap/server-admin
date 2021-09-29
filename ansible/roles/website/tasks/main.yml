@@ -199,6 +199,7 @@
     shell:
       cmd: 'a2ensite {{ item }}'
       chdir: /etc/apache2/sites-available
+      creates: '/etc/apache2/sites-enabled/{{ item }}'
     loop:
       - www.openrailwaymap.org.conf
       - api.openrailwaymap.org.conf

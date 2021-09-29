@@ -1,0 +1,5 @@
+skip_list:
+  - '204' # Lines should be no longer than 160 chars
+  - '208' # File permissions unset or incorrect
+  - '305' # Use shell only when shell functionality is required
+  - '503' # Tasks that run when changed should likely be handlers

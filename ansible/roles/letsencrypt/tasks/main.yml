@@ -64,7 +64,7 @@
         path: '{{ item.path }}'
         type: RSA
       loop:
-        - {'path': '/etc/letsencrypt/{{ssl_domain}}/domain.key', 'group': 'root', 'mode': '600'}
+        - {'path': '/etc/letsencrypt/{{ ssl_domain }}/domain.key', 'group': 'root', 'mode': '600'}
         - {'path': '/var/lib/acme/account.key', 'group': 'acme', 'mode': '640'}
 
     - name: Build configuration for SSL certificate renewal script

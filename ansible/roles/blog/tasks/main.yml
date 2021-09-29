@@ -44,6 +44,7 @@
     shell:
       cmd: a2enconf php7.3-fpm
       chdir: /etc/apache2/conf-available
+      creates: '/etc/apache2/conf-enabled/php7.3-fpm.conf'
     notify:
       - systemd reload apache2
 

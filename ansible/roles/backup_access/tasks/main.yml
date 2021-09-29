@@ -30,7 +30,7 @@
         name: '{{ postgresql_backup_user.username }}'
         db: '{{ item }}'
       with_list: '{{ postgresql_backup_user.databases }}'
-  
+
     - name: 'GRANT SELECT ON ALL TABLES IN SCHEMA public TO {{ postgresql_backup_user.username }}'
       become: true
       become_user: postgres
@@ -41,7 +41,7 @@
         privs: 'SELECT'
         database: '{{ item }}'
       with_list: '{{ postgresql_backup_user.databases }}'
-  
+
     - name: 'GRANT SELECT ON ALL SEQUENCES IN SCHEMA public TO {{ postgresql_backup_user.username }}'
       become: true
       become_user: postgres

@@ -10,7 +10,7 @@
     postgresql_query:
       db: '{{ osm_dbname }}'
       login_user: osmimport
-      path_to_script: '{{ cartocss_dir}}/sql/{{ item }}'
+      path_to_script: '{{ cartocss_dir }}/sql/{{ item }}'
     loop:
       - functions.sql
       - osm_carto_views.sql
@@ -173,6 +173,7 @@
     shell:
       cmd: a2dissite tileserver_site.conf
       chdir: /etc/apache2/sites-available
+      removes: '/etc/apache2/sites-enabled/tileserver_site.conf'
     notify:
       - systemd reload apache2
 
@@ -204,6 +205,7 @@
     shell:
       cmd: a2ensite tiles.openrailwaymap.org.conf
       chdir: /etc/apache2/sites-available
+      creates: '/etc/apache2/sites-enabled/tiles.openrailwaymap.org.conf'
     notify:
       - systemd reload apache2
 
