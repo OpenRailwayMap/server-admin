@@ -271,6 +271,7 @@
             group: '{{ item.group }}'
             recurse: '{{ item.recurse }}'
             state: directory
+            mode: '0755'
           loop:
             - {'path': '/var/lib/mailman/', 'owner': root, 'group': list, recurse: yes}
             - {'path': '/var/lib/mailman/archives/private', 'owner': 'list', 'group': list, recurse: yes}

@@ -22,6 +22,7 @@
         state: directory
         owner: acme
         group: acme
+        mode: '0755'
       loop:
         - '/var/lib/acme'
         - '/var/lib/acme/challenges'
@@ -32,6 +33,7 @@
         state: directory
         owner: acme
         group: root
+        mode: '0755'
 
     - name: Create /opt/acme-scripts
       file:
@@ -39,6 +41,7 @@
         state: directory
         owner: root
         group: root
+        mode: '0755'
 
     - name: Copy special scripts to /opt/acme-scripts
       copy:

@@ -53,6 +53,7 @@
       owner: osmimport
       group: osmimport
       state: directory
+      mode: '0755'
     loop:
       - '{{ flatnodes_dir }}'
       - '{{ tile_expiry_dir }}'
@@ -119,6 +120,7 @@
       owner: root
       group: root
       state: directory
+      mode: '0755'
 
   - name: Clone server-admin repository
     git:
@@ -179,6 +181,7 @@
       owner: root
       group: root
       state: directory
+      mode: '0755'
 
   - name: Clone CartoCSS map style repository
     git:

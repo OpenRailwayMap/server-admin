@@ -20,6 +20,7 @@
       owner: root
       group: root
       state: directory
+      mode: '0755'
 
   - name: Clone Git repository of the website
     git:
