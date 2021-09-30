@@ -80,10 +80,10 @@
       - systemd reload apache2
 
   - name: Enable Apache VirtualHost configuration for API and website
-    when: apache_virtualhost_files.changed
     shell:
       cmd: 'a2ensite blog.openrailwaymap.org.conf'
       chdir: /etc/apache2/sites-available
+      creates: '/etc/apache2/sites-enabled/blog.openrailwaymap.org.conf'
     notify:
       - systemd reload apache2
 

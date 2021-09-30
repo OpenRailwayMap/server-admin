@@ -230,7 +230,8 @@
     shell:
       cmd: a2enconf max_request_workers.conf
       chdir: /etc/apache2/conf-available
-    when: max_request_workers_result.changed
+      creates: '/etc/apache/conf-enabled/max_request_workers.conf'
+    when: apache2.max_request_workers is defined or apache2.min_spare_servers is defined or apache2.max_spare_servers is defined
     notify:
       - systemd reload apache2
 

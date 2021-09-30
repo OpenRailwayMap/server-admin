@@ -9,14 +9,14 @@
   register: map_result
 
 - name: Run postmap if required on virtual_alias_map
-  shell:
+  command:
     cmd: '{{ item.cmd }} hash:{{ item.dest }}'
     chdir: /etc/postfix
-  when: map_result.changed
+  when: map_result.changed # noqa 503
   register: postmap_result
 
 - name: Reload Postfix because postmap was executed
   systemd:
     name: postfix
     state: reloaded
-  when: postmap_result.changed
+  when: postmap_result.changed # noqa 503
