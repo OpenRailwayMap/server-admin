@@ -157,7 +157,7 @@
             - systemctl restart opendkim
 
         - name: Create OpenDKIM key
-          shell:
+          command:
             chdir: /etc/opendkim
             cmd: 'opendkim-genkey --selector=2020 --bits=2048 --directory=keys'
             creates: /etc/opendkim/keys/2020.private
@@ -227,7 +227,7 @@
       when: mail.mailman2
       block:
         - name: 'Create entries in Debconf database for Mailman 2 setup'
-          shell:
+          command:
             cmd: 'debconf-set-selections'
             stdin: |
               mailman mailman/site_languages multiselect en
@@ -293,7 +293,7 @@
       when: mail.mailman3
       block:
         - name: 'Create entries in Debconf database for Mailman 3 setup'
-          shell:
+          command:
             cmd: 'debconf-set-selections'
             stdin: "{{ lookup('file', 'mailman3_debconf_settings') }}"
 
@@ -336,7 +336,7 @@
 
         - name: Enable Apache VirtualHost configuration
           when: apache_conf.changed
-          shell:
+          command:
             cmd: 'a2ensite mailman.conf'
             chdir: /etc/apache2/sites-available
           notify:

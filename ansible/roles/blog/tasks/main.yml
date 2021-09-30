@@ -41,7 +41,7 @@
       - systemd restart apache2
 
   - name: Enable default configuration for php-fpm
-    shell:
+    command:
       cmd: a2enconf php7.3-fpm
       chdir: /etc/apache2/conf-available
       creates: '/etc/apache2/conf-enabled/php7.3-fpm.conf'
@@ -80,7 +80,7 @@
       - systemd reload apache2
 
   - name: Enable Apache VirtualHost configuration for API and website
-    shell:
+    command:
       cmd: 'a2ensite blog.openrailwaymap.org.conf'
       chdir: /etc/apache2/sites-available
       creates: '/etc/apache2/sites-enabled/blog.openrailwaymap.org.conf'

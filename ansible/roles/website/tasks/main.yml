@@ -196,7 +196,7 @@
       - systemd reload apache2
 
   - name: Enable Apache VirtualHost configuration for API and website
-    shell:
+    command:
       cmd: 'a2ensite {{ item }}'
       chdir: /etc/apache2/sites-available
       creates: '/etc/apache2/sites-enabled/{{ item }}'

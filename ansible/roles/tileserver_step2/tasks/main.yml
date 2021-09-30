@@ -170,7 +170,7 @@
       target: all
 
   - name: Deactivate default tileserver page
-    shell:
+    command:
       cmd: a2dissite tileserver_site.conf
       chdir: /etc/apache2/sites-available
       removes: '/etc/apache2/sites-enabled/tileserver_site.conf'
@@ -202,7 +202,7 @@
       - systemd reload apache2
 
   - name: Enable tileserver configuration
-    shell:
+    command:
       cmd: a2ensite tiles.openrailwaymap.org.conf
       chdir: /etc/apache2/sites-available
       creates: '/etc/apache2/sites-enabled/tiles.openrailwaymap.org.conf'
@@ -227,7 +227,7 @@
     when: apache2.max_request_workers is defined or apache2.min_spare_servers is defined or apache2.max_spare_servers is defined
 
   - name: Enable /etc/apache2/conf-available/max_request_workers.conf
-    shell:
+    command:
       cmd: a2enconf max_request_workers.conf
       chdir: /etc/apache2/conf-available
       creates: '/etc/apache/conf-enabled/max_request_workers.conf'

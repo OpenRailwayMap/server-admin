@@ -142,7 +142,7 @@
         register: apache_virtual_host_step
 
       - name: Enable Apache VirtualHost configuration for server-status
-        shell:
+        command:
           cmd: 'a2ensite localhost.conf'
           chdir: /etc/apache2/sites-available
         when: apache_virtual_host_step.changed
