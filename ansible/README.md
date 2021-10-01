@@ -118,12 +118,14 @@ Transpiling the map styles from CartoCSS to Mapnik XML does not require database
 expects the XML files at /root/packages.
 
 ```sh
-git clone https://github.com/OpenRailwayMap/OpenRailwayMap-CartoCSS
+git clone https://github.com/OpenRailwayMap/OpenRailwayMap-CartoCSS.git
 cd OpenRailwayMap-CartoCSS
-carto project.mm > project.xml
-carto maxspeed.mm > maxspeed.xml
-carto signals.mm > signals.xml
-cp project.xml maxspeed.xml signals.xml /root/packages`
+for stylemml in *.mml
+do
+  style=${stylemml%".mml"}
+  carto ${style}.mml > ${style}.xml
+  cp ${style}.xml /root/packages
+done
 ```
 
 ### Build Mailman 3

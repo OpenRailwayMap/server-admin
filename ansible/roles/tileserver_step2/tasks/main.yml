@@ -1,6 +1,13 @@
 # SPDX-License-Identifier: MIT
 - hosts: all
   remote_user: michael
+  vars:
+    styles:
+      - standard
+      - maxspeed
+      - signals
+      - electrification
+      - gauge
 
   tasks:
     #TODO handle recreation of existing views if schema changes
@@ -53,16 +60,12 @@
   - name: Install Mapnik XML style files
     copy:
       remote_src: yes
-      src: '/root/packages/{{ item }}'
+      src: '/root/packages/{{ item }}.xml'
       dest: '{{ cartocss_dir }}'
       owner: root
       group: root
       mode: 0744
-    loop:
-      - 'standard.xml'
-      - 'maxspeed.xml'
-      - 'signals.xml'
-      - 'electrification.xml'
+    loop: "{{ styles }}"
     tags:
       - install_map_styles
     notify:
@@ -234,25 +237,21 @@
 
   - name: Create Tirex configuration for all map styles
     copy:
-      dest: '/etc/tirex/renderer/mapnik/{{ item.stylename }}.conf'
+      dest: '/etc/tirex/renderer/mapnik/{{ item }}.conf'
       owner: root
       group: root
       mode: 0664
       content: |
-          name={{ item.stylename }}
-          tiledir=/var/lib/tirex/tiles/{{ item.stylename }}
+          name={{ item }}
+          tiledir=/var/lib/tirex/tiles/{{ item }}
           minz=0
           maxz=19
-          mapfile={{ cartocss_dir }}/{{ item.filename }}
+          mapfile={{ cartocss_dir }}/{{ item }}.xml
           maxrequests=50
           tilesize=512
           scalefactor=2.0
           buffersize=50
-    loop:
-      - {'stylename': 'standard', 'filename': 'standard.xml'}
-      - {'stylename': 'maxspeed', 'filename': 'maxspeed.xml'}
-      - {'stylename': 'signals', 'filename': 'signals.xml'}
-      - {'stylename': 'electrification', 'filename': 'electrification.xml'}
+    loop: "{{ styles }}"
     notify:
       - systemd reload tirex-backend-manager
       - systemd reload tirex-master
@@ -264,11 +263,7 @@
       group: tirex
       mode: 0755
       state: directory
-    loop:
-      - standard
-      - maxspeed
-      - signals
-      - electrification
+    loop: "{{ styles }}"
     notify:
       - systemd reload tirex-backend-manager
       - systemd reload tirex-master
