@@ -156,7 +156,7 @@
     version: 5571bb913905fba6def4eb194efdc80d4620cc42
 
 - name: Configure demonstration page
-  copy:
+  template:
     src: settings.js
     dest: /var/www/tiles/settings.js
     mode: 0644
@@ -236,25 +236,21 @@
 
 - name: Create Tirex configuration for all map styles
   copy:
-    dest: '/etc/tirex/renderer/mapnik/{{ item.stylename }}.conf'
+    dest: '/etc/tirex/renderer/mapnik/{{ item }}.conf'
     owner: root
     group: root
     mode: 0664
     content: |
-        name={{ item.stylename }}
-        tiledir=/var/lib/tirex/tiles/{{ item.stylename }}
+        name={{ item }}
+        tiledir=/var/lib/tirex/tiles/{{ item }}
         minz=0
         maxz=19
-        mapfile={{ cartocss_dir }}/{{ item.filename }}
+        mapfile={{ cartocss_dir }}/{{ item }}.xml
         maxrequests=50
         tilesize=512
         scalefactor=2.0
         buffersize=50
-  loop:
-    - {'stylename': 'standard', 'filename': 'standard.xml'}
-    - {'stylename': 'maxspeed', 'filename': 'maxspeed.xml'}
-    - {'stylename': 'signals', 'filename': 'signals.xml'}
-    - {'stylename': 'electrification', 'filename': 'electrification.xml'}
+  loop: "{{ tileserver.styles }}"
   notify:
     - systemd reload tirex-backend-manager
     - systemd reload tirex-master
