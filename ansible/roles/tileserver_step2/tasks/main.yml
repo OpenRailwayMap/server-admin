@@ -160,7 +160,7 @@
       version: 5571bb913905fba6def4eb194efdc80d4620cc42
 
   - name: Configure demonstration page
-    copy:
+    template:
       src: settings.js
       dest: /var/www/tiles/settings.js
       mode: 0644

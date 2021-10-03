@@ -250,6 +250,8 @@
           - standard
           - maxspeed
           - signals
+          - electrification
+          - gauge
 
       - name: Configure Tirex plugins
         copy:

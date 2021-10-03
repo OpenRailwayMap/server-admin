@@ -61,7 +61,7 @@ The general order of the playbooks is:
 * Run the data import manually: `sudo -u osmimport import.sh`*
 * tileserver_step2
 * Start bulk rendering of tiles on zoom levels 0 to 12 manually using
-  `tirex-batch --prio 15 map=standard,maxspeed,signals z=0-12 bbox=-180,-80,180,80`
+  `tirex-batch --prio 15 map=standard,maxspeed,signals,electrification,gauge z=0-12 bbox=-180,-80,180,80`
 * website
 
 ## Building Packages
