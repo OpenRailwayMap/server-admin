@@ -35,6 +35,8 @@ Header set Access-Control-Allow-Origin "*"
     <RequireAll>
         Require all granted
         Require not ip 5.35.80.253
+	# Tile scraping 2021-12-28
+        Require not ip 5.166.235.3
     </RequireAll>
 </Location>
 
