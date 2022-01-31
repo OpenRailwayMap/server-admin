@@ -13,4 +13,4 @@ jobs:
         uses: ansible/ansible-lint-action@master
         with:
           override-deps: ansible-lint>=5.3.2
-          targets: "ansible/roles/*/tasks/*.yml ./ansible/*/*.yml ansible/*.yml"
+          targets: "ansible/roles/*/tasks/*.yml ./ansible/group_vars/*.yml ansible/*.yml"
