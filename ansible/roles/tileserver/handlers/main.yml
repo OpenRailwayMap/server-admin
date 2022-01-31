@@ -1,0 +1,7 @@
+- name: systemd daemon-reload
+  systemd:
+    daemon_reload: yes
+- name: systemd reload postgresql
+  systemd:
+    name: postgresql
+    state: reloaded

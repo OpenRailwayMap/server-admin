@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: MIT
 - hosts: all
+  name: Base tasks (user accounts, important packages)
   remote_user: root
+  tags: base
 
   tasks:
   - name: Create user accounts

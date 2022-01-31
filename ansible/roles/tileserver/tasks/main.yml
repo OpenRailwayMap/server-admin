@@ -1,202 +1,187 @@
 # SPDX-License-Identifier: MIT
-- hosts: all
-  remote_user: michael
+- name: Install database packages using apt
+  apt:
+    name: [postgresql, postgis]
 
-  tasks:
-  - name: Install database packages using apt
-    apt:
-      name: [postgresql, postgis]
+- name: Install pyscopg2 because it is a dependency for Ansible's PostgreSQL module
+  apt:
+    name: python3-psycopg2
 
-  - name: Install pyscopg2 because it is a dependency for Ansible's PostgreSQL module
-    apt:
-      name: python3-psycopg2
+- name: Create /nvme/postgresql for fast PostgreSQL tablespace
+  file:
+    path: /nvme/postgresql
+    owner: postgres
+    group: postgres
+    mode: 0700
+    state: directory
+  register: postgres_directory
 
-  - name: Create /nvme/postgresql for fast PostgreSQL tablespace
-    file:
-      path: /nvme/postgresql
-      owner: postgres
-      group: postgres
-      mode: 0700
-      state: directory
-    register: postgres_directory
+- name: Install helpful packages for map style debugging
+  apt:
+    name: nik4
 
-  - name: Install helpful packages for map style debugging
-    when: tileserver.development_tools
-    apt:
-      name: nik4
+- name: Start PostgreSQL
+  systemd:
+    name: postgresql
+    state: started
 
-  - name: Start PostgreSQL
-    systemd:
-      name: postgresql
-      state: started
+- name: Create PostgreSQL tablespace on NVME
+  become: yes
+  become_user: postgres
+  postgresql_tablespace:
+    name: nvme
+    owner: postgres
+    location: /nvme/postgresql
 
-  - name: Create PostgreSQL tablespace on NVME
-    become: yes
-    become_user: postgres
-    postgresql_tablespace:
-      name: nvme
-      owner: postgres
-      location: /nvme/postgresql
+- name: Create system user osmimport
+  user:
+    name: osmimport
+    shell: '/usr/sbin/nologin'
+    home: '{{ osm_data_dir }}'
+    comment: 'OSM data import user'
+    password: '*'
+    system: yes
 
-  - name: Create system user osmimport
-    user:
-      name: osmimport
-      shell: '/usr/sbin/nologin'
-      home: '{{ osm_data_dir }}'
-      comment: 'OSM data import user'
-      password: '*'
-      system: yes
+- name: Create directories for flatnodes file, tile expiry list and temporary directory for planet update
+  file:
+    path: '{{ item }}'
+    owner: osmimport
+    group: osmimport
+    state: directory
+    mode: '0755'
+  loop:
+    - '{{ flatnodes_dir }}'
+    - '{{ tile_expiry_dir }}'
+    - '{{ osm_data_dir }}/tmp'
 
-  - name: Create directories for flatnodes file, tile expiry list and temporary directory for planet update
-    file:
-      path: '{{ item }}'
-      owner: osmimport
-      group: osmimport
-      state: directory
-      mode: '0755'
-    loop:
-      - '{{ flatnodes_dir }}'
-      - '{{ tile_expiry_dir }}'
-      - '{{ osm_data_dir }}/tmp'
+- name: Create database user osmimport for data import and update
+  become: true
+  become_user: postgres
+  postgresql_user:
+    name: osmimport
+    db: 'postgres'
 
-  - name: Create database user osmimport for data import and update
-    become: true
-    become_user: postgres
-    postgresql_user:
-      name: osmimport
-      db: 'postgres'
+- name: 'Create database {{ osm_dbname }}'
+  become: true
+  become_user: postgres
+  postgresql_db:
+    name: '{{ osm_dbname }}'
+    encoding: "utf-8"
+    state: present
+    owner: osmimport
+    tablespace: nvme
 
-  - name: 'Create database {{ osm_dbname }}'
-    become: true
-    become_user: postgres
-    postgresql_db:
-      name: '{{ osm_dbname }}'
-      encoding: "utf-8"
-      state: present
-      owner: osmimport
-      tablespace: nvme
+- name: Create database extension PostGIS and Hstore
+  become: true
+  become_user: postgres
+  postgresql_ext:
+    db: '{{ osm_dbname }}'
+    name: '{{ item }}'
+  loop:
+    - 'postgis'
+    - 'hstore'
 
-  - name: Create database extension PostGIS and Hstore
-    become: true
-    become_user: postgres
-    postgresql_ext:
-      db: '{{ osm_dbname }}'
-      name: '{{ item }}'
-    loop:
-      - 'postgis'
-      - 'hstore'
+- name: Enable peer authentication for PostgreSQL
+  postgresql_pg_hba:
+    contype: local
+    databases: '{{ osm_dbname }}'
+    dest: '/etc/postgresql/{{ pg_version }}/main/pg_hba.conf'
+    method: peer
+    users: 'osmimport,tirex'
+    mode: 0640
+    owner: postgres
+    group: postgres
+  notify:
+    - systemd reload postgresql
 
-  - name: Enable peer authentication for PostgreSQL
-    postgresql_pg_hba:
-      contype: local
-      databases: '{{ osm_dbname }}'
-      dest: '/etc/postgresql/{{ pg_version }}/main/pg_hba.conf'
-      method: peer
-      users: 'osmimport,tirex'
-      mode: 0640
-      owner: postgres
-      group: postgres
-    notify:
-      - systemd reload postgresql
+- name: Create database user for tile rendering
+  become: true
+  become_user: postgres
+  postgresql_user:
+    name: tirex
+    db: '{{ osm_dbname }}'
 
-  - name: Create database user for tile rendering
-    become: true
-    become_user: postgres
-    postgresql_user:
-      name: tirex
-      db: '{{ osm_dbname }}'
+- name: Install Osm2pgsql
+  apt:
+    name: osm2pgsql
 
-  - name: Install Osm2pgsql
-    apt:
-      name: osm2pgsql
+- name: Install other tile serving dependencies from Apt
+  apt:
+    name: wget,gdal-bin,nodejs,npm,libwww-perl,mapnik-utils,bc,git,osmium-tool,python3-pyosmium,pyosmium
 
-  - name: Install other tile serving dependencies from Apt
-    apt:
-      name: wget,gdal-bin,nodejs,npm,libwww-perl,mapnik-utils,bc,git,osmium-tool,python3-pyosmium,pyosmium
+- name: Create directory for server-admin repository
+  file:
+    path: '{{ tileserver_script_dir }}'
+    owner: root
+    group: root
+    state: directory
+    mode: '0755'
 
-  - name: Create directory for server-admin repository
-    file:
-      path: '{{ tileserver_script_dir }}'
-      owner: root
-      group: root
-      state: directory
-      mode: '0755'
+- name: Clone server-admin repository
+  git:
+    dest: '{{ tileserver_script_dir }}'
+    repo: https://github.com/OpenRailwayMap/server-admin.git
+    version: 9ee06654bb2a9442e1dc71116f8fd958fd5066cd
 
-  - name: Clone server-admin repository
-    git:
-      dest: '{{ tileserver_script_dir }}'
-      repo: https://github.com/OpenRailwayMap/server-admin.git
-      version: 9ee06654bb2a9442e1dc71116f8fd958fd5066cd
+- name: Write Systemd Unit file for update-data
+  copy:
+    dest: '/etc/systemd/system/update-data.service'
+    mode: 0644
+    owner: root
+    group: root
+    content: |
+      [Unit]
+      Description=Update OSM data and apply diff to database
+      After=syslog.target network.target
+      Requires=postgresql.service tirex-master.service
 
-  - name: Write Systemd Unit file for update-data
-    copy:
-      dest: '/etc/systemd/system/update-data.service'
-      mode: 0644
-      owner: root
-      group: root
-      content: |
-        [Unit]
-        Description=Update OSM data and apply diff to database
-        After=syslog.target network.target
-        Requires=postgresql.service tirex-master.service
+      [Service]
+      Type=oneshot
+      ExecStart=/bin/bash {{ tileserver_script_dir }}/scripts/update_osm.sh
+      User=osmimport
+      Group=users
+      StandardOutput=journal
+      StandardError=journal
+      SyslogIdentifier=update_osm
+      Nice=+1
+  notify:
+    - systemd daemon-reload
 
-        [Service]
-        Type=oneshot
-        ExecStart=/bin/bash {{ tileserver_script_dir }}/scripts/update_osm.sh
-        User=osmimport
-        Group=users
-        StandardOutput=journal
-        StandardError=journal
-        SyslogIdentifier=update_osm
-        Nice=+1
-    notify:
-      - systemd daemon-reload
+- name: Write Systemd Timer for update-data.timer
+  copy:
+    dest: '/etc/systemd/system/update-data.timer'
+    mode: 0644
+    owner: root
+    group: root
+    content: |
+      [Unit]
+      Description=Update OSM data and apply diff to database
 
-  - name: Write Systemd Timer for update-data.timer
-    copy:
-      dest: '/etc/systemd/system/update-data.timer'
-      mode: 0644
-      owner: root
-      group: root
-      content: |
-        [Unit]
-        Description=Update OSM data and apply diff to database
+      [Timer]
+      OnCalendar=*-*-* 2,5,7,13,17,20,23:05
+      Unit=update-data.service
 
-        [Timer]
-        OnCalendar=*-*-* 2,5,7,13,17,20,23:05
-        Unit=update-data.service
+      [Install]
+      WantedBy=default.target
+  notify:
+    - systemd daemon-reload
 
-        [Install]
-        WantedBy=default.target
-    notify:
-      - systemd daemon-reload
+- name: Install fonts for map style
+  apt:
+    name: [fonts-noto-cjk, fonts-noto-hinted, fonts-noto-unhinted, fonts-hanazono, ttf-unifont]
 
-  - name: Install fonts for map style
-    apt:
-      name: [fonts-noto-cjk, fonts-noto-hinted, fonts-noto-unhinted, fonts-hanazono, ttf-unifont]
+- name: Create directory for CartoCSS map style repository
+  file:
+    path: '{{ cartocss_dir }}'
+    owner: root
+    group: root
+    state: directory
+    mode: '0755'
 
-  - name: Create directory for CartoCSS map style repository
-    file:
-      path: '{{ cartocss_dir }}'
-      owner: root
-      group: root
-      state: directory
-      mode: '0755'
+- name: Clone CartoCSS map style repository
+  git:
+    dest: '{{ cartocss_dir }}'
+    repo: https://github.com/OpenRailwayMap/OpenRailwayMap-CartoCSS.git
+    version: dbd054a43fa95eb08574a75e4cd15f2226996a50
 
-  - name: Clone CartoCSS map style repository
-    git:
-      dest: '{{ cartocss_dir }}'
-      repo: https://github.com/OpenRailwayMap/OpenRailwayMap-CartoCSS.git
-      version: dbd054a43fa95eb08574a75e4cd15f2226996a50
-
-  - debug: {msg: 'Please build the map styles manually using Carto and run the OSM data import script. Then continue with the playbook for step 2.'}
-
-
-  handlers:
-    - name: systemd daemon-reload
-      systemd:
-        daemon_reload: yes
-    - name: systemd reload postgresql
-      systemd:
-        name: postgresql
-        state: reloaded
+- debug: {msg: 'Please build the map styles manually using Carto and run the OSM data import script. Then continue with the playbook for step 2.'}

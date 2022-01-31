@@ -1,0 +1,4 @@
+# SPDX-License-Identifier: MIT
+- import_playbook: openrailwaymap/base.yml
+- import_playbook: openrailwaymap/security.yml
+- import_playbook: openrailwaymap/openrailwaymap.yml
