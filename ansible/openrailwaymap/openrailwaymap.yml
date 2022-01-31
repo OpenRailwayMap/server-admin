@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: MIT
+- hosts: all
+  become: yes
+  remote_user: root
+  tags: tileserver
+  tasks:
+    - import_role:
+        name: roles/tileserver
+      vars: 
+        osm_dbname: gis
+        tileserver_script_dir: /opt/OpenRailwayMap-server-config
+        cartocss_dir: /opt/OpenRailwayMap-CartoCSS
+        osm_data_dir: /nvme/data/planet
+        flatnodes_dir: /nvme/data/flatnodes
+        tile_expiry_dir: /nvme/data/tileupdate
