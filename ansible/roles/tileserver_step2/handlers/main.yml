@@ -1,0 +1,24 @@
+- name: systemd restart tirex-backend-manager
+  systemd:
+    name: tirex-backend-manager
+    state: restarted
+- name: systemd restart tirex-master
+  systemd:
+    name: tirex-master
+    state: restarted
+- name: systemd reload tirex-backend-manager
+  systemd:
+    name: tirex-backend-manager
+    state: reloaded
+- name: systemd reload tirex-master
+  systemd:
+    name: tirex-master
+    state: reloaded
+- name: systemd reload apache2
+  systemd:
+    name: apache2
+    state: reloaded
+- name: systemd restart apache2
+  systemd:
+    name: apache2
+    state: restarted

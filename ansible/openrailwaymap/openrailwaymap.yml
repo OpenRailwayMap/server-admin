@@ -13,3 +13,10 @@
         osm_data_dir: /nvme/data/planet
         flatnodes_dir: /nvme/data/flatnodes
         tile_expiry_dir: /nvme/data/tileupdate
+    - import_role:
+        name: roles/tileserver_step2
+      vars: 
+        osm_dbname: gis
+        cartocss_dir: /opt/OpenRailwayMap-CartoCSS
+        apache2:
+          max_request_workers: 350
