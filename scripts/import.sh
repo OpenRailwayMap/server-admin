@@ -28,7 +28,7 @@ source $(dirname ${0})/config.cfg
 echo "Started processing at $(date)"
 
 echo "[1/3] Downloading planet file"
-wget -O $PLANET_FILE https://planet.openstreetmap.org/pbf/planet-latest.osm.pbf
+wget --progress=dot:giga --no-clobber -O $PLANET_FILE https://planet.openstreetmap.org/pbf/planet-latest.osm.pbf
 
 echo "[2/3] Filtering data extract"
 $OSMIUM tags-filter -o $PLANET_FILTERED $PLANET_FILE $OSMIUM_FILTER_EXPR

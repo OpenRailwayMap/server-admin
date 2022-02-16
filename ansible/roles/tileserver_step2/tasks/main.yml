@@ -1,325 +1,295 @@
 # SPDX-License-Identifier: MIT
-- hosts: all
-  remote_user: michael
+# TODO handle recreation of existing views if schema changes
+- name: Create database functions and views for the map style
+  become: true
+  become_user: osmimport
+  postgresql_query:
+    db: '{{ osm_dbname }}'
+    login_user: osmimport
+    path_to_script: '{{ cartocss_dir }}/sql/{{ item }}'
+    as_single_query: yes
+  loop:
+    - functions.sql
+    - osm_carto_views.sql
+    - get_station_importance.sql
 
-  tasks:
-    #TODO handle recreation of existing views if schema changes
-  - name: Create database functions and views for the map style
-    become: true
-    become_user: osmimport
-    postgresql_query:
-      db: '{{ osm_dbname }}'
-      login_user: osmimport
-      path_to_script: '{{ cartocss_dir }}/sql/{{ item }}'
-    loop:
-      - functions.sql
-      - osm_carto_views.sql
-      - get_station_importance.sql
+- name: Create indexes to boost up rendering
+  become: true
+  become_user: postgres
+  postgresql_idx:
+    db: '{{ osm_dbname }}'
+    idxname: '{{ item.name }}'
+    idxtype: gist
+    columns: way
+    cond: '{{ item.where }}'
+    table: '{{ item.table }}'
+  loop:
+    - name: 'openrailwaymap_line_all_but_ab_raz_prop'
+      where: "railway IN ('rail', 'tram', 'light_rail', 'subway', 'narrow_gauge', 'disused', 'construction')"
+      table: planet_osm_line
+    - name: 'openrailwaymap_line_low'
+      where: "railway = 'rail' AND tags->'usage' IN ('main', 'branch') AND tags->'service' IS NULL"
+      table: planet_osm_line
+    - name: 'openrailwaymap_line_med'
+      where: "railway = 'rail' AND tags->'usage' = 'main' AND tags->'service' IS NULL"
+      table: planet_osm_line
+    - name: 'openrailwaymap_electrification_signals'
+      where: "railway = 'signal' AND tags ? 'railway:signal:electricity'"
+      table: planet_osm_line
 
-  - name: Create indexes to boost up rendering
-    become: true
-    become_user: postgres
-    postgresql_idx:
-      db: '{{ osm_dbname }}'
-      idxname: '{{ item.name }}'
-      idxtype: gist
-      columns: way
-      cond: '{{ item.where }}'
-      table: '{{ item.table }}'
-    loop:
-      - name: 'openrailwaymap_line_all_but_ab_raz_prop'
-        where: "railway IN ('rail', 'tram', 'light_rail', 'subway', 'narrow_gauge', 'disused', 'construction')"
-        table: planet_osm_line
-      - name: 'openrailwaymap_line_low'
-        where: "railway = 'rail' AND tags->'usage' IN ('main', 'branch') AND tags->'service' IS NULL"
-        table: planet_osm_line
-      - name: 'openrailwaymap_line_med'
-        where: "railway = 'rail' AND tags->'usage' = 'main' AND tags->'service' IS NULL"
-        table: planet_osm_line
-      - name: 'openrailwaymap_electrification_signals'
-        where: "railway = 'signal' AND tags ? 'railway:signal:electricity'"
-        table: planet_osm_line
+- name: 'GRANT SELECT ON ALL TABLES IN SCHEMA public TO tirex'
+  become: true
+  become_user: postgres
+  postgresql_privs:
+    role: tirex
+    type: table
+    objs: ALL_IN_SCHEMA
+    privs: 'SELECT'
+    database: '{{ osm_dbname }}'
 
-  - name: 'GRANT SELECT ON ALL TABLES IN SCHEMA public TO tirex'
-    become: true
-    become_user: postgres
-    postgresql_privs:
-      role: tirex
-      type: table
-      objs: ALL_IN_SCHEMA
-      privs: 'SELECT'
-      database: '{{ osm_dbname }}'
+- name: Install Mapnik XML style files
+  copy:
+    remote_src: yes
+    src: '/root/packages/{{ item }}'
+    dest: '{{ cartocss_dir }}'
+    owner: root
+    group: root
+    mode: 0744
+  loop:
+    - 'standard.xml'
+    - 'maxspeed.xml'
+    - 'signals.xml'
+    - 'electrification.xml'
+  tags:
+    - install_map_styles
+  notify:
+    - systemd reload tirex-backend-manager
 
-  - name: Install Mapnik XML style files
-    copy:
-      remote_src: yes
-      src: '/root/packages/{{ item }}'
-      dest: '{{ cartocss_dir }}'
-      owner: root
-      group: root
-      mode: 0744
-    loop:
-      - 'standard.xml'
-      - 'maxspeed.xml'
-      - 'signals.xml'
-      - 'electrification.xml'
-    tags:
-      - install_map_styles
-    notify:
-      - systemd reload tirex-backend-manager
+- name: Enable Apache module mod_ssl
+  apache2_module:
+    name: ssl
+    state: present
+  notify:
+    - systemd restart apache2
+  when: "'letsencrypt' in group_names"
 
-  - name: Enable Apache module mod_ssl
-    apache2_module:
-      name: ssl
-      state: present
-    notify:
-      - systemd restart apache2
-    when: "'letsencrypt' in group_names"
+- name: Create /var/www/tiles to avoid a2dismod and a2dissite (and their counterparts) return status code != 0 due to missing document root
+  file:
+    path: '/var/www/tiles'
+    owner: root
+    group: root
+    state: directory
+    mode: '0755'
 
-  - name: Create /var/www/tiles to avoid a2dismod and a2dissite (and their counterparts) return status code != 0 due to missing document root
-    file:
-      path: '/var/www/tiles'
-      owner: root
-      group: root
-      state: directory
-      mode: '0755'
+- name: Install mod_tile, tirex-core and tirex-backend-mapnik
+  apt:
+    deb: '{{ item }}'
+  loop:
+    - '/root/packages/tirex-core_0.6.1_amd64.deb'
+    - '/root/packages/tirex-backend-mapnik_0.6.1_amd64.deb'
+    - '/root/packages/libapache2-mod-tile_0.4-12~precise2_amd64.deb'
+  notify:
+    # Tirex and Apache are only restarted/reloaded if Ansible had to change something on the remote host (i.e. we install new package)
+    - systemd reload apache2
+    - systemd restart tirex-backend-manager
+    - systemd restart tirex-master
 
-  - name: Install mod_tile, tirex-core and tirex-backend-mapnik
-    apt:
-      deb: '{{ item }}'
-    loop:
-      - '/root/packages/tirex-core_0.6.1_amd64.deb'
-      - '/root/packages/tirex-backend-mapnik_0.6.1_amd64.deb'
-      - '/root/packages/libapache2-mod-tile_0.4-12~precise2_amd64.deb'
-    notify:
-      # Tirex and Apache are only restarted/reloaded if Ansible had to change something on the remote host (i.e. we install new package)
-      - systemd reload apache2
-      - systemd restart tirex-backend-manager
-      - systemd restart tirex-master
+- name: Create symlink from /var/lib/mod_tile to /var/lib/tirex/tiles
+  file:
+    src: /var/lib/tirex/tiles
+    path: /var/lib/mod_tile
+    state: link
+    force: yes
 
-  - name: Create symlink from /var/lib/mod_tile to /var/lib/tirex/tiles
-    file:
-      src: /var/lib/tirex/tiles
-      path: /var/lib/mod_tile
-      state: link
-      force: yes
+- name: Ensure that /var/lib/tirex/tiles is owned by tirex:tirex
+  file:
+    path: /var/lib/tirex/tiles
+    state: directory
+    owner: tirex
+    group: tirex
+    mode: 0755
+  notify:
+    - systemd reload tirex-backend-manager
+    - systemd reload tirex-master
 
-  - name: Ensure that /var/lib/tirex/tiles is owned by tirex:tirex
-    file:
-      path: /var/lib/tirex/tiles
-      state: directory
-      owner: tirex
-      group: tirex
-      mode: 0755
-    notify:
-      - systemd reload tirex-backend-manager
-      - systemd reload tirex-master
+- name: 'Tirex: Change Mapnik plugin path in /etc/tirex/renderer/mapnik.conf'
+  lineinfile:
+    path: /etc/tirex/renderer/mapnik.conf
+    regexp: '^plugindir=/usr/lib/mapnik/(3\.0/)?input/?$'
+    line: 'plugindir=/usr/lib/mapnik/3.0/input/'
+  notify:
+    - systemd reload tirex-backend-manager
 
-  - name: 'Tirex: Change Mapnik plugin path in /etc/tirex/renderer/mapnik.conf'
-    lineinfile:
-      path: /etc/tirex/renderer/mapnik.conf
-      regexp: '^plugindir=/usr/lib/mapnik/(3\.0/)?input/?$'
-      line: 'plugindir=/usr/lib/mapnik/3.0/input/'
-    notify:
-      - systemd reload tirex-backend-manager
+- name: 'Tirex: Set syslog facility to daemon in /etc/tirex/renderer/mapnik.conf'
+  lineinfile:
+    path: /etc/tirex/renderer/mapnik.conf
+    regexp: '^#? *syslog_facility=daemon$'
+    line: 'syslog_facility=daemon'
+  notify:
+    - systemd reload tirex-backend-manager
 
-  - name: 'Tirex: Set syslog facility to daemon in /etc/tirex/renderer/mapnik.conf'
-    lineinfile:
-      path: /etc/tirex/renderer/mapnik.conf
-      regexp: '^#? *syslog_facility=daemon$'
-      line: 'syslog_facility=daemon'
-    notify:
-      - systemd reload tirex-backend-manager
+- name: 'Tirex: Change Mapnik fonts path in /etc/tirex/renderer/mapnik.conf'
+  lineinfile:
+    path: /etc/tirex/renderer/mapnik.conf
+    regexp: '^fontdir=/usr/(lib/mapnik|share)/fonts/?$'
+    line: 'fontdir=/usr/share/fonts/'
+  notify:
+    - systemd reload tirex-backend-manager
 
-  - name: 'Tirex: Change Mapnik fonts path in /etc/tirex/renderer/mapnik.conf'
-    lineinfile:
-      path: /etc/tirex/renderer/mapnik.conf
-      regexp: '^fontdir=/usr/(lib/mapnik|share)/fonts/?$'
-      line: 'fontdir=/usr/share/fonts/'
-    notify:
-      - systemd reload tirex-backend-manager
+- name: 'Tirex: Enable recursive search in Mapnik fonts path in /etc/tirex/renderer/mapnik.conf'
+  lineinfile:
+    path: /etc/tirex/renderer/mapnik.conf
+    regexp: '^#?fontdir_recurse='
+    line: 'fontdir_recurse=1'
+  notify:
+    - systemd reload tirex-backend-manager
 
-  - name: 'Tirex: Enable recursive search in Mapnik fonts path in /etc/tirex/renderer/mapnik.conf'
-    lineinfile:
-      path: /etc/tirex/renderer/mapnik.conf
-      regexp: '^#?fontdir_recurse='
-      line: 'fontdir_recurse=1'
-    notify:
-      - systemd reload tirex-backend-manager
+- name: Install gawk
+  apt:
+    name: gawk
 
-  - name: Install gawk
-    apt:
-      name: gawk
+- name: Clone tileserver demonstration page repository
+  git:
+    dest: /var/www/tiles
+    repo: https://github.com/geofabrik/tileserver-demosite.git
+    version: 5571bb913905fba6def4eb194efdc80d4620cc42
 
-  - name: Clone tileserver demonstration page repository
-    git:
-      dest: /var/www/tiles
-      repo: https://github.com/geofabrik/tileserver-demosite.git
-      version: 5571bb913905fba6def4eb194efdc80d4620cc42
+- name: Configure demonstration page
+  copy:
+    src: settings.js
+    dest: /var/www/tiles/settings.js
+    mode: 0644
+    owner: root
+    group: root
 
-  - name: Configure demonstration page
-    copy:
-      src: settings.js
-      dest: /var/www/tiles/settings.js
-      mode: 0644
-      owner: root
-      group: root
+- name: Build demonstration page
+  make:
+    chdir: /var/www/tiles
+    target: all
 
-  - name: Build demonstration page
-    make:
-      chdir: /var/www/tiles
-      target: all
+- name: Deactivate default tileserver page
+  command:
+    cmd: a2dissite tileserver_site.conf
+    chdir: /etc/apache2/sites-available
+    removes: '/etc/apache2/sites-enabled/tileserver_site.conf'
+  notify:
+    - systemd reload apache2
 
-  - name: Deactivate default tileserver page
-    command:
-      cmd: a2dissite tileserver_site.conf
-      chdir: /etc/apache2/sites-available
-      removes: '/etc/apache2/sites-enabled/tileserver_site.conf'
-    notify:
-      - systemd reload apache2
+- name: Ensure that files included by Apache configuration are present
+  when: "'letsencrypt' in group_names"
+  include_tasks: '../../../includes/redirect-and-acme-challenge-includes.yml'
 
-  - name: Ensure that files included by Apache configuration are present
-    when: "'letsencrypt' in group_names"
-    include_tasks: '../../../includes/redirect-and-acme-challenge-includes.yml'
+- name: Add tileserver configuration for Apache virtualhost
+  template:
+    src: '{{ item }}'
+    dest: '/etc/apache2/sites-available/{{ item }}'
+    owner: root
+    group: root
+    mode: 0664
+  loop:
+    - 'tiles.openrailwaymap.org.inc'
+    - 'tiles.openrailwaymap.org.conf'
+  notify:
+    - systemd reload apache2
 
-  - name: Add tileserver configuration for Apache virtualhost
-    template:
-      src: '{{ item }}'
-      dest: '/etc/apache2/sites-available/{{ item }}'
-      owner: root
-      group: root
-      mode: 0664
-    loop:
-      - 'tiles.openrailwaymap.org.inc'
-      - 'tiles.openrailwaymap.org.conf'
-    notify:
-      - systemd reload apache2
+- name: Enable mod_tile because it is enabled by its Debian package by default
+  apache2_module:
+    name: tile
+    state: present
+  notify:
+    - systemd reload apache2
 
-  - name: Enable mod_tile because it is enabled by its Debian package by default
-    apache2_module:
-      name: tile
-      state: present
-    notify:
-      - systemd reload apache2
+- name: Enable tileserver configuration
+  command:
+    cmd: a2ensite tiles.openrailwaymap.org.conf
+    chdir: /etc/apache2/sites-available
+    creates: '/etc/apache2/sites-enabled/tiles.openrailwaymap.org.conf'
+  notify:
+    - systemd reload apache2
 
-  - name: Enable tileserver configuration
-    command:
-      cmd: a2ensite tiles.openrailwaymap.org.conf
-      chdir: /etc/apache2/sites-available
-      creates: '/etc/apache2/sites-enabled/tiles.openrailwaymap.org.conf'
-    notify:
-      - systemd reload apache2
+- name: Configure Apache2 MaxRequestWorkers
+  copy:
+    dest: /etc/apache2/conf-available/max_request_workers.conf
+    owner: root
+    group: root
+    mode: 0644
+    content: |
+      {% if apache2.max_request_workers is defined %}
+      <IfModule mpm_event_module>
+          # MaxRequestWorkers could be raised up to ServerLimit * ThreadsPerChild (defaults to 16 and 25)
+          # For default of ThreadsPerChild, see mods-available/mpm_event.conf
+          MaxRequestWorkers {{ apache2.max_request_workers }}
+      </IfModule>
+      {% endif %}
+  register: max_request_workers_result
+  when: apache2.max_request_workers is defined or apache2.min_spare_servers is defined or apache2.max_spare_servers is defined
 
-  - name: Configure Apache2 MaxRequestWorkers
-    copy:
-      dest: /etc/apache2/conf-available/max_request_workers.conf
-      owner: root
-      group: root
-      mode: 0644
-      content: |
-        {% if apache2.max_request_workers is defined %}
-        <IfModule mpm_event_module>
-            # MaxRequestWorkers could be raised up to ServerLimit * ThreadsPerChild (defaults to 16 and 25)
-            # For default of ThreadsPerChild, see mods-available/mpm_event.conf
-            MaxRequestWorkers {{ apache2.max_request_workers }}
-        </IfModule>
-        {% endif %}
-    register: max_request_workers_result
-    when: apache2.max_request_workers is defined or apache2.min_spare_servers is defined or apache2.max_spare_servers is defined
+- name: Enable /etc/apache2/conf-available/max_request_workers.conf
+  command:
+    cmd: a2enconf max_request_workers.conf
+    chdir: /etc/apache2/conf-available
+    creates: '/etc/apache/conf-enabled/max_request_workers.conf'
+  when: apache2.max_request_workers is defined or apache2.min_spare_servers is defined or apache2.max_spare_servers is defined
+  notify:
+    - systemd reload apache2
 
-  - name: Enable /etc/apache2/conf-available/max_request_workers.conf
-    command:
-      cmd: a2enconf max_request_workers.conf
-      chdir: /etc/apache2/conf-available
-      creates: '/etc/apache/conf-enabled/max_request_workers.conf'
-    when: apache2.max_request_workers is defined or apache2.min_spare_servers is defined or apache2.max_spare_servers is defined
-    notify:
-      - systemd reload apache2
+- name: Create Tirex configuration for all map styles
+  copy:
+    dest: '/etc/tirex/renderer/mapnik/{{ item.stylename }}.conf'
+    owner: root
+    group: root
+    mode: 0664
+    content: |
+        name={{ item.stylename }}
+        tiledir=/var/lib/tirex/tiles/{{ item.stylename }}
+        minz=0
+        maxz=19
+        mapfile={{ cartocss_dir }}/{{ item.filename }}
+        maxrequests=50
+        tilesize=512
+        scalefactor=2.0
+        buffersize=50
+  loop:
+    - {'stylename': 'standard', 'filename': 'standard.xml'}
+    - {'stylename': 'maxspeed', 'filename': 'maxspeed.xml'}
+    - {'stylename': 'signals', 'filename': 'signals.xml'}
+    - {'stylename': 'electrification', 'filename': 'electrification.xml'}
+  notify:
+    - systemd reload tirex-backend-manager
+    - systemd reload tirex-master
 
-  - name: Create Tirex configuration for all map styles
-    copy:
-      dest: '/etc/tirex/renderer/mapnik/{{ item.stylename }}.conf'
-      owner: root
-      group: root
-      mode: 0664
-      content: |
-          name={{ item.stylename }}
-          tiledir=/var/lib/tirex/tiles/{{ item.stylename }}
-          minz=0
-          maxz=19
-          mapfile={{ cartocss_dir }}/{{ item.filename }}
-          maxrequests=50
-          tilesize=512
-          scalefactor=2.0
-          buffersize=50
-    loop:
-      - {'stylename': 'standard', 'filename': 'standard.xml'}
-      - {'stylename': 'maxspeed', 'filename': 'maxspeed.xml'}
-      - {'stylename': 'signals', 'filename': 'signals.xml'}
-      - {'stylename': 'electrification', 'filename': 'electrification.xml'}
-    notify:
-      - systemd reload tirex-backend-manager
-      - systemd reload tirex-master
+- name: Create tile cache directories
+  file:
+    path: '/var/lib/tirex/tiles/{{ item }}'
+    owner: tirex
+    group: tirex
+    mode: 0755
+    state: directory
+  loop:
+    - standard
+    - maxspeed
+    - signals
+    - electrification
+  notify:
+    - systemd reload tirex-backend-manager
+    - systemd reload tirex-master
 
-  - name: Create tile cache directories
-    file:
-      path: '/var/lib/tirex/tiles/{{ item }}'
-      owner: tirex
-      group: tirex
-      mode: 0755
-      state: directory
-    loop:
-      - standard
-      - maxspeed
-      - signals
-      - electrification
-    notify:
-      - systemd reload tirex-backend-manager
-      - systemd reload tirex-master
+- name: systemd start and enable tirex-backend-manager.service
+  systemd:
+    name: tirex-backend-manager
+    enabled: yes
+    state: started
 
-  - name: systemd start and enable tirex-backend-manager.service
-    systemd:
-      name: tirex-backend-manager
-      enabled: yes
-      state: started
+- name: systemd start and enable tirex-master.service
+  systemd:
+    name: tirex-backend-manager
+    enabled: yes
+    state: started
 
-  - name: systemd start and enable tirex-master.service
-    systemd:
-      name: tirex-backend-manager
-      enabled: yes
-      state: started
+- name: systemd enable update-data.timer
+  systemd:
+    name: update-data.timer
+    enabled: yes
+    state: started
 
-  - name: systemd enable update-data.timer
-    systemd:
-      name: update-data.timer
-      enabled: yes
-      state: started
-
-  - debug: {msg: 'Tirex is ready to render tiles now. Please start bulk-rendering of tiles on zoom levels 0 to 12 using the following command:\ntirex-batch --prio 15 map=standard,maxspeed,signals z=0-12 bbox=-180,-80,180,80'}
-
-
-  handlers:
-    - name: systemd restart tirex-backend-manager
-      systemd:
-        name: tirex-backend-manager
-        state: restarted
-    - name: systemd restart tirex-master
-      systemd:
-        name: tirex-master
-        state: restarted
-    - name: systemd reload tirex-backend-manager
-      systemd:
-        name: tirex-backend-manager
-        state: reloaded
-    - name: systemd reload tirex-master
-      systemd:
-        name: tirex-master
-        state: reloaded
-    - name: systemd reload apache2
-      systemd:
-        name: apache2
-        state: reloaded
-    - name: systemd restart apache2
-      systemd:
-        name: apache2
-        state: restarted
+- debug: {msg: 'Tirex is ready to render tiles now. Please start bulk-rendering of tiles on zoom levels 0 to 12 using the following command:\ntirex-batch --prio 15 map=standard,maxspeed,signals z=0-12 bbox=-180,-80,180,80'}

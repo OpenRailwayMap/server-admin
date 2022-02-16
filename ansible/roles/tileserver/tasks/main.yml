@@ -184,4 +184,24 @@
     repo: https://github.com/OpenRailwayMap/OpenRailwayMap-CartoCSS.git
     version: dbd054a43fa95eb08574a75e4cd15f2226996a50
 
-- debug: {msg: 'Please build the map styles manually using Carto and run the OSM data import script. Then continue with the playbook for step 2.'}
+- name: Run import
+  command: "systemd-run osm_import {{ tileserver_script_dir }}/scripts/import_osm.sh"
+  args:
+    creates: /nvme/data/timestamp.txt
+
+- name: 'Is the import (still) running?'
+  command: systemctl is-active osm_import
+  failed_when: False
+  changed_when: False
+  ignore_errors: True
+  register: osm_import
+  check_mode: no
+
+- name: 'Does the timestamp file exist already'
+  stat:
+    path: '/nvme/data/timestamp.txt'
+  register: timestamp_file
+
+- set_fact:
+    download_status: "{% if not osm_import or (osm_import.stdout == 'inactive' and timestamp_file.stat.exists) %}complete{% else %}incomplete{% endif %}"
+  check_mode: no
