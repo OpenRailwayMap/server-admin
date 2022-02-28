@@ -20,3 +20,21 @@
         cartocss_dir: /opt/OpenRailwayMap-CartoCSS
         apache2:
           max_request_workers: 350
+
+- hosts: all
+  become: yes
+  remote_user: root
+  tags: website
+  tasks:
+    - import_role:
+        name: roles/website
+      vars:
+        osm_dbname: gis
+        website_hostname: www.openrailwaymap.org
+        website_hostname_aliases:
+          - openrailwaymap.org
+          - buegelfalte.openrailwaymap.org
+        api_hostname: api.openrailwaymap.org
+        website_dir: /var/www/www.openrailwaymap.org
+        openrailwaymap_user_home: /srv/openrailwaymap
+        apache2_logdir: /var/log/apache2
