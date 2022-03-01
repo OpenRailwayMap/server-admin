@@ -1,4 +1,6 @@
 ---
+ansible_python_interpreter: python3
+apache2_logdir: /var/log/apache2
 users:
   - name: michael
     root: true

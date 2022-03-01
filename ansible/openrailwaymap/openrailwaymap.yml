@@ -20,6 +20,14 @@
         cartocss_dir: /opt/OpenRailwayMap-CartoCSS
         apache2:
           max_request_workers: 350
+        tileserver:
+          development_tools: true
+          hostname: tiles.openrailwaymap.org
+          hostname_aliases:
+            - a.tiles.openrailwaymap.org
+            - b.tiles.openrailwaymap.org
+            - c.tiles.openrailwaymap.org
+            - tiles.buegelfalte.openrailwaymap.org
 
 - hosts: all
   become: yes
@@ -37,4 +45,3 @@
         api_hostname: api.openrailwaymap.org
         website_dir: /var/www/www.openrailwaymap.org
         openrailwaymap_user_home: /srv/openrailwaymap
-        apache2_logdir: /var/log/apache2
