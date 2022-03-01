@@ -1,1 +1,4 @@
 pg_version: 11
+letsencrypt: true
+website_hostname_aliases:
+  - buegelfalte.openrailwaymap.org
