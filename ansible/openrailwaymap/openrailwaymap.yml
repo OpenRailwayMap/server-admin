@@ -94,3 +94,12 @@
         postgresql_backup_user:
           username: backup
           databases: ['mailman3web', 'mailman3']
+
+- hosts: munin_nodes
+  become: yes
+  remote_user: root
+  tags: munin
+  tasks:
+    - import_role:
+        name: roles/munin_node
+      vars:
