@@ -46,6 +46,19 @@
         website_dir: /var/www/www.openrailwaymap.org
         openrailwaymap_user_home: /srv/openrailwaymap
 
+- hosts: blog
+  become: yes
+  remote_user: root
+  tags: blog
+  tasks:
+    - import_role:
+        name: roles/blog
+      vars:
+        blog:
+          hostname: blog.openrailwaymap.org
+          hostname_aliases: []
+          directory: /var/www/blog
+
 - hosts: mailservers
   become: yes
   remote_user: root
