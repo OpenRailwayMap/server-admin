@@ -58,3 +58,18 @@
           mailman2: false
           mailman3: true
           http_hostname: lists.openrailwaymap.org
+
+- hosts: backup_access
+  become: yes
+  remote_user: root
+  tags: backup
+  tasks:
+    - import_role:
+        name: roles/backup_access
+      vars:
+        backup_user_in_groups:
+          - user: backup
+            groups: list
+        postgresql_backup_user:
+          username: backup
+          databases: ['mailman3web', 'mailman3']

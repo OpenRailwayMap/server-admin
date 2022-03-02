@@ -1,0 +1,4 @@
+backup_access:
+  users:
+    - name: backup
+      ssh_pub_key: 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIF3sWWFwMR6Goke3hCYs0p2b/xQSUUmqNCV0gP86qocW access backups'

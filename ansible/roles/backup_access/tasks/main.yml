@@ -1,54 +1,51 @@
 # SPDX-License-Identifier: MIT
-- hosts: all
-  remote_user: michael
-  tasks:
-    - name: Create users to make backup
-      user:
-        name: '{{ item.name }}'
-        shell: /bin/bash
-        comment: 'user making backups, logs in from remote machines'
-        password: '*'
-      with_list: '{{ backup_access.users }}'
+- name: Create users to make backup
+  user:
+    name: '{{ item.name }}'
+    shell: /bin/bash
+    comment: 'user making backups, logs in from remote machines'
+    password: '*'
+  with_list: '{{ backup_access.users }}'
 
-    - name: Add SSH public key for backup users
-      authorized_key:
-        user: backup
-        key: '{{ item.ssh_pub_key }}'
-      with_list: '{{ backup_access.users }}'
+- name: Add SSH public key for backup users
+  authorized_key:
+    user: backup
+    key: '{{ item.ssh_pub_key }}'
+  with_list: '{{ backup_access.users }}'
 
-    - name: Add backup access users to their groups
-      user:
-        append: yes
-        name: '{{ item.user }}'
-        groups: '{{ item.groups }}'
-      with_list: '{{ backup_user_in_groups }}'
+- name: Add backup access users to their groups
+  user:
+    append: yes
+    name: '{{ item.user }}'
+    groups: '{{ item.groups }}'
+  with_list: '{{ backup_user_in_groups }}'
 
-    - name: 'Create database user {{ postgresql_backup_user.username }}'
-      become: true
-      become_user: postgres
-      postgresql_user:
-        name: '{{ postgresql_backup_user.username }}'
-        db: '{{ item }}'
-      with_list: '{{ postgresql_backup_user.databases }}'
+- name: 'Create database user {{ postgresql_backup_user.username }}'
+  become: true
+  become_user: postgres
+  postgresql_user:
+    name: '{{ postgresql_backup_user.username }}'
+    db: '{{ item }}'
+  with_list: '{{ postgresql_backup_user.databases }}'
 
-    - name: 'GRANT SELECT ON ALL TABLES IN SCHEMA public TO {{ postgresql_backup_user.username }}'
-      become: true
-      become_user: postgres
-      postgresql_privs:
-        role: '{{ postgresql_backup_user.username }}'
-        type: table
-        objs: ALL_IN_SCHEMA
-        privs: 'SELECT'
-        database: '{{ item }}'
-      with_list: '{{ postgresql_backup_user.databases }}'
+- name: 'GRANT SELECT ON ALL TABLES IN SCHEMA public TO {{ postgresql_backup_user.username }}'
+  become: true
+  become_user: postgres
+  postgresql_privs:
+    role: '{{ postgresql_backup_user.username }}'
+    type: table
+    objs: ALL_IN_SCHEMA
+    privs: 'SELECT'
+    database: '{{ item }}'
+  with_list: '{{ postgresql_backup_user.databases }}'
 
-    - name: 'GRANT SELECT ON ALL SEQUENCES IN SCHEMA public TO {{ postgresql_backup_user.username }}'
-      become: true
-      become_user: postgres
-      postgresql_privs:
-        role: '{{ postgresql_backup_user.username }}'
-        type: sequence
-        objs: ALL_IN_SCHEMA
-        privs: 'SELECT'
-        database: '{{ item }}'
-      with_list: '{{ postgresql_backup_user.databases }}'
+- name: 'GRANT SELECT ON ALL SEQUENCES IN SCHEMA public TO {{ postgresql_backup_user.username }}'
+  become: true
+  become_user: postgres
+  postgresql_privs:
+    role: '{{ postgresql_backup_user.username }}'
+    type: sequence
+    objs: ALL_IN_SCHEMA
+    privs: 'SELECT'
+    database: '{{ item }}'
+  with_list: '{{ postgresql_backup_user.databases }}'
