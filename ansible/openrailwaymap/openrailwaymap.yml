@@ -1,4 +1,12 @@
 # SPDX-License-Identifier: MIT
+- hosts: letsencrypt
+  become: yes
+  remote_user: root
+  tags: letsencrypt
+  tasks:
+    - import_role:
+        name: roles/letsencrypt
+
 - hosts: all
   become: yes
   remote_user: root

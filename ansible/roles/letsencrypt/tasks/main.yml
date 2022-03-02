@@ -1,99 +1,121 @@
 # SPDX-License-Identifier: MIT
-- hosts: all
-  remote_user: michael
+- name: Install acme-tiny
+  apt:
+    name: [acme-tiny, apache2, openssl]
 
-  tasks:
-    - name: Install acme-tiny
-      apt:
-        name: acme-tiny
+- name: Create user and group acme for acme-tiny
+  user:
+    name: acme
+    shell: '/usr/sbin/nologin'
+    home: '/var/lib/acme'
+    comment: 'user to renew LetsEncrypt certificates'
+    password: '*'
+    system: yes
 
-    - name: Create user and group acme for acme-tiny
-      user:
-        name: acme
-        shell: '/usr/sbin/nologin'
-        home: '/var/lib/acme'
-        comment: 'user to renew LetsEncrypt certificates'
-        password: '*'
-        system: yes
+- name: Create /var/lib/acme/challenges
+  file:
+    path: '{{ item }}'
+    state: directory
+    owner: acme
+    group: acme
+    mode: '0755'
+  loop:
+    - '/var/lib/acme'
+    - '/var/lib/acme/challenges'
 
-    - name: Create /var/lib/acme/challenges
-      file:
-        path: '{{ item }}'
-        state: directory
-        owner: acme
-        group: acme
-        mode: '0755'
-      loop:
-        - '/var/lib/acme'
-        - '/var/lib/acme/challenges'
+- name: 'Create /etc/letsencrypt/{{ letsencrypt.ssl_domain }}'
+  file:
+    path: '/etc/letsencrypt/{{ letsencrypt.ssl_domain }}'
+    state: directory
+    owner: acme
+    group: root
+    mode: '0755'
 
-    - name: 'Create /etc/letsencrypt/{{ ssl_domain }}'
-      file:
-        path: '/etc/letsencrypt/{{ ssl_domain }}'
-        state: directory
-        owner: acme
-        group: root
-        mode: '0755'
+- name: Create /opt/acme-scripts
+  file:
+    path: /opt/acme-scripts
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
 
-    - name: Create /opt/acme-scripts
-      file:
-        path: /opt/acme-scripts
-        state: directory
-        owner: root
-        group: root
-        mode: '0755'
+- name: Copy special scripts to /opt/acme-scripts
+  copy:
+    src: '{{ item }}'
+    dest: '/opt/acme-scripts/{{ item }}'
+    mode: 0755
+    owner: root
+    group: root
+  loop:
+    - 'new_certificate.sh'
+    - 'request_certificate.sh'
 
-    - name: Copy special scripts to /opt/acme-scripts
-      copy:
-        src: '{{ item }}'
-        dest: '/opt/acme-scripts/{{ item }}'
-        mode: 0755
-        owner: root
-        group: root
-      loop:
-        - 'new_certificate.sh'
-        - 'request_certificate.sh'
+- name: Create group for access to private key
+  group:
+    name: sslkeyaccess
+    state: present
 
-    - name: Create group for access to private key
-      group:
-        name: sslkeyaccess
-        state: present
+- name: Generate domain key
+  openssl_privatekey:
+    mode: '{{ item.mode }}'
+    owner: root
+    group: '{{ item.group }}'
+    path: '{{ item.path }}'
+    type: RSA
+  loop:
+    - {'path': '/etc/letsencrypt/{{ letsencrypt.ssl_domain }}/domain.key', 'group': 'root', 'mode': '600'}
+    - {'path': '/var/lib/acme/account.key', 'group': 'acme', 'mode': '640'}
 
-    - name: Generate domain key
-      openssl_privatekey:
-        mode: '{{ item.mode }}'
-        owner: root
-        group: '{{ item.group }}'
-        path: '{{ item.path }}'
-        type: RSA
-      loop:
-        - {'path': '/etc/letsencrypt/{{ ssl_domain }}/domain.key', 'group': 'root', 'mode': '600'}
-        - {'path': '/var/lib/acme/account.key', 'group': 'acme', 'mode': '640'}
+- name: Build configuration for SSL certificate renewal script
+  template:
+    src: 'acme_scripts_config.cfg'
+    dest: '/opt/acme-scripts/acme_scripts_config.cfg'
+    mode: 0755
+    owner: root
+    group: root
 
-    - name: Build configuration for SSL certificate renewal script
-      template:
-        src: 'acme_scripts_config.cfg'
-        dest: '/opt/acme-scripts/acme_scripts_config.cfg'
-        mode: 0755
-        owner: root
-        group: root
+- name: Create cronjob for SSL certificate renewal
+  cron:
+    name: 'LetsEncrypt certificate renewal'
+    day: '10'
+    minute: '34'
+    hour: '4'
+    job: '/bin/bash /opt/acme-scripts/new_certificate.sh'
+    user: root
 
-    - name: Create cronjob for SSL certificate renewal
-      cron:
-        name: 'LetsEncrypt certificate renewal'
-        day: '10'
-        minute: '34'
-        hour: '4'
-        job: '/bin/bash /opt/acme-scripts/new_certificate.sh'
-        user: root
+- name: 'Write letsencrypt-acme-challenges.conf'
+  copy:
+    dest: '/etc/apache2/conf-available/letsencrypt-acme-challenges.conf'
+    owner: root
+    group: root
+    mode: 0644
+    content: |
+      Alias "/.well-known/acme-challenge/" "/var/lib/acme/challenges/"
+      <Directory /var/lib/acme/challenges>
+          Require all granted
+      </Directory>
+  notify:
+    - systemd reload apache2
 
+- name: 'Enable letsencrypt-acme-challenges.conf'
+  command:
+    cmd: 'a2enconf letsencrypt-acme-challenges.conf'
+    creates: '/etc/apache2/conf-enabled/letsencrypt-acme-challenges.conf'
+    chdir: '/etc/apache2/conf-available'
+  notify:
+    - systemd reload apache2
 
-  handlers:
-    - name: systemd reload apache2
-      systemd:
-        name: apache2
-        state: reloaded
-    - name: systemd restart apache2
-      systemd:
-        name: apache2
-        state: restarted
+- name: systemctl start apache2
+  systemd:
+    name: apache2
+    state: started
+
+- name: 'Flush handlers before retrieving the certificate for the first time'
+  meta: flush_handlers
+
+- name: Fetch a certificate for the first time
+  check_mode: no
+  become_user: root
+  command:
+    cmd: '/bin/bash /opt/acme-scripts/new_certificate.sh'
+    creates: '/etc/letsencrypt/{{ letsencrypt.ssl_domain }}/{{ letsencrypt.ssl_domain }}-chain.crt'

@@ -42,7 +42,7 @@ mv $LETSENCRYPT_ETC/$DOMAIN-chain.crt.new $LETSENCRYPT_ETC/$DOMAIN-chain.crt
 # reload services
 echo "Reload Apache and Postfix"
 systemctl reload apache2.service
-systemctl reload postfix.service
+systemctl reload postfix.service || echo "WARNING: Postfix reload failed, maybe not installed."
 
 # clean up
 rm $ACME_WORKING_DIR/domain.csr
