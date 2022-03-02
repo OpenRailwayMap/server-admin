@@ -13,10 +13,9 @@ LogLevel info tile:warn
 
 ModTileRenderdSocketName /var/lib/tirex/modtile.sock
 ModTileTileDir           /var/lib/tirex/tiles
-AddTileConfig            /standard standard
-AddTileConfig            /maxspeed maxspeed
-AddTileConfig            /signals signals
-AddTileConfig            /electrification electrification
+{% for style in styles -%}
+AddTileConfig            /{{ style }} {{ style }}
+{% endfor %}
 Redirect permanent       /electrified /electrification
 ModTileRequestTimeout 0
 ModTileMissingRequestTimeout 90

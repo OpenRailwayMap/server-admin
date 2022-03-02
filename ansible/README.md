@@ -63,6 +63,8 @@ finished import are left out. Please run the playbook a second time when the imp
 The playbook makes use of [Systemd's transient units](https://www.freedesktop.org/software/systemd/man/systemd-run.html)
 and therefore is idempotent. This means, you can run the playbook multiple times on the same host.
 
+After setting up the tile server, you can start pre-rendering for zoom levels 0 to 12 using
+`tirex-batch --prio 15 map=standard,maxspeed,signals,electrification,gauge z=0-12 bbox=-180,-80,180,80`.
 
 ## Building Packages
 

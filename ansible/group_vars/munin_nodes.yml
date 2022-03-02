@@ -29,15 +29,23 @@ munin:
     - {name: tirex-status-queued-requests-age, dest: tirex-status-queued-requests-age}
     - {name: tirex-status-render-time, dest: tirex-status-render-time}
     - {name: tirex-status-requests-rendered, dest: tirex-status-requests-rendered}
+    - {name: tirex-tiledir-diskusage-gauge, dest: tirex-tiledir-diskusage}
+    - {name: tirex-tiledir-diskusage-electrification, dest: tirex-tiledir-diskusage}
     - {name: tirex-tiledir-diskusage-maxspeed, dest: tirex-tiledir-diskusage}
     - {name: tirex-tiledir-diskusage-signals, dest: tirex-tiledir-diskusage}
     - {name: tirex-tiledir-diskusage-standard, dest: tirex-tiledir-diskusage}
+    - {name: tirex-tiledir-tileage-gauge, dest: tirex-tiledir-tileage}
+    - {name: tirex-tiledir-tileage-electrification, dest: tirex-tiledir-tileage}
     - {name: tirex-tiledir-tileage-maxspeed, dest: tirex-tiledir-tileage}
     - {name: tirex-tiledir-tileage-signals, dest: tirex-tiledir-tileage}
     - {name: tirex-tiledir-tileage-standard, dest: tirex-tiledir-tileage}
+    - {name: tirex-tiledir-tilecount-absolute-gauge, dest: tirex-tiledir-tilecount-absolute}
+    - {name: tirex-tiledir-tilecount-absolute-electrification, dest: tirex-tiledir-tilecount-absolute}
     - {name: tirex-tiledir-tilecount-absolute-maxspeed, dest: tirex-tiledir-tilecount-absolute}
     - {name: tirex-tiledir-tilecount-absolute-signals, dest: tirex-tiledir-tilecount-absolute}
     - {name: tirex-tiledir-tilecount-absolute-standard, dest: tirex-tiledir-tilecount-absolute}
+    - {name: tirex-tiledir-tilecount-relative-gauge, dest: tirex-tiledir-tilecount-relative}
+    - {name: tirex-tiledir-tilecount-relative-electrification, dest: tirex-tiledir-tilecount-relative}
     - {name: tirex-tiledir-tilecount-relative-maxspeed, dest: tirex-tiledir-tilecount-relative}
     - {name: tirex-tiledir-tilecount-relative-signals, dest: tirex-tiledir-tilecount-relative}
     - {name: tirex-tiledir-tilecount-relative-standard, dest: tirex-tiledir-tilecount-relative}

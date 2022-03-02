@@ -10,9 +10,8 @@ var baseLayers = {
     'osm.org' : L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19, attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, imagery CC-BY-SA'})
 };
 var overlays = {
-    'infrastructure' : L.tileLayer('/standard/{z}/{x}/{y}.png', {maxZoom: maxZoom, attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, rendering CC-BY-SA OpenRailwayMap'}),
-    'maxspeed' : L.tileLayer('/maxspeed/{z}/{x}/{y}.png', {maxZoom: maxZoom, attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, rendering CC-BY-SA OpenRailwayMap'}),
-    'signals' : L.tileLayer('/signals/{z}/{x}/{y}.png', {maxZoom: maxZoom, attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, rendering CC-BY-SA OpenRailwayMap'}),
-    'electrification' : L.tileLayer('/electrification/{z}/{x}/{y}.png', {maxZoom: maxZoom, attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, rendering CC-BY-SA OpenRailwayMap'}),
+{% for style in styles -%}
+    '{{ style }}' : L.tileLayer('/{{ style }}/{z}/{x}/{y}.png', {maxZoom: maxZoom, attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, rendering CC-BY-SA OpenRailwayMap'}),
+{% endfor %}
 };
 // End of the variables which might be modified if deployed on a server

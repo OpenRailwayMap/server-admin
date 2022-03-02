@@ -24,6 +24,12 @@
       vars: 
         osm_dbname: gis
         cartocss_dir: /opt/OpenRailwayMap-CartoCSS
+        styles:
+          - standard
+          - maxspeed
+          - signals
+          - electrification
+          - gauge
         apache2:
           max_request_workers: 350
         tileserver:
