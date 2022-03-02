@@ -3,7 +3,7 @@
 ## Requirements
 
 In order to run the Ansible playbook, you have to install Python on the server using `apt install
-python`.
+python3`.
 
 On client side, install Ansible from your package manager or Pip (or Pip in a Virtualenv):
 
@@ -26,43 +26,43 @@ You can leave the virtualenv using `deactivate`.
 
 ## Calling Ansible
 
-This repository contains an inventory file called `hosts.yml`. You have to append `-i hosts.yml` to
-all Ansible commands to make Ansible use this inventory instead of `/etc/ansible/hosts`.
+This repository contains an inventory file called `hosts`. Add your host to the the hosts file
+in order to install the services on it.
+
+By default, the following components will be installed on a host provided in the hosts file:
+
+* tileserver
+* website and API
+
+The following playbooks are optional:
+
+* blog (the OpenRailwayMap blog)
+* mail (Postfix and Mailman 3, you very likely do not need this)
+* backup_access (not recommended for use because it prepares the server for access by Nakaner's
+  backup machine)
+* munin_node (not recommened for use because it sends data to Nakaner's personal Munin master)
+
+All other services (Blog, Mailman, Munin etc.) are installed only if you add the hostname to the
+specific group.
 
 Run a whole Playbook:
 
 ```sh
-ansible-playbook -i hosts.yml -v roles/base/tasks/main.yml
+ansible-playbook -l THE_HOSTNAME -v site.yml
 ```
 
-Add `--check` for a dry run. Add `--private-key ~/.ssh/id_rsa` if Ansible does not find your private
-SSH key.
+Add `--check` for a dry run. Add `--diff` to display the changes to text files. Add
+`--private-key ~/.ssh/id_rsa` if Ansible does not find your private SSH key.
 
 
-## Order of the Playbooks of the Tileserver Setup
+## OSM Import
 
-Not all steps are full automatised. You have to do the following steps yourself:
+OSM raw data import takes some time (downloading the planet dump and importing it into the database).
+If you run Ansible for the first time, the download and import will be started. Tasks depending on a
+finished import are left out. Please run the playbook a second time when the import is complete.
+The playbook makes use of [Systemd's transient units](https://www.freedesktop.org/software/systemd/man/systemd-run.html)
+and therefore is idempotent. This means, you can run the playbook multiple times on the same host.
 
-* Initially download of the planet dump and initial Osm2pgsql data import. This is done by the Bash
-  script [import.sh](../scripts/import.sh) which should be executed as user `osmimport`.
-* Build Debian packages for Tirex and mod_tile. They are not available in Apt. Build them in your
-  home directory on the server. The Ansible playbook will finally install them. See below for build
-  instructions.
-* The Mapnik XML file is not build by Ansible. Build it on your computer or in your home directory
-  on the server.
-
-Building the dependencies and the Mapnik XML files is explained below.
-
-The general order of the playbooks is:
-
-* base
-* security
-* tileserver
-* Run the data import manually: `sudo -u osmimport import.sh`*
-* tileserver_step2
-* Start bulk rendering of tiles on zoom levels 0 to 12 manually using
-  `tirex-batch --prio 15 map=standard,maxspeed,signals z=0-12 bbox=-180,-80,180,80`
-* website
 
 ## Building Packages
 
