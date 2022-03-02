@@ -34,6 +34,14 @@ By default, the following components will be installed on a host provided in the
 * tileserver
 * website and API
 
+The following playbooks are optional:
+
+* blog (the OpenRailwayMap blog)
+* mail (Postfix and Mailman 3, you very likely do not need this)
+* backup_access (not recommended for use because it prepares the server for access by Nakaner's
+  backup machine)
+* munin_node (not recommened for use because it sends data to Nakaner's personal Munin master)
+
 All other services (Blog, Mailman, Munin etc.) are installed only if you add the hostname to the
 specific group.
 
@@ -45,6 +53,15 @@ ansible-playbook -l THE_HOSTNAME -v site.yml
 
 Add `--check` for a dry run. Add `--diff` to display the changes to text files. Add
 `--private-key ~/.ssh/id_rsa` if Ansible does not find your private SSH key.
+
+
+## OSM Import
+
+OSM raw data import takes some time (downloading the planet dump and importing it into the database).
+If you run Ansible for the first time, the download and import will be started. Tasks depending on a
+finished import are left out. Please run the playbook a second time when the import is complete.
+The playbook makes use of [Systemd's transient units](https://www.freedesktop.org/software/systemd/man/systemd-run.html)
+and therefore is idempotent. This means, you can run the playbook multiple times on the same host.
 
 
 ## Building Packages
