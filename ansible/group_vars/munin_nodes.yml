@@ -1,0 +1,45 @@
+munin:
+  accept_from: ['148.251.245.55', '2a01:4f8:192:81b6::2']
+  node_plugins:
+    - {name: apache_accesses, dest: apache_accesses}
+    - {name: apache_processes, dest: apache_processes}
+    - {name: apache_volume, dest: apache_volume}
+    - {name: postgres_autovacuum, dest: postgres_autovacuum}
+    - {name: postgres_bgwriter, dest: postgres_bgwriter}
+    - {name: postgres_checkpoints, dest: postgres_checkpoints}
+    - {name: postgres_users, dest: postgres_users}
+    - {name: postgres_xlog, dest: postgres_xlog}
+    - {name: postgres_connections_db, dest: postgres_connections_db}
+    - {name: postgres_connections_ALL, dest: postgres_connections_}
+    - {name: postgres_cache_ALL, dest: postgres_cache_}
+    - {name: postgres_locks_ALL, dest: postgres_locks_}
+    - {name: postgres_oldest_prepared_xact_ALL, dest: postgres_oldest_prepared_xact_}
+    - {name: postgres_prepared_xacts_ALL, dest: postgres_prepared_xacts_}
+    - {name: postgres_querylength_ALL, dest: postgres_querylength_}
+    - {name: postgres_scans_ALL, dest: postgres_scans_}
+    - {name: postgres_size_ALL, dest: postgres_size_}
+    - {name: postgres_transactions_ALL, dest: postgres_transactions_}
+    - {name: postgres_tuples_ALL, dest: postgres_tuples_}
+    - {name: mod_tile_fresh, dest: mod_tile_fresh}
+    - {name: mod_tile_latency, dest: mod_tile_latency}
+    - {name: mod_tile_response, dest: mod_tile_response}
+    - {name: mod_tile_zoom, dest: mod_tile_zoom}
+    - {name: tirex-status-active-requests, dest: tirex-status-active-requests}
+    - {name: tirex-status-queued-requests, dest: tirex-status-queued-requests}
+    - {name: tirex-status-queued-requests-age, dest: tirex-status-queued-requests-age}
+    - {name: tirex-status-render-time, dest: tirex-status-render-time}
+    - {name: tirex-status-requests-rendered, dest: tirex-status-requests-rendered}
+    - {name: tirex-tiledir-diskusage-maxspeed, dest: tirex-tiledir-diskusage}
+    - {name: tirex-tiledir-diskusage-signals, dest: tirex-tiledir-diskusage}
+    - {name: tirex-tiledir-diskusage-standard, dest: tirex-tiledir-diskusage}
+    - {name: tirex-tiledir-tileage-maxspeed, dest: tirex-tiledir-tileage}
+    - {name: tirex-tiledir-tileage-signals, dest: tirex-tiledir-tileage}
+    - {name: tirex-tiledir-tileage-standard, dest: tirex-tiledir-tileage}
+    - {name: tirex-tiledir-tilecount-absolute-maxspeed, dest: tirex-tiledir-tilecount-absolute}
+    - {name: tirex-tiledir-tilecount-absolute-signals, dest: tirex-tiledir-tilecount-absolute}
+    - {name: tirex-tiledir-tilecount-absolute-standard, dest: tirex-tiledir-tilecount-absolute}
+    - {name: tirex-tiledir-tilecount-relative-maxspeed, dest: tirex-tiledir-tilecount-relative}
+    - {name: tirex-tiledir-tilecount-relative-signals, dest: tirex-tiledir-tilecount-relative}
+    - {name: tirex-tiledir-tilecount-relative-standard, dest: tirex-tiledir-tilecount-relative}
+  node_ip_plugin: true
+  tirex_enabled: true
