@@ -1,556 +1,490 @@
 # SPDX-License-Identifier: MIT
-- hosts: all
-  remote_user: root
+- name: Install Postfix
+  apt:
+    name: [postfix, postfix-pcre, postgrey]
 
-  tasks:
-    - name: Install Postfix
+- name: Add localhost.localdomain to Postgrey whitelist
+  lineinfile:
+    path: /etc/postgrey/whitelist_clients
+    regexp: '^localhost.localdomain$'
+    line: 'localhost.localdomain'
+
+- name: set /etc/mailname
+  copy:
+    dest: /etc/mailname
+    owner: root
+    group: root
+    mode: 0644
+    content: |
+      {{ inventory_hostname }}
+
+# - name: Ensure that Postfix and Postgrey do not run
+#   systemd:
+#     name: '{{ item }}'
+#     state: stopped
+#   loop:
+#     - postfix
+#     - postgrey
+
+- name: Generate our own DH parameters, see http://www.postfix.org/postconf.5.html#smtp_tls_policy_maps for details
+  openssl_dhparam:
+    size: 2048
+    mode: 0640
+    owner: root
+    group: root
+    path: /etc/postfix/dh2048.pem
+
+- name: 'virtual_alias_map and bad_senders'
+  include_tasks: write_and_hash.yml
+  loop:
+    - {'src': 'virtual_alias_map', 'dest': '/etc/postfix/virtual_alias_map', 'cmd': 'postalias'}
+    - {'src': 'bad_senders', 'dest': '/etc/postfix/bad_senders', 'cmd': 'postmap'}
+
+- name: Write /etc/postfix/main.cf
+  template:
+    dest: /etc/postfix/main.cf
+    src: main.cf
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - systemctl reload postfix
+
+- name: Write /etc/postfix/master.cf
+  copy:
+    dest: /etc/postfix/master.cf
+    src: master.cf
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - systemctl restart postfix
+
+- name: Write header checks for simple spam filtering to /etc/postfix/header_checks and Postscreen IP blacklist
+  copy:
+    dest: '/etc/postfix/{{ item }}'
+    owner: root
+    group: root
+    mode: 0644
+    src: '{{ item }}'
+  loop:
+    - 'postscreen_access.cidr'
+    - 'header_checks.pcre'
+  notify:
+    - systemctl reload postfix
+
+- name: Install Amavis from APT
+  apt:
+    name: [amavisd-new, amavisd-milter]
+
+# - name: Ensure that Amavis does not run
+#   systemd:
+#     name: '{{ item }}'
+#     state: stopped
+#   loop:
+#     - amavisd-new
+#     - amavisd-milter
+
+- name: Create directory for Amavis where to place the socke of the Milter
+  file:
+    path: /var/spool/postfix/amavis
+    owner: amavis
+    group: amavis
+    recurse: no
+    mode: 0755
+    state: directory
+
+- name: Write custom Amavis configuration to /etc/amavis/conf.d/50-user
+  copy:
+    dest: /etc/amavis/conf.d/50-user
+    src: 50-user
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - systemctl restart amavis
+
+- name: Configure socket path for Amavisd-milter which is accessible by chroot-ed Postfix
+  lineinfile:
+    path: /etc/default/amavisd-milter
+    regexp: '{{ item.regexp }}'
+    line: '{{ item.line }}'
+  loop:
+    - {'regexp': '^#?MILTERSOCKET=/var/spool/postfix/amavis/amavis.sock', 'line': 'MILTERSOCKET=/var/spool/postfix/amavis/amavis.sock'}
+    - {'regexp': '^#?MILTERSOCKETOWNER="postfix:postfix"', 'line': 'MILTERSOCKETOWNER=postfix:postfix'}
+    - {'regexp': '^#?MILTERSOCKETMODE="0660"', 'line': 'MILTERSOCKETMODE="0660"'}
+  notify:
+    - systemctl daemon-reload
+    - systemctl restart amavis
+    - systemctl restart amavisd-milter
+
+- name: Install OpenDKIM
+  block:
+    - name: Install OpenDKIM from APT
       apt:
-        name: [postfix, postfix-pcre, postgrey]
+        name: [opendkim, opendkim-tools]
 
-    - name: Add localhost.localdomain to Postgrey whitelist
-      lineinfile:
-        path: /etc/postgrey/whitelist_clients
-        regexp: '^localhost.localdomain$'
-        line: 'localhost.localdomain'
-
-    - name: set /etc/mailname
+    - name: Write /etc/opendkim.conf
       copy:
-        dest: /etc/mailname
+        src: opendkim.conf
+        dest: /etc/opendkim.conf
+        owner: root
+        group: root
+        mode: 0644
+      notify:
+        - systemctl restart opendkim
+
+    - name: Ensure correct permissions on /etc/opendkim
+      file:
+        state: directory
+        path: /etc/opendkim
+        owner: root
+        group: root
+        mode: 0755
+
+    - name: Ensure correct permissions on /etc/opendkim/keys
+      file:
+        state: directory
+        path: /etc/opendkim/keys
+        owner: root
+        group: opendkim
+        mode: 0750
+      notify:
+        - systemctl restart opendkim
+
+    - name: Create OpenDKIM key
+      command:
+        chdir: /etc/opendkim
+        cmd: 'opendkim-genkey --selector=2020 --bits=2048 --directory=keys'
+        creates: /etc/opendkim/keys/2020.private
+      register: opendkim_key_creation
+
+    - name: Make OpenDKIM key readable for user opendkim
+      when: opendkim_key_creation.changed
+      file:
+        path: '/etc/opendkim/keys/{{ item }}'
+        owner: opendkim
+        group: root
+        mode: 0600
+      loop:
+        - '2020.private'
+        - '2020.txt'
+
+    - name: Print public OpenDKIM key
+      when: opendkim_key_creation.changed
+      block:
+        - slurp:
+            src: /etc/opendkim/keys/2020.txt
+          register: opendkim_public_key
+        - debug:
+            msg: 'Please publish the following DNS entry with your public DKIM key:\n{{ opendkim.public_key }}'
+
+    - name: Write /etc/opendkim/keytable
+      copy:
+        dest: /etc/opendkim/keytable
         owner: root
         group: root
         mode: 0644
         content: |
-          {{ inventory_hostname }}
-
-  #    - name: Ensure that Postfix and Postgrey do not run
-  #      systemd:
-  #        name: '{{ item }}'
-  #        state: stopped
-  #      loop:
-  #        - postfix
-  #        - postgrey
-
-    - name: Generate our own DH parameters, see http://www.postfix.org/postconf.5.html#smtp_tls_policy_maps for details
-      openssl_dhparam:
-        size: 2048
-        mode: 0640
-        owner: root
-        group: root
-        path: /etc/postfix/dh2048.pem
-
-    - name: 'virtual_alias_map and bad_senders'
-      include_tasks: write_and_hash.yml
-      loop:
-        - {'src': 'virtual_alias_map', 'dest': '/etc/postfix/virtual_alias_map', 'cmd': 'postalias'}
-        - {'src': 'bad_senders', 'dest': '/etc/postfix/bad_senders', 'cmd': 'postmap'}
-
-    - name: Write /etc/postfix/main.cf
-      template:
-        dest: /etc/postfix/main.cf
-        src: main.cf
-        owner: root
-        group: root
-        mode: 0644
+          default    %:2020:/etc/opendkim/keys/2020.private
       notify:
-        - systemctl reload postfix
+        - systemctl restart opendkim
 
-    - name: Write /etc/postfix/master.cf
+    - name: Write /etc/opendkim/signingtable
       copy:
-        dest: /etc/postfix/master.cf
-        src: master.cf
+        dest: /etc/opendkim/signingtable
         owner: root
         group: root
         mode: 0644
+        content: |
+          *@openrailwaymap.org default
       notify:
-        - systemctl restart postfix
+        - systemctl restart opendkim
 
-    - name: Write header checks for simple spam filtering to /etc/postfix/header_checks and Postscreen IP blacklist
-      copy:
-        dest: '/etc/postfix/{{ item }}'
-        owner: root
-        group: root
-        mode: 0644
-        src: '{{ item }}'
-      loop:
-        - 'postscreen_access.cidr'
-        - 'header_checks.pcre'
-      notify:
-        - systemctl reload postfix
-
-    - name: Install Amavis from APT
-      apt:
-        name: [amavisd-new, amavisd-milter]
-
-  #    - name: Ensure that Amavis does not run
-  #      systemd:
-  #        name: '{{ item }}'
-  #        state: stopped
-  #      loop:
-  #        - amavisd-new
-  #        - amavisd-milter
-
-    - name: Create directory for Amavis where to place the socke of the Milter
+    - name: Create /var/spool/postfix/opendkim
       file:
-        path: /var/spool/postfix/amavis
-        owner: amavis
-        group: amavis
-        recurse: no
+        path: /var/spool/postfix/opendkim
+        owner: opendkim
+        group: opendkim
         mode: 0755
         state: directory
 
-    - name: Write custom Amavis configuration to /etc/amavis/conf.d/50-user
+- name: Add Postfix to opendkim group
+  user:
+    append: yes
+    name: postfix
+    groups: opendkim
+
+- name: Install Spamassassin
+  apt:
+    name: spamassassin
+
+- name: Mailman 2 setup
+  when: mail.mailman2
+  block:
+    - name: 'Create entries in Debconf database for Mailman 2 setup'
+      command:
+        cmd: 'debconf-set-selections'
+        stdin: |
+          mailman mailman/site_languages multiselect en
+          mailman mailman/used_languages  string
+          mailman mailman/default_server_language select  en
+          mailman mailman/queue_files_present select abort installation
+          mailman mailman/create_site_list note
+    - name: 'Install Mailman 2'
+      apt:
+        name: mailman
+
+    - name: 'Modify Mailman 2 configuration'
+      lineinfile:
+        path: /etc/mailman/mm_cfg.py
+        regexp: "^{{ item.key }} *="
+        line: "{{ item.key }} = '{{ item.value }}'"
+      loop:
+        - {'key': 'DEFAULT_URL_HOST', 'value': 'lists.openrailwaymap.org'}
+        - {'key': 'DEFAULT_EMAIL_HOST', 'value': 'openrailwaymap.org'}
+        - {'key': 'DEFAULT_URL_PATTERN', 'value': 'https://%s/mailman/'}
+      notify:
+        - systemctl restart mailman
+
+    - name: Copy sitelist.cfg
       copy:
-        dest: /etc/amavis/conf.d/50-user
-        src: 50-user
+        src: sitelist.cfg
+        dest: /etc/mailman/sitelist.cfg
         owner: root
         group: root
         mode: 0644
-      notify:
-        - systemctl restart amavis
 
-    - name: Configure socket path for Amavisd-milter which is accessible by chroot-ed Postfix
+    - name: Create and hash aliases file for Mailman mailing lists
+      include_tasks: write_and_hash.yml
+      loop:
+        - {'src': 'mailman_aliases', 'dest': '/etc/mailman/aliases', 'cmd': 'postalias'}
+
+    - name: Set permissions on directories in /var/lib/mailman properly
+      file:
+        path: '{{ item.path }}'
+        owner: '{{ item.owner }}'
+        group: '{{ item.group }}'
+        recurse: '{{ item.recurse }}'
+        state: directory
+        mode: '0755'
+      loop:
+        - {'path': '/var/lib/mailman/', 'owner': root, 'group': list, recurse: yes}
+        - {'path': '/var/lib/mailman/archives/private', 'owner': 'list', 'group': list, recurse: yes}
+        - {'path': '/var/lib/mailman/archives', 'owner': 'www-data', 'group': list, recurse: no}
+        - {'path': '/var/lib/mailman/archives/private', 'owner': 'www-data', 'group': list, recurse: yes}
+        - {'path': '/var/lib/mailman/archives/public', 'owner': 'root', 'group': list, recurse: yes}
+        - {'path': '/var/lib/mailman/data', 'owner': 'list', 'group': list, recurse: yes}
+        - {'path': '/var/lib/mailman/spam', 'owner': 'root', 'group': list, recurse: yes}
+
+    - debug:
+        msg: 'Run "newlist mailman" as root to create a first mailing list, or copy data from old server to /var/lib/mailman/'
+
+    - name: Stop and disable Mailman 2
+      systemd:
+        name: mailman
+        state: stopped
+        enabled: no
+
+- name: Mailman 3 setup
+  when: mail.mailman3
+  block:
+    - name: 'Create entries in Debconf database for Mailman 3 setup'
+      command:
+        cmd: 'debconf-set-selections'
+        stdin: "{{ lookup('file', 'mailman3_debconf_settings') }}"
+
+    - name: Install packages of Mailman 3 dependencies from APT
+      apt:
+        name: [lynx, postgresql, python3-django, python3-django-captcha, sox, flite]
+
+    - name: Install our self-build Mailman 3 packages
+      apt:
+        deb: '/root/packages/{{ item }}'
+      loop:
+        - 'python3-django-allauth_0.40.0+ds-3_all.deb'
+        - 'mailman3_3.2.1-3_all.deb'
+        - 'python3-django-mailman3_1.3.0-4_all.deb'
+        - 'python3-django-hyperkitty_1.2.2-2_all.deb'
+        - 'python3-django-postorius_1.2.4-2_all.deb'
+        - 'mailman3-full_3.2.1-3_all.deb'
+        - 'mailman3-web_0+20180916-11_all.deb'
+
+    - name: Add VirtualHost configuration of Apache
+      template:
+        src: '{{ item }}'
+        dest: '/etc/apache2/sites-available/{{ item }}'
+        owner: root
+        group: root
+        mode: 0664
+      loop:
+        - 'mailman.conf'
+        - 'mailman.inc'
+      register: apache_conf
+      notify:
+        - systemctl reload apache2
+
+    - name: Enable Apache VirtualHost configuration
+      when: apache_conf.changed
+      command:
+        cmd: 'a2ensite mailman.conf'
+        chdir: /etc/apache2/sites-available
+      notify:
+        - systemctl reload apache2
+
+    - name: Enable peer authentication for PostgreSQL for user mailman3
+      postgresql_pg_hba:
+        contype: local
+        databases: '{{ item.db }}'
+        dest: '/etc/postgresql/{{ pg_version }}/main/pg_hba.conf'
+        method: md5
+        users: '{{ item.user }}'
+        mode: 0640
+        owner: postgres
+        group: postgres
+      loop:
+        - {'user': 'www-data', 'db': 'mailman3web'}
+        - {'user': 'lists', 'db': 'mailman3'}
+      notify:
+        - systemctl reload postgresql
+
+    - name: Modify /etc/mailman3/mailman.cfg
       lineinfile:
-        path: /etc/default/amavisd-milter
+        path: /etc/mailman3/mailman.cfg
         regexp: '{{ item.regexp }}'
         line: '{{ item.line }}'
       loop:
-        - {'regexp': '^#?MILTERSOCKET=/var/spool/postfix/amavis/amavis.sock', 'line': 'MILTERSOCKET=/var/spool/postfix/amavis/amavis.sock'}
-        - {'regexp': '^#?MILTERSOCKETOWNER="postfix:postfix"', 'line': 'MILTERSOCKETOWNER=postfix:postfix'}
-        - {'regexp': '^#?MILTERSOCKETMODE="0660"', 'line': 'MILTERSOCKETMODE="0660"'}
+        - {'regexp': '^#?site_owner: ', 'line': 'site_owner: info@openrailwaymap.org'}
       notify:
-        - systemctl daemon-reload
-        - systemctl restart amavis
-        - systemctl restart amavisd-milter
+        - systemctl restart mailman3
 
-    - name: Install OpenDKIM
-      block:
-        - name: Install OpenDKIM from APT
-          apt:
-            name: [opendkim, opendkim-tools]
+    - name: 'Mailman 3: set default encoding to utf-8'
+      blockinfile:
+        path: /etc/mailman3/mailman.cfg
+        block: |
+          [language.master]
+          description: English (USA)
+          charset: utf-8
+          enabled: yes
+      notify:
+        - systemctl restart mailman3
 
-        - name: Write /etc/opendkim.conf
-          copy:
-            src: opendkim.conf
-            dest: /etc/opendkim.conf
-            owner: root
-            group: root
-            mode: 0644
-          notify:
-            - systemctl restart opendkim
+    - name: 'Hyperkitty/Postorius: set links to imprint and privacy policy'
+      blockinfile:
+        path: /etc/mailman3/mailman-web.py
+        block: |
+          INSTALLED_APPS = INSTALLED_APPS + tuple(['allauth.socialaccount.providers.openstreetmap', 'captcha'])
+          ACCOUNT_SIGNUP_FORM_CLASS = 'django_mailman3.forms.CaptchaSignupForm'
+          import shutil
+          CAPTCHA_FLITE_PATH = shutil.which('flite')
+          CAPTCHA_SOX_PATH = shutil.which('sox')
+          # Footer links
+          FOOTER_LINKS = [
+              {
+                  'url': 'https://www.openrailwaymap.org/imprint-en.html',
+                  'text': 'Imprint/Privacy Policy',
+                  'translations': {
+                      'de': 'Impressum/Datenschutzerklärung'
+                  }
+              },
+          ]
+      notify:
+        - systemctl restart mailman3-web
 
-        - name: Ensure correct permissions on /etc/opendkim
-          file:
-            state: directory
-            path: /etc/opendkim
-            owner: root
-            group: root
-            mode: 0755
+    - name: 'Mailman 3: Disable Gravatar'
+      lineinfile:
+        path: /etc/mailman3/mailman-web.py
+        regexp: '{{ item.regexp }}'
+        line: '{{ item.line }}'
+      loop:
+        - {'regexp': '^(# ?)?GRAVATAR_DISABLED = .*$', 'line': 'GRAVATAR_DISABLED = True'}
+      notify:
+        - systemctl restart mailman3-web
 
-        - name: Ensure correct permissions on /etc/opendkim/keys
-          file:
-            state: directory
-            path: /etc/opendkim/keys
-            owner: root
-            group: opendkim
-            mode: 0750
-          notify:
-            - systemctl restart opendkim
+    - name: Modify /etc/mailman3/mailman-web.py
+      replace:
+        path: /etc/mailman3/mailman-web.py
+        regexp: '{{ item.regexp }}'
+        replace: '{{ item.line }}'
+      loop:
+        - {'regexp': "^ADMINS = \\(\\n( *)\\('[^']*', '[^']*'\\), *\\n\\)", 'line': "ADMINS = (\\n    ('OpenRailwayMap Mailman Admin', 'info@openrailwaymap.org')\\n)"}
+        - {'regexp': "^    #? *'django.contrib.admindocs', *$", 'line': "    'django.contrib.admindocs',"}
+        - {'regexp': "^#? *SECURE_PROXY_SSL_HEADER = \\('HTTP_X_FORWARDED_PROTO', 'https'\\)", 'line': "SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')"}
+        - {'regexp': "^#? *SESSION_COOKIE_SECURE =.[^\n]*$", 'line': "SESSION_COOKIE_SECURE = True"}
+        - {'regexp': "^#? *SECURE_CONTENT_TYPE_NOSNIFF =.[^\n]*$", 'line': "SECURE_CONTENT_TYPE_NOSNIFF = True"}
+        - {'regexp': "^#? *SECURE_BROWSER_XSS_FILTER =.[^\n]*$", 'line': "SECURE_BROWSER_XSS_FILTER = True"}
+        - {'regexp': "^#? *CSRF_COOKIE_SECURE =.[^\n]*$", 'line': "CSRF_COOKIE_SECURE = True"}
+        - {'regexp': "^#? *CSRF_COOKIE_HTTPONLY =.[^\n]*$", 'line': "CSRF_COOKIE_HTTPONLY = True"}
+        - {'regexp': "^#? *X_FRAME_OPTIONS =.[^\n]*$", 'line': "X_FRAME_OPTIONS = 'DENY'"}
+        - {'regexp': "^#? *EMAILNAME =.[^\n]*$", 'line': "EMAILNAME = 'openrailwaymap.org'"}
+        - {'regexp': "^#?( *)'HOST': '[^']+',[^\n]*$", 'line': "\\1'HOST': '',"}
+        - {'regexp': "^#?(    +)#? *'allauth.socialaccount.providers.github', *$", 'line': "\\1'allauth.socialaccount.providers.github',"}
+      notify:
+        - systemctl restart mailman3-web
 
-        - name: Create OpenDKIM key
-          command:
-            chdir: /etc/opendkim
-            cmd: 'opendkim-genkey --selector=2020 --bits=2048 --directory=keys'
-            creates: /etc/opendkim/keys/2020.private
-          register: opendkim_key_creation
-
-        - name: Make OpenDKIM key readable for user opendkim
-          when: opendkim_key_creation.changed
-          file:
-            path: '/etc/opendkim/keys/{{ item }}'
-            owner: opendkim
-            group: root
-            mode: 0600
-          loop:
-            - '2020.private'
-            - '2020.txt'
-
-        - name: Print public OpenDKIM key
-          when: opendkim_key_creation.changed
-          block:
-            - slurp:
-                src: /etc/opendkim/keys/2020.txt
-              register: opendkim_public_key
-            - debug:
-                msg: 'Please publish the following DNS entry with your public DKIM key:\n{{ opendkim.public_key }}'
-
-        - name: Write /etc/opendkim/keytable
-          copy:
-            dest: /etc/opendkim/keytable
-            owner: root
-            group: root
-            mode: 0644
-            content: |
-              default    %:2020:/etc/opendkim/keys/2020.private
-          notify:
-            - systemctl restart opendkim
-
-        - name: Write /etc/opendkim/signingtable
-          copy:
-            dest: /etc/opendkim/signingtable
-            owner: root
-            group: root
-            mode: 0644
-            content: |
-              *@openrailwaymap.org default
-          notify:
-            - systemctl restart opendkim
-
-        - name: Create /var/spool/postfix/opendkim
-          file:
-            path: /var/spool/postfix/opendkim
-            owner: opendkim
-            group: opendkim
-            mode: 0755
-            state: directory
-
-    - name: Add Postfix to opendkim group
-      user:
-        append: yes
-        name: postfix
-        groups: opendkim
-
-    - name: Install Spamassassin
-      apt:
-        name: spamassassin
-
-    - name: Mailman 2 setup
-      when: mail.mailman2
-      block:
-        - name: 'Create entries in Debconf database for Mailman 2 setup'
-          command:
-            cmd: 'debconf-set-selections'
-            stdin: |
-              mailman mailman/site_languages multiselect en
-              mailman mailman/used_languages  string
-              mailman mailman/default_server_language select  en
-              mailman mailman/queue_files_present select abort installation
-              mailman mailman/create_site_list note
-        - name: 'Install Mailman 2'
-          apt:
-            name: mailman
-
-        - name: 'Modify Mailman 2 configuration'
-          lineinfile:
-            path: /etc/mailman/mm_cfg.py
-            regexp: "^{{ item.key }} *="
-            line: "{{ item.key }} = '{{ item.value }}'"
-          loop:
-            - {'key': 'DEFAULT_URL_HOST', 'value': 'lists.openrailwaymap.org'}
-            - {'key': 'DEFAULT_EMAIL_HOST', 'value': 'openrailwaymap.org'}
-            - {'key': 'DEFAULT_URL_PATTERN', 'value': 'https://%s/mailman/'}
-          notify:
-            - systemctl restart mailman
-
-        - name: Copy sitelist.cfg
-          copy:
-            src: sitelist.cfg
-            dest: /etc/mailman/sitelist.cfg
-            owner: root
-            group: root
-            mode: 0644
-
-        - name: Create and hash aliases file for Mailman mailing lists
-          include_tasks: write_and_hash.yml
-          loop:
-            - {'src': 'mailman_aliases', 'dest': '/etc/mailman/aliases', 'cmd': 'postalias'}
-
-        - name: Set permissions on directories in /var/lib/mailman properly
-          file:
-            path: '{{ item.path }}'
-            owner: '{{ item.owner }}'
-            group: '{{ item.group }}'
-            recurse: '{{ item.recurse }}'
-            state: directory
-            mode: '0755'
-          loop:
-            - {'path': '/var/lib/mailman/', 'owner': root, 'group': list, recurse: yes}
-            - {'path': '/var/lib/mailman/archives/private', 'owner': 'list', 'group': list, recurse: yes}
-            - {'path': '/var/lib/mailman/archives', 'owner': 'www-data', 'group': list, recurse: no}
-            - {'path': '/var/lib/mailman/archives/private', 'owner': 'www-data', 'group': list, recurse: yes}
-            - {'path': '/var/lib/mailman/archives/public', 'owner': 'root', 'group': list, recurse: yes}
-            - {'path': '/var/lib/mailman/data', 'owner': 'list', 'group': list, recurse: yes}
-            - {'path': '/var/lib/mailman/spam', 'owner': 'root', 'group': list, recurse: yes}
-
-        - debug:
-            msg: 'Run "newlist mailman" as root to create a first mailing list, or copy data from old server to /var/lib/mailman/'
-
-        - name: Stop and disable Mailman 2
-          systemd:
-            name: mailman
-            state: stopped
-            enabled: no
-
-    - name: Mailman 3 setup
-      when: mail.mailman3
-      block:
-        - name: 'Create entries in Debconf database for Mailman 3 setup'
-          command:
-            cmd: 'debconf-set-selections'
-            stdin: "{{ lookup('file', 'mailman3_debconf_settings') }}"
-
-        - name: Install packages of Mailman 3 dependencies from APT
-          apt:
-            name: [lynx, postgresql, python3-django, python3-django-captcha, sox, flite]
-
-        - name: Install our self-build Mailman 3 packages
-          apt:
-            deb: '/root/packages/{{ item }}'
-          loop:
-            - 'python3-django-allauth_0.40.0+ds-3_all.deb'
-            - 'mailman3_3.2.1-3_all.deb'
-            - 'python3-django-mailman3_1.3.0-4_all.deb'
-            - 'python3-django-hyperkitty_1.2.2-2_all.deb'
-            - 'python3-django-postorius_1.2.4-2_all.deb'
-            - 'mailman3-full_3.2.1-3_all.deb'
-            - 'mailman3-web_0+20180916-11_all.deb'
-
-        - name: Enable Apache module CGI
-          apache2_module:
-            name: cgi
-            state: present
-          notify:
-            - systemctl restart apache2
-
-        - name: Add VirtualHost configuration of Apache
-          template:
-            src: '{{ item }}'
-            dest: '/etc/apache2/sites-available/{{ item }}'
-            owner: root
-            group: root
-            mode: 0664
-          loop:
-            - 'mailman.conf'
-            - 'mailman.inc'
-          register: apache_conf
-          notify:
-            - systemctl reload apache2
-
-        - name: Enable Apache VirtualHost configuration
-          when: apache_conf.changed
-          command:
-            cmd: 'a2ensite mailman.conf'
-            chdir: /etc/apache2/sites-available
-          notify:
-            - systemctl reload apache2
-
-        - name: Enable peer authentication for PostgreSQL for user mailman3
-          postgresql_pg_hba:
-            contype: local
-            databases: '{{ item.db }}'
-            dest: '/etc/postgresql/{{ pg_version }}/main/pg_hba.conf'
-            method: md5
-            users: '{{ item.user }}'
-            mode: 0640
-            owner: postgres
-            group: postgres
-          loop:
-            - {'user': 'www-data', 'db': 'mailman3web'}
-            - {'user': 'lists', 'db': 'mailman3'}
-          notify:
-            - systemctl reload postgresql
-
-        - name: Modify /etc/mailman3/mailman.cfg
-          lineinfile:
-            path: /etc/mailman3/mailman.cfg
-            regexp: '{{ item.regexp }}'
-            line: '{{ item.line }}'
-          loop:
-            - {'regexp': '^#?site_owner: ', 'line': 'site_owner: info@openrailwaymap.org'}
-          notify:
-            - systemctl restart mailman3
-
-        - name: 'Mailman 3: set default encoding to utf-8'
-          blockinfile:
-            path: /etc/mailman3/mailman.cfg
-            block: |
-              [language.master]
-              description: English (USA)
-              charset: utf-8
-              enabled: yes
-          notify:
-            - systemctl restart mailman3
-
-        - name: 'Hyperkitty/Postorius: set links to imprint and privacy policy'
-          blockinfile:
-            path: /etc/mailman3/mailman-web.py
-            block: |
-              INSTALLED_APPS = INSTALLED_APPS + tuple(['allauth.socialaccount.providers.openstreetmap', 'captcha'])
-              ACCOUNT_SIGNUP_FORM_CLASS = 'django_mailman3.forms.CaptchaSignupForm'
-              import shutil
-              CAPTCHA_FLITE_PATH = shutil.which('flite')
-              CAPTCHA_SOX_PATH = shutil.which('sox')
-              # Footer links
-              FOOTER_LINKS = [
-                  {
-                      'url': 'https://www.openrailwaymap.org/imprint-en.html',
-                      'text': 'Imprint/Privacy Policy',
-                      'translations': {
-                          'de': 'Impressum/Datenschutzerklärung'
-                      }
-                  },
-              ]
-          notify:
-            - systemctl restart mailman3-web
-
-        - name: 'Mailman 3: Disable Gravatar'
-          lineinfile:
-            path: /etc/mailman3/mailman-web.py
-            regexp: '{{ item.regexp }}'
-            line: '{{ item.line }}'
-          loop:
-            - {'regexp': '^(# ?)?GRAVATAR_DISABLED = .*$', 'line': 'GRAVATAR_DISABLED = True'}
-          notify:
-            - systemctl restart mailman3-web
-
-        - name: Modify /etc/mailman3/mailman-web.py
-          replace:
-            path: /etc/mailman3/mailman-web.py
-            regexp: '{{ item.regexp }}'
-            replace: '{{ item.line }}'
-          loop:
-            - {'regexp': "^ADMINS = \\(\\n( *)\\('[^']*', '[^']*'\\), *\\n\\)", 'line': "ADMINS = (\\n    ('OpenRailwayMap Mailman Admin', 'info@openrailwaymap.org')\\n)"}
-            - {'regexp': "^    #? *'django.contrib.admindocs', *$", 'line': "    'django.contrib.admindocs',"}
-            - {'regexp': "^#? *SECURE_PROXY_SSL_HEADER = \\('HTTP_X_FORWARDED_PROTO', 'https'\\)", 'line': "SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')"}
-            - {'regexp': "^#? *SESSION_COOKIE_SECURE =.[^\n]*$", 'line': "SESSION_COOKIE_SECURE = True"}
-            - {'regexp': "^#? *SECURE_CONTENT_TYPE_NOSNIFF =.[^\n]*$", 'line': "SECURE_CONTENT_TYPE_NOSNIFF = True"}
-            - {'regexp': "^#? *SECURE_BROWSER_XSS_FILTER =.[^\n]*$", 'line': "SECURE_BROWSER_XSS_FILTER = True"}
-            - {'regexp': "^#? *CSRF_COOKIE_SECURE =.[^\n]*$", 'line': "CSRF_COOKIE_SECURE = True"}
-            - {'regexp': "^#? *CSRF_COOKIE_HTTPONLY =.[^\n]*$", 'line': "CSRF_COOKIE_HTTPONLY = True"}
-            - {'regexp': "^#? *X_FRAME_OPTIONS =.[^\n]*$", 'line': "X_FRAME_OPTIONS = 'DENY'"}
-            - {'regexp': "^#? *EMAILNAME =.[^\n]*$", 'line': "EMAILNAME = 'openrailwaymap.org'"}
-            - {'regexp': "^#?( *)'HOST': '[^']+',[^\n]*$", 'line': "\\1'HOST': '',"}
-            - {'regexp': "^#?(    +)#? *'allauth.socialaccount.providers.github', *$", 'line': "\\1'allauth.socialaccount.providers.github',"}
-          notify:
-            - systemctl restart mailman3-web
-
-        # The OpenStreetMap logo is not installed because it is not included in the Mailman 3 source code.
-        - name: Copy OpenStreetMap logo
-          copy:
-            src: openstreetmap.png
-            dest: /var/lib/mailman3/web/static/django-mailman3/img/login/
-            mode: 0644
-            owner: root
-            group: root
-
-              #        # It is likely that running a migration is not necessary.
-              #        - name: 'Run django-admin migrate'
-              #          become: yes
-              #          become_user: 'www-data'
-              #          django_manage:
-              #            app_path: '/usr/share/mailman3-web/'
-              #            python_path: '/usr/share/mailman3-web'
-              #            command: 'migrate'
-              #              # settings imports settings_local at the end of the file
-              #            settings: 'settings'
-              #          notify:
-              #            - systemctl restart mailman3-web
-
-        - name: Change Postorius site name
-          become: yes
-          become_user: postgres
-          postgresql_query:
-            db: mailman3web
-            login_user: postgres
-            query: "UPDATE django_site SET domain = 'lists.openrailwaymap.org', name = 'openrailwaymap.org' WHERE domain = 'example.com';"
-          notify:
-            - systemctl restart mailman3-web
-
-        - name: Enable Mailman3 UWSGI app
-          file:
-            src: /etc/mailman3/uwsgi.ini
-            dest: /etc/uwsgi/apps-enabled/mailman3.ini
-            state: link
-            owner: root
-            group: root
-
-        - name: Change URL for Hyperkitty to get emails from (add authentication)
-          lineinfile:
-            path: /etc/mailman3/mailman-hyperkitty.cfg
-            regexp: '^base_url: .*$'
-            line: 'base_url: http://127.0.0.1/mailman3/hyperkitty/'
-
-
-
-    - name: Write Spamassassin configuration to /etc/spamassassin/local.cf
+    # The OpenStreetMap logo is not installed because it is not included in the Mailman 3 source code.
+    - name: Copy OpenStreetMap logo
       copy:
-        dest: /etc/spamassassin/local.cf
-        src: local.cf
+        src: openstreetmap.png
+        dest: /var/lib/mailman3/web/static/django-mailman3/img/login/
+        mode: 0644
         owner: root
         group: root
-        mode: 0644
+
+          #        # It is likely that running a migration is not necessary.
+          #        - name: 'Run django-admin migrate'
+          #          become: yes
+          #          become_user: 'www-data'
+          #          django_manage:
+          #            app_path: '/usr/share/mailman3-web/'
+          #            python_path: '/usr/share/mailman3-web'
+          #            command: 'migrate'
+          #              # settings imports settings_local at the end of the file
+          #            settings: 'settings'
+          #          notify:
+          #            - systemctl restart mailman3-web
+
+    - name: Change Postorius site name
+      become: yes
+      become_user: postgres
+      postgresql_query:
+        db: mailman3web
+        login_user: postgres
+        query: "UPDATE django_site SET domain = 'lists.openrailwaymap.org', name = 'openrailwaymap.org' WHERE domain = 'example.com';"
       notify:
-        - systemctl restart amavis
+        - systemctl restart mailman3-web
 
-    - name: systemctl start amavis amavisd-milter postfix
-      systemd:
-        name: '{{ item }}'
-        state: started
-      loop:
-        - amavis
-        - amavisd-milter
-        - postfix
-        - postgrey
+    - name: Enable Mailman3 UWSGI app
+      file:
+        src: /etc/mailman3/uwsgi.ini
+        dest: /etc/uwsgi/apps-enabled/mailman3.ini
+        state: link
+        owner: root
+        group: root
+
+    - name: Change URL for Hyperkitty to get emails from (add authentication)
+      lineinfile:
+        path: /etc/mailman3/mailman-hyperkitty.cfg
+        regexp: '^base_url: .*$'
+        line: 'base_url: http://127.0.0.1/mailman3/hyperkitty/'
 
 
-  handlers:
-    - name: systemctl daemon-reload
-      systemd:
-        daemon_reload: yes
-    - name: systemctl reload apache2
-      systemd:
-        name: apache2
-        state: reloaded
-    - name: systemctl reload postgresql
-      systemd:
-        name: apache2
-        state: reloaded
-    - name: systemctl restart apache2
-      systemd:
-        name: apache2
-        state: restarted
-    - name: systemctl reload postfix
-      systemd:
-        name: postfix
-        state: reloaded
-    - name: systemctl restart postfix
-      systemd:
-        name: postfix
-        state: restarted
-    - name: systemctl restart postgrey
-      systemd:
-        name: postgrey
-        state: restarted
-    - name: systemctl restart mailman
-      systemd:
-        name: mailman
-        state: restarted
-    - name: systemctl restart mailman3
-      systemd:
-        name: mailman3
-        state: restarted
-    - name: systemctl restart mailman3-web
-      systemd:
-        name: mailman3-web
-        state: restarted
-    - name: systemctl restart amavis
-      systemd:
-        name: amavis
-        state: restarted
-    - name: systemctl restart amavisd-milter
-      systemd:
-        name: amavisd-milter
-        state: restarted
-    - name: systemctl restart opendkim
-      systemd:
-        name: opendkim
-        state: restarted
+- name: Write Spamassassin configuration to /etc/spamassassin/local.cf
+  copy:
+    dest: /etc/spamassassin/local.cf
+    src: local.cf
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - systemctl restart amavis
+
+- name: systemctl start amavis amavisd-milter postfix
+  systemd:
+    name: '{{ item }}'
+    state: started
+  loop:
+    - amavis
+    - amavisd-milter
+    - postfix
+    - postgrey

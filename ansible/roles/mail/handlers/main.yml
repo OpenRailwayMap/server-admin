@@ -1,0 +1,52 @@
+# SPDX-License-Identifier: MIT
+- name: systemctl daemon-reload
+  systemd:
+    daemon_reload: yes
+- name: systemctl reload apache2
+  systemd:
+    name: apache2
+    state: reloaded
+- name: systemctl reload postgresql
+  systemd:
+    name: apache2
+    state: reloaded
+- name: systemctl restart apache2
+  systemd:
+    name: apache2
+    state: restarted
+- name: systemctl reload postfix
+  systemd:
+    name: postfix
+    state: reloaded
+- name: systemctl restart postfix
+  systemd:
+    name: postfix
+    state: restarted
+- name: systemctl restart postgrey
+  systemd:
+    name: postgrey
+    state: restarted
+- name: systemctl restart mailman
+  systemd:
+    name: mailman
+    state: restarted
+- name: systemctl restart mailman3
+  systemd:
+    name: mailman3
+    state: restarted
+- name: systemctl restart mailman3-web
+  systemd:
+    name: mailman3-web
+    state: restarted
+- name: systemctl restart amavis
+  systemd:
+    name: amavis
+    state: restarted
+- name: systemctl restart amavisd-milter
+  systemd:
+    name: amavisd-milter
+    state: restarted
+- name: systemctl restart opendkim
+  systemd:
+    name: opendkim
+    state: restarted

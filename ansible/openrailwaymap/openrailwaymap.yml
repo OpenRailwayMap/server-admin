@@ -45,3 +45,16 @@
         api_hostname: api.openrailwaymap.org
         website_dir: /var/www/www.openrailwaymap.org
         openrailwaymap_user_home: /srv/openrailwaymap
+
+- hosts: mailservers
+  become: yes
+  remote_user: root
+  tags: mail
+  tasks:
+    - import_role:
+        name: roles/mail
+      vars:
+        mail:
+          mailman2: false
+          mailman3: true
+          http_hostname: lists.openrailwaymap.org
