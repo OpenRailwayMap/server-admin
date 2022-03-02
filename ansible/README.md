@@ -111,21 +111,6 @@ sudo cp tirex-backend-mapnik_*.deb tirex-core_*.deb /root/packages
 ```
 
 
-### Build Mapfiles
-
-Install Carto either using `npm install carto` or from your system's package manager if available.
-Transpiling the map styles from CartoCSS to Mapnik XML does not require database access. Ansible
-expects the XML files at /root/packages.
-
-```sh
-git clone https://github.com/OpenRailwayMap/OpenRailwayMap-CartoCSS
-cd OpenRailwayMap-CartoCSS
-carto project.mm > project.xml
-carto maxspeed.mm > maxspeed.xml
-carto signals.mm > signals.xml
-cp project.xml maxspeed.xml signals.xml /root/packages`
-```
-
 ### Build Mailman 3
 
 Our setup of Mailman 3 includes a couple of patches to comply with German

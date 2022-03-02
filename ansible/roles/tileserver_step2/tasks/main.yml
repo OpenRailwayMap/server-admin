@@ -47,23 +47,24 @@
     privs: 'SELECT'
     database: '{{ osm_dbname }}'
 
-- name: Install Mapnik XML style files
-  copy:
-    remote_src: yes
-    src: '/root/packages/{{ item }}'
-    dest: '{{ cartocss_dir }}'
-    owner: root
-    group: root
-    mode: 0744
-  loop:
-    - 'standard.xml'
-    - 'maxspeed.xml'
-    - 'signals.xml'
-    - 'electrification.xml'
-  tags:
-    - install_map_styles
-  notify:
-    - systemd reload tirex-backend-manager
+- name: Install Carto and build Mapnik XML style file
+  become: yes
+  become_user: osmimport
+  block:
+    - name: Install Carto
+      npm:
+        name: carto
+        version: '1.2.0'
+        path: '{{ cartocss_dir }}'
+
+    - name: Build Mapnik XML style files
+      make:
+        chdir: '{{ cartocss_dir }}'
+        target: all
+        params:
+          CARTO: '{{ cartocss_dir }}/node_modules/carto/bin/carto'
+      notify:
+        - systemd reload tirex-backend-manager
 
 - name: Enable Apache module mod_ssl
   apache2_module:
