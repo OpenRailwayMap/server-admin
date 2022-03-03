@@ -1,11 +1,3 @@
-- name: systemd reload apache2
-  systemd:
-    name: apache2
-    state: reloaded
-- name: systemd restart apache2
-  systemd:
-    name: apache2
-    state: restarted
 - name: systemd restart php-fpm
   systemd:
     name: php7.3-fpm.service

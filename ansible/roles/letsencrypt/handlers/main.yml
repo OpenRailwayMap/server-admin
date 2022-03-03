@@ -1,8 +1,0 @@
-- name: systemd reload apache2
-  systemd:
-    name: apache2
-    state: reloaded
-- name: systemd restart apache2
-  systemd:
-    name: apache2
-    state: restarted

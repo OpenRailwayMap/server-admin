@@ -48,7 +48,7 @@
     group: root
     mode: 0644
   notify:
-    - systemctl reload postfix
+    - systemd reload postfix
 
 - name: Write /etc/postfix/master.cf
   copy:
@@ -58,7 +58,7 @@
     group: root
     mode: 0644
   notify:
-    - systemctl restart postfix
+    - systemd restart postfix
 
 - name: Write header checks for simple spam filtering to /etc/postfix/header_checks and Postscreen IP blacklist
   copy:
@@ -71,7 +71,7 @@
     - 'postscreen_access.cidr'
     - 'header_checks.pcre'
   notify:
-    - systemctl reload postfix
+    - systemd reload postfix
 
 - name: Install Amavis from APT
   apt:
@@ -102,7 +102,7 @@
     group: root
     mode: 0644
   notify:
-    - systemctl restart amavis
+    - systemd restart amavis
 
 - name: Configure socket path for Amavisd-milter which is accessible by chroot-ed Postfix
   lineinfile:
@@ -114,9 +114,9 @@
     - {'regexp': '^#?MILTERSOCKETOWNER="postfix:postfix"', 'line': 'MILTERSOCKETOWNER=postfix:postfix'}
     - {'regexp': '^#?MILTERSOCKETMODE="0660"', 'line': 'MILTERSOCKETMODE="0660"'}
   notify:
-    - systemctl daemon-reload
-    - systemctl restart amavis
-    - systemctl restart amavisd-milter
+    - systemd daemon-reload
+    - systemd restart amavis
+    - systemd restart amavisd-milter
 
 - name: Install OpenDKIM
   block:
@@ -132,7 +132,7 @@
         group: root
         mode: 0644
       notify:
-        - systemctl restart opendkim
+        - systemd restart opendkim
 
     - name: Ensure correct permissions on /etc/opendkim
       file:
@@ -150,7 +150,7 @@
         group: opendkim
         mode: 0750
       notify:
-        - systemctl restart opendkim
+        - systemd restart opendkim
 
     - name: Create OpenDKIM key
       command:
@@ -188,7 +188,7 @@
         content: |
           default    %:2020:/etc/opendkim/keys/2020.private
       notify:
-        - systemctl restart opendkim
+        - systemd restart opendkim
 
     - name: Write /etc/opendkim/signingtable
       copy:
@@ -199,7 +199,7 @@
         content: |
           *@openrailwaymap.org default
       notify:
-        - systemctl restart opendkim
+        - systemd restart opendkim
 
     - name: Create /var/spool/postfix/opendkim
       file:
@@ -245,7 +245,7 @@
         - {'key': 'DEFAULT_EMAIL_HOST', 'value': 'openrailwaymap.org'}
         - {'key': 'DEFAULT_URL_PATTERN', 'value': 'https://%s/mailman/'}
       notify:
-        - systemctl restart mailman
+        - systemd restart mailman
 
     - name: Copy sitelist.cfg
       copy:
@@ -322,7 +322,7 @@
         - 'mailman.inc'
       register: apache_conf
       notify:
-        - systemctl reload apache2
+        - systemd reload apache2
 
     - name: Enable Apache VirtualHost configuration
       when: apache_conf.changed
@@ -330,7 +330,7 @@
         cmd: 'a2ensite mailman.conf'
         chdir: /etc/apache2/sites-available
       notify:
-        - systemctl reload apache2
+        - systemd reload apache2
 
     - name: Enable peer authentication for PostgreSQL for user mailman3
       postgresql_pg_hba:
@@ -346,7 +346,7 @@
         - {'user': 'www-data', 'db': 'mailman3web'}
         - {'user': 'lists', 'db': 'mailman3'}
       notify:
-        - systemctl reload postgresql
+        - systemd reload postgresql
 
     - name: Modify /etc/mailman3/mailman.cfg
       lineinfile:
@@ -356,7 +356,7 @@
       loop:
         - {'regexp': '^#?site_owner: ', 'line': 'site_owner: info@openrailwaymap.org'}
       notify:
-        - systemctl restart mailman3
+        - systemd restart mailman3
 
     - name: 'Mailman 3: set default encoding to utf-8'
       blockinfile:
@@ -367,7 +367,7 @@
           charset: utf-8
           enabled: yes
       notify:
-        - systemctl restart mailman3
+        - systemd restart mailman3
 
     - name: 'Hyperkitty/Postorius: set links to imprint and privacy policy'
       blockinfile:
@@ -389,7 +389,7 @@
               },
           ]
       notify:
-        - systemctl restart mailman3-web
+        - systemd restart mailman3-web
 
     - name: 'Mailman 3: Disable Gravatar'
       lineinfile:
@@ -399,7 +399,7 @@
       loop:
         - {'regexp': '^(# ?)?GRAVATAR_DISABLED = .*$', 'line': 'GRAVATAR_DISABLED = True'}
       notify:
-        - systemctl restart mailman3-web
+        - systemd restart mailman3-web
 
     - name: Modify /etc/mailman3/mailman-web.py
       replace:
@@ -420,7 +420,7 @@
         - {'regexp': "^#?( *)'HOST': '[^']+',[^\n]*$", 'line': "\\1'HOST': '',"}
         - {'regexp': "^#?(    +)#? *'allauth.socialaccount.providers.github', *$", 'line': "\\1'allauth.socialaccount.providers.github',"}
       notify:
-        - systemctl restart mailman3-web
+        - systemd restart mailman3-web
 
     # The OpenStreetMap logo is not installed because it is not included in the Mailman 3 source code.
     - name: Copy OpenStreetMap logo
@@ -442,7 +442,7 @@
           #              # settings imports settings_local at the end of the file
           #            settings: 'settings'
           #          notify:
-          #            - systemctl restart mailman3-web
+          #            - systemd restart mailman3-web
 
     - name: Change Postorius site name
       become: yes
@@ -452,7 +452,7 @@
         login_user: postgres
         query: "UPDATE django_site SET domain = 'lists.openrailwaymap.org', name = 'openrailwaymap.org' WHERE domain = 'example.com';"
       notify:
-        - systemctl restart mailman3-web
+        - systemd restart mailman3-web
 
     - name: Enable Mailman3 UWSGI app
       file:
@@ -477,7 +477,7 @@
     group: root
     mode: 0644
   notify:
-    - systemctl restart amavis
+    - systemd restart amavis
 
 - name: systemctl start amavis amavisd-milter postfix
   systemd:

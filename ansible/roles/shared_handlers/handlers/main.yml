@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: MIT
+# Handlers shared between roles
+- name: 'systemd daemon-reload'
+  systemd:
+    daemon-reload: yes
+- name: 'systemd reload apache2'
+  systemd:
+    name: apache2
+    state: reloaded
+- name: 'systemd restart apache2'
+  systemd:
+    name: apache2
+    state: restarted

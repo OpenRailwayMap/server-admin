@@ -3,14 +3,3 @@
   systemd:
     name: munin-node
     state: restarted
-- name: 'systemd reload apache2'
-  systemd:
-    name: apache2
-    state: reloaded
-- name: 'systemd restart apache2'
-  systemd:
-    name: apache2
-    state: restarted
-- name: 'systemd daemon-reload'
-  systemd:
-    daemon-reload: yes

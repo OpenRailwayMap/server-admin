@@ -1,6 +1,3 @@
-- name: systemd daemon-reload
-  systemd:
-    daemon_reload: yes
 - name: systemd restart rsyslog
   systemd:
     name: rsyslog
@@ -8,12 +5,4 @@
 - name: systemd restart orm-api
   systemd:
     name: orm-api
-    state: restarted
-- name: systemd reload apache2
-  systemd:
-    name: apache2
-    state: reloaded
-- name: systemd restart apache2
-  systemd:
-    name: apache2
     state: restarted
