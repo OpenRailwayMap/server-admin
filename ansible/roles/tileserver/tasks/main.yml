@@ -190,7 +190,7 @@
   args:
     creates: /nvme/data/timestamp.txt
 
-- name: 'Is the import (still) running?'
+- name: 'Is the import (still) running?' # noqa command-instead-of-module
   command: systemctl is-active osm_import
   failed_when: False
   changed_when: False
@@ -203,6 +203,6 @@
     path: '/nvme/data/timestamp.txt'
   register: timestamp_file
 
-- set_fact:
+- set_fact: # noqa unnamed-task
     download_status: "{% if not osm_import or (osm_import.stdout == 'inactive' and timestamp_file.stat.exists) %}complete{% else %}incomplete{% endif %}"
   check_mode: no

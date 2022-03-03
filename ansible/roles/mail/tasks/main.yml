@@ -173,10 +173,12 @@
     - name: Print public OpenDKIM key
       when: opendkim_key_creation.changed
       block:
-        - slurp:
+        - name: Read /etc/opendkim/keys/2020.txt
+          slurp:
             src: /etc/opendkim/keys/2020.txt
           register: opendkim_public_key
-        - debug:
+        - name: Print public OpenDKIM key
+          debug:
             msg: 'Please publish the following DNS entry with your public DKIM key:\n{{ opendkim.public_key }}'
 
     - name: Write /etc/opendkim/keytable
@@ -222,7 +224,7 @@
 - name: Mailman 2 setup
   when: mail.mailman2
   block:
-    - name: 'Create entries in Debconf database for Mailman 2 setup'
+    - name: 'Create entries in Debconf database for Mailman 2 setup' # noqa no-changed-when
       command:
         cmd: 'debconf-set-selections'
         stdin: |
@@ -277,7 +279,7 @@
         - {'path': '/var/lib/mailman/data', 'owner': 'list', 'group': list, recurse: yes}
         - {'path': '/var/lib/mailman/spam', 'owner': 'root', 'group': list, recurse: yes}
 
-    - debug:
+    - debug: # noqa unnamed-task
         msg: 'Run "newlist mailman" as root to create a first mailing list, or copy data from old server to /var/lib/mailman/'
 
     - name: Stop and disable Mailman 2
@@ -289,7 +291,7 @@
 - name: Mailman 3 setup
   when: mail.mailman3
   block:
-    - name: 'Create entries in Debconf database for Mailman 3 setup'
+    - name: 'Create entries in Debconf database for Mailman 3 setup' # noqa no-changed-when
       command:
         cmd: 'debconf-set-selections'
         stdin: "{{ lookup('file', 'mailman3_debconf_settings') }}"

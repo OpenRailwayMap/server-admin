@@ -100,7 +100,8 @@
     group: adm
     mode: 0750
 
-- debug: {msg: 'On Debian, the authentication method md5 is enabled for all users connecting from localhost via TCP/IP to any local database. Modify pg_hba.conf if your database is configured differently.'}
+- debug: # noqa unnamed-task
+    msg: 'On Debian, the authentication method md5 is enabled for all users connecting from localhost via TCP/IP to any local database. Modify pg_hba.conf if your database is configured differently.'
 
 - name: Create a random password
   set_fact:

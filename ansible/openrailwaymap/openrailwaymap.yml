@@ -3,14 +3,16 @@
   become: yes
   tags: letsencrypt
   tasks:
-    - import_role:
+    - name: 'LetsEncrypt'
+      import_role:
         name: roles/letsencrypt
 
 - hosts: all
   become: yes
   tags: tileserver
   tasks:
-    - import_role:
+    - name: 'Tile server (steps until data import)'
+      import_role:
         name: roles/tileserver
       vars:
         osm_dbname: gis
@@ -19,7 +21,8 @@
         osm_data_dir: /nvme/data/planet
         flatnodes_dir: /nvme/data/flatnodes
         tile_expiry_dir: /nvme/data/tileupdate
-    - import_role:
+    - name: 'Tile server (steps after data import)'
+      import_role:
         name: roles/tileserver_step2
       vars:
         osm_dbname: gis
@@ -39,7 +42,8 @@
   become: yes
   tags: website
   tasks:
-    - import_role:
+    - name: 'Website and API'
+      import_role:
         name: roles/website
       vars:
         osm_dbname: gis
@@ -55,7 +59,8 @@
   become: yes
   tags: blog
   tasks:
-    - import_role:
+    - name: 'Blog'
+      import_role:
         name: roles/blog
       vars:
         blog:
@@ -67,7 +72,8 @@
   become: yes
   tags: mail
   tasks:
-    - import_role:
+    - name: 'Mail server'
+      import_role:
         name: roles/mail
       vars:
         mail:
@@ -79,7 +85,8 @@
   become: yes
   tags: backup
   tasks:
-    - import_role:
+    - name: 'Prepare for backup access'
+      import_role:
         name: roles/backup_access
       vars:
         backup_user_in_groups:
@@ -93,6 +100,6 @@
   become: yes
   tags: munin
   tasks:
-    - import_role:
+    - name: 'Munin node'
+      import_role:
         name: roles/munin_node
-      vars:
