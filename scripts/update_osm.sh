@@ -39,8 +39,8 @@ function apply_diff_database {
     fi
 
     echo "apply diff"
-    if [[ -v "$OSM2PGSQL_FLATNODES" ]]; then
-        FLATNODES_OPTION="--flat-node $FLATNODES_FILE"
+    if [[ -v "OSM2PGSQL_FLATNODES" ]]; then
+        FLATNODES_OPTION="--flat-node $OSM2PGSQL_FLATNODES"
     else
         FLATNODES_OPTION=""
     fi
@@ -50,7 +50,7 @@ function apply_diff_database {
         NUMBER_PROCESSES_OPTION=""
     fi
     OSM2PGSQL_RETURNCODE=0
-    $OSM2PGSQL --append -d $DATABASE_NAME --merc --multi-geometry --hstore --style $OSM2PGSQL_STYLE --tag-transform $OSM2PGSQL_LUA --expire-tiles $EXPIRE_TILES_ZOOM --expire-output $EXPIRE_OUTPUT --expire-bbox-size 30000 --cache 12000 --slim $FLATNODES_OPTION $NUMBER_PROCESSES_OPTION $DERIVED_DIFF || OSM2PGSQL_RETURNCODE=$?
+    $OSM2PGSQL --append -d $DATABASE_NAME --merc --multi-geometry --hstore --style $OSM2PGSQL_STYLE --tag-transform $OSM2PGSQL_LUA --cache 12000 --slim $FLATNODES_OPTION $NUMBER_PROCESSES_OPTION $DERIVED_DIFF || OSM2PGSQL_RETURNCODE=$?
 
     if [ "$OSM2PGSQL_RETURNCODE" -gt 0 ] ; then
         echo "Osm2pgsql failed with return code $OSM2PGSQL_RETURNCODE, storing diff file in $LAST_DERIVED_DIFF"
@@ -63,8 +63,7 @@ function apply_diff_database {
         psql -v ON_ERROR_STOP=1 --echo-errors -d $DATABASE_NAME -f $MAPSTYLE_DIR/sql/update_station_importance.sql
 
         echo "Expiring up to $(wc -l $EXPIRE_OUTPUT) tiles"
-        $PYTHON $MERGE_TILES -z $EXPIRE_TILES_ZOOM $EXPIRE_OUTPUT | sed -re "s;^([0-9]+)/([0-9]+)/([0-9]+)$;map=$TIREX_MAPS x=\\2 y=\\3 z=\\1;g" | tirex-batch -f exists -p $TIREX_RERENDER_PRIO
-        rm $EXPIRE_OUTPUT
+        $PYTHON $EXPIRE_TILES --min $EXPIRE_TILES_MINZOOM --max $EXPIRE_TILES_MAXZOOM --meta-tile-size 8 --node-cache $OSM2PGSQL_FLATNODES | sed -re "s;^([0-9]+)/([0-9]+)/([0-9]+)$;map=$TIREX_MAPS x=\\2 y=\\3 z=\\1;g" | tirex-batch -f exists -p $TIREX_RERENDER_PRIO
         echo "Submitted expired tiles to Tirex"
     fi
 }
