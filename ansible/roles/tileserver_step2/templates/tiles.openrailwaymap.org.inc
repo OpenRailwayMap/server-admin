@@ -13,7 +13,7 @@ LogLevel info tile:warn
 
 ModTileRenderdSocketName /var/lib/tirex/modtile.sock
 ModTileTileDir           /var/lib/tirex/tiles
-{% for style in styles -%}
+{% for style in tileserver.styles -%}
 AddTileConfig            /{{ style }} {{ style }}
 {% endfor %}
 Redirect permanent       /electrified /electrification
