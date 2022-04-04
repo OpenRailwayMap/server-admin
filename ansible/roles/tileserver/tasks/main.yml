@@ -111,17 +111,18 @@
 
 - name: Create directory for server-admin repository
   file:
-    path: '{{ tileserver_script_dir }}'
+    path: '{{ tileserver_script_dir }}/scripts'
     owner: root
     group: root
     state: directory
     mode: '0755'
 
-- name: Clone server-admin repository
-  git:
-    dest: '{{ tileserver_script_dir }}'
-    repo: https://github.com/OpenRailwayMap/server-admin.git
-    version: 9ee06654bb2a9442e1dc71116f8fd958fd5066cd
+- name: Copy scripts # noqa risky-file-permissions
+  ansible.builtin.copy:
+    dest: '{{ tileserver_script_dir }}/'
+    src: 'files/scripts'
+    owner: root
+    group: root
 
 - name: Write Systemd Unit file for update-data
   copy:
