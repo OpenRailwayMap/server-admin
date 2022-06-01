@@ -8,6 +8,7 @@ users:
       - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDf4xi+0ZDIBcVpdnM/B/zUKar0PQ17yx65eT9r7pmbpuaBKUcp5NV8bl/w1OSxPJkQYyICR1iKddEMMVwKGEhc48Aao24WnwIuuV4jmx+BfTSQ4qsW+zmLrF0/gmgLUFlx06ShIjFt4C7wlOy078PamwkHzzhA2gEETKqJqYKh/2nrCqa1h1RTOb8UJGOwUtHw0z+IXUI1C78eDz/lckPBt3C8K3s8plMqGHnl55S+C2x7EqXGZanVSCdlSwGlsi3Y3N1XJ/nAsaJPRkoUjxe7F9pY3IJSxLdGkp+XMbS3dZ5Y0Z99vOyH75EffJZqkkCwiJqHHJE+1cCC4MKepzQh michael@ackerMichael"
       - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICojyfDNHs8VB2nRxXoRb1AAOYYaufTJcWvmdrkgPeS3 Michael Reichert 2020-02-22"
       - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOiPfgaYNvZsRo+ToTyQITD6fmWAY4gD9+UR7EZIETFN michael@hopscotch.geofabrik.de 2020-03-19"
+      - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIsVV8pnea1n+aDvu2GxT2p7tmkJZ0o+MTw0tJh2AL2F michael@ortelius"
   - name: eike
     root: true
     ssh_public_keys:
