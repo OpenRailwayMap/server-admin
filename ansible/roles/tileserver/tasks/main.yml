@@ -137,13 +137,15 @@
       Requires=postgresql.service tirex-master.service
 
       [Service]
-      Type=oneshot
+      Type=simple
       ExecStart=/bin/bash {{ tileserver_script_dir }}/scripts/update_osm.sh
+      Environment="OSMIUM_POOL_THREADS=3"
       User=osmimport
       Group=users
       StandardOutput=journal
       StandardError=journal
       SyslogIdentifier=update_osm
+      CPUQuota=400%
       Nice=+1
   notify:
     - systemd daemon-reload
