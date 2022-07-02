@@ -85,7 +85,7 @@
 #     - amavisd-new
 #     - amavisd-milter
 
-- name: Create directory for Amavis where to place the socke of the Milter
+- name: Create directory for Amavis where to place the socket of the Milter
   file:
     path: /var/spool/postfix/amavis
     owner: amavis
@@ -93,6 +93,12 @@
     recurse: no
     mode: 0755
     state: directory
+
+- name: Add user postfix to group amavis in order to access Amavis socket
+  user:
+    append: yes
+    groups: amavis
+    name: postfix
 
 - name: Write custom Amavis configuration to /etc/amavis/conf.d/50-user
   copy:
