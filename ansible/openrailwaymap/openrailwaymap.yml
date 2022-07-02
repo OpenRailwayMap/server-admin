@@ -28,7 +28,8 @@
         osm_dbname: gis
         cartocss_dir: /opt/OpenRailwayMap-CartoCSS
         apache2:
-          max_request_workers: 350
+          max_request_workers: 450
+          server_limit: 20
         tileserver:
           styles:
             - standard
