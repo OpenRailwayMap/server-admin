@@ -180,6 +180,22 @@
   when: "'letsencrypt' in group_names"
   include_tasks: '../../../includes/redirect-and-acme-challenge-includes.yml'
 
+- name: Create directory for error tiles
+  file:
+    path: /var/www/tile-util
+    owner: root
+    group: root
+    mode: 0755
+    state: directory
+
+- name: Copy error tile to /var/www/tile-util
+  copy:
+    src: black.png
+    dest: /var/www/tile-util/black.png
+    owner: root
+    group: root
+    mode: 0644
+
 - name: Add tileserver configuration for Apache virtualhost
   template:
     src: '{{ item }}'

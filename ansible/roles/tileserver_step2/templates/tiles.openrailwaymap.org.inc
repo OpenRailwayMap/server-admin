@@ -39,11 +39,16 @@ Header set Access-Control-Allow-Origin "*"
     </RequireAll>
 </Location>
 
+Alias /tile-util/ /var/www/tile-util/
+<Directory /var/www/tile-util>
+    Require all granted
+</Directory>
+
 RewriteEngine on
 
 # Lacking attribution and high traffic
 RewriteCond "%{HTTP_USER_AGENT}" "railon.vonatDroid"
-RewriteRule "." "-" [F]
+RewriteRule "." "/tile-util/black.png" [PT]
 
 # Generic Android user agent
 RewriteCond "%{HTTP_USER_AGENT}" "^Dalvik/[0-9.]+ \(Linux; U; Android"
