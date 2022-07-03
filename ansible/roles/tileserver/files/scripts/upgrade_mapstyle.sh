@@ -13,6 +13,15 @@ function update_git_and_build_styles {
     popd
 }
 
+function update_website_git_and_build_l10n {
+    WEBSITE_GIT=/var/www/www.openrailwaymap.org
+    pushd ${WEBSITE_GIT}
+    echo "updating upstream website changes"
+    git pull --ff
+    make
+    popd
+}
+
 if [ $# -lt 3 ]; then
     echo "ERROR: Wrong usage."
     echo "Usage: $0 RERENDER_MINZOOM RERENDER_MAXZOOM STYLES_TO_RERENDER..."
@@ -31,3 +40,5 @@ systemctl restart tirex-master tirex-backend-manager
 
 echo "Sending rerender requests to Tirex"
 sudo -u osmimport tirex-batch -f exists -p 21 z=${MINZOOM:?}-${MAXZOOM:?} map=${STYLES:?} bbox=-180,-80,180,80
+
+update_website_git_and_build_l10n
