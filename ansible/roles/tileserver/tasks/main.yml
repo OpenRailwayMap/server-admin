@@ -171,7 +171,7 @@
 
 - name: Install fonts for map style
   apt:
-    name: [fonts-noto-cjk, fonts-noto-hinted, fonts-noto-unhinted, fonts-hanazono, ttf-unifont]
+    name: [fonts-noto-cjk, fonts-noto-hinted, fonts-noto-unhinted, fonts-noto-color-emoji, fonts-hanazono, ttf-unifont]
 
 - name: Create directory for CartoCSS map style repository
   file:
@@ -186,7 +186,7 @@
   git:
     dest: '{{ cartocss_dir }}'
     repo: https://github.com/OpenRailwayMap/OpenRailwayMap-CartoCSS.git
-    version: 780c2c88dd08a791d5d0332d789c8a2d0ff53bdd
+    version: c40f134bfe3a314b27a3afd003167a8961e09097
 
 - name: Run import
   command: "systemd-run osm_import {{ tileserver_script_dir }}/scripts/import_osm.sh"
