@@ -169,6 +169,48 @@
   notify:
     - systemd daemon-reload
 
+- name: Write Systemd Unit file for rerender-lowzoom-tiles.service
+  copy:
+    dest: '/etc/systemd/system/rerender-lowzoom-tiles.service'
+    mode: 0644
+    owner: root
+    group: root
+    content: |
+      [Unit]
+      Description=Rerender low zoom tiles
+      After=syslog.target network.target
+      Requires=postgresql.service tirex-master.service
+
+      [Service]
+      Type=simple
+      ExecStart=/usr/bin/tirex-batch -p 26 map=standard,maxspeed,signals,electrification,gauge z=0-9 bbox=-180,-55,180,71
+      User=tirex
+      Group=users
+      StandardOutput=journal
+      StandardError=journal
+  notify:
+    - systemd daemon-reload
+
+- name: Write Systemd Timer for rerender-lowzoom-tiles.timer
+  copy:
+    dest: '/etc/systemd/system/rerender-lowzoom-tiles.timer'
+    mode: 0644
+    owner: root
+    group: root
+    content: |
+      [Unit]
+      Description=Rerender low zoom tiles
+
+      [Timer]
+      OnUnitActiveSec=30d
+      OnBootSec=2h
+      Unit=rerender-lowzoom-tiles.service
+
+      [Install]
+      WantedBy=default.target
+  notify:
+    - systemd daemon-reload
+
 - name: Install fonts for map style
   apt:
     name: [fonts-noto-cjk, fonts-noto-hinted, fonts-noto-unhinted, fonts-noto-color-emoji, fonts-hanazono, ttf-unifont]

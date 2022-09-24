@@ -300,11 +300,14 @@
     enabled: yes
     state: started
 
-- name: systemd enable update-data.timer
+- name: Enable update-data and rerender-lowzoom-tiles timers
   systemd:
-    name: update-data.timer
+    name: "{{ item }}"
     enabled: yes
     state: started
+  loop:
+    - "update-data.timer"
+    - "rerender-lowzoom-tiles.timer"
 
 - debug: # noqa unnamed-task
     msg: 'Tirex is ready to render tiles now. Please start bulk-rendering of tiles on zoom levels 0 to 12 using the following command:\ntirex-batch --prio 15 map=standard,maxspeed,signals z=0-12 bbox=-180,-80,180,80'
