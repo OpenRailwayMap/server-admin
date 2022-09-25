@@ -35,10 +35,10 @@ STYLES=$( IFS=, ; echo "${*}" )
 
 update_git_and_build_styles
 
-echo "Restarting Tirex to clean old queue"
-systemctl restart tirex-master tirex-backend-manager
+echo "Reload tirex-backend-manager to use new map styles"
+systemctl reload tirex-backend-manager
 
 echo "Sending rerender requests to Tirex"
-sudo -u osmimport tirex-batch -f exists -p 21 z=${MINZOOM:?}-${MAXZOOM:?} map=${STYLES:?} bbox=-180,-80,180,80
+sudo -u osmimport tirex-batch -f exists -p 21 z=${MINZOOM:?}-${MAXZOOM:?} map=${STYLES:?} bbox=-150,-55,180,71
 
 update_website_git_and_build_l10n
