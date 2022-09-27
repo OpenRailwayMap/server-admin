@@ -228,7 +228,7 @@
   git:
     dest: '{{ cartocss_dir }}'
     repo: https://github.com/OpenRailwayMap/OpenRailwayMap-CartoCSS.git
-    version: c40f134bfe3a314b27a3afd003167a8961e09097
+    version: cc265cbd005d8ed43e6d2f15c09550a5724429af
 
 - name: Run import
   command: "systemd-run osm_import {{ tileserver_script_dir }}/scripts/import_osm.sh"
