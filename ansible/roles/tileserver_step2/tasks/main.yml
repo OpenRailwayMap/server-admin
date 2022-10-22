@@ -145,6 +145,38 @@
   notify:
     - systemd reload tirex-backend-manager
 
+- name: 'Tirex: Configure buckets'
+  lineinfile:
+    path: /etc/tirex/tirex.conf
+    regexp: '^bucket +name=({{ item.bucket }}|{{ item.oldname }}) +minprio=\d+ +maxproc=\d+ +maxload=\d+$'
+    line: 'bucket name={{ item.bucket }} minprio={{ item.minprio}} maxproc={{ item.maxproc }} maxload={{ item.maxload }}'
+  loop:
+    - bucket: live
+      oldname: live
+      minprio: 1
+      maxproc: 4
+      maxload: 20
+      # Upstream minprio 10, maxproc 3, maxload 8
+    - bucket: important
+      oldname: important
+      minprio: 10
+      maxproc: 2
+      maxload: 8
+      # Does not exist upstream
+    - bucket: expiredtiles
+      oldname: expiredtiles
+      minprio: 15
+      maxproc: 2
+      maxload: 6
+      # Upstream called "background", minprio 20, maxproc 2, maxload 4
+    - bucket: rerenderstyleupdate
+      oldname: background
+      minprio: 20
+      maxproc: 2
+      maxload: 4
+  notify:
+    - systemd reload tirex-master
+
 - name: Install gawk
   apt:
     name: gawk
