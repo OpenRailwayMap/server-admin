@@ -10,6 +10,15 @@ function update_git_and_build_styles {
     sudo -u osmimport git checkout origin/master
     echo "Building map styles"
     sudo -u osmimport make CARTO=node_modules/carto/bin/carto
+    echo "Updating database views."
+    echo "If errors are reported, remove and recreate the view using following commands:"
+    echo "sudo -u osmimport psql -d gis -c 'DROP VIEW viewname CASCADE;'"
+    echo "sudo -u osmimport psql -d gis -f sql/osm_carto_views.sql && sudo -u osmimport psql -d gis -f sql/get_station_importance.sql"
+    sudo -u osmimport psql -d gis -f sql/osm_carto_views.sql
+    echo "If errors are reported, remove and recreate the view using following commands:"
+    echo "sudo -u osmimport psql -d gis -c 'DROP FUNCTION function_name CASCADE;'"
+    echo "sudo -u osmimport psql -d gis -f sql/functions.sql"
+    sudo -u osmimport psql -d gis -f sql/functions.sql
     popd
 }
 
