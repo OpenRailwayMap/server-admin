@@ -14,10 +14,12 @@ function update_git_and_build_styles {
     echo "If errors are reported, remove and recreate the view using following commands:"
     echo "sudo -u osmimport psql -d gis -c 'DROP VIEW viewname CASCADE;'"
     echo "sudo -u osmimport psql -d gis -f sql/osm_carto_views.sql && sudo -u osmimport psql -d gis -f sql/get_station_importance.sql"
+    echo "and rerun this script afterwards."
     sudo -u osmimport psql -d gis -f sql/osm_carto_views.sql
     echo "If errors are reported, remove and recreate the view using following commands:"
     echo "sudo -u osmimport psql -d gis -c 'DROP FUNCTION function_name CASCADE;'"
     echo "sudo -u osmimport psql -d gis -f sql/functions.sql"
+    echo "and rerun this script afterwards."
     sudo -u osmimport psql -d gis -f sql/functions.sql
     popd
 }
