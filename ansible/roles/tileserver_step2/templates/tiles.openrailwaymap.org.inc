@@ -54,6 +54,11 @@ RewriteRule "." "/tile-util/black.png" [PT]
 RewriteCond "%{HTTP_USER_AGENT}" "^Dalvik/[0-9.]+ \(Linux; U; Android"
 RewriteRule "." "-" [F]
 
+# More than 20k tile requets per day but website is not public (looks like for-charge service)
+RewriteCond "%{HTTP_REFERER}" "//(www\.)?geliospro\.com/" [OR]
+RewriteCond "%{HTTP_REFERER}" "//tapiagps\.mx/"
+RewriteRule "." "-" [R=429,L]
+
 # Monitoring tool doing test requests every second for three map styles, Deutsche Bahn IP
 # RewriteCond "%{HTTP_USER_AGENT}" "SynxHealthTest"
 # RewriteRule "." "-" [R=429,L]
