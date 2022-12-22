@@ -50,9 +50,14 @@ RewriteEngine on
 RewriteCond "%{HTTP_USER_AGENT}" "railon.vonatDroid"
 RewriteRule "." "/tile-util/black.png" [PT]
 
-# Generic Android user agent
-RewriteCond "%{HTTP_USER_AGENT}" "^Dalvik/[0-9.]+ \(Linux; U; Android"
-RewriteRule "." "-" [F]
+# Generic user agents
+# Dalvik, an Android HTTP library
+RewriteCond "%{HTTP_USER_AGENT}" "^Dalvik/[0-9.]+ \(Linux; U; Android" [OR]
+# Dart:io, a NodeJS HTTP library
+RewriteCond "%{HTTP_USER_AGENT}" "^Dart/\d+\.\d+ \(dart:io\)$" [OR]
+# Empty user agents
+RewriteCond "%{HTTP_USER_AGENT}" "^$"
+RewriteRule "." "-" [R=400,L]
 
 # More than 20k tile requets per day but website is not public (looks like for-charge service)
 RewriteCond "%{HTTP_REFERER}" "//(www\.)?geliospro\.com/" [OR]
