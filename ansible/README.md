@@ -164,3 +164,4 @@ If you consider porting this to other Linux distributions, you might have to cha
 ## License
 
 The Ansible Playbooks are licensed under the terms of the MIT License. See the COPYING file for details.
+Some files are available on different terms (but still free software). See their headers for details.
