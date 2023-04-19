@@ -161,7 +161,7 @@
       Description=Update OSM data and apply diff to database
 
       [Timer]
-      OnCalendar=*-*-* 2,5,7,13,17,20,23:05
+      OnCalendar=*-*-* 0,8,13,20:05
       Unit=update-data.service
 
       [Install]
