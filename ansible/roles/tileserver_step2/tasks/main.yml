@@ -311,11 +311,7 @@
     group: tirex
     mode: 0755
     state: directory
-  loop:
-    - standard
-    - maxspeed
-    - signals
-    - electrification
+  loop: "{{ tileserver.styles }}"
   notify:
     - systemd reload tirex-backend-manager
     - systemd reload tirex-master
