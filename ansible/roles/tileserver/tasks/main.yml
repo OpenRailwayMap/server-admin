@@ -168,6 +168,7 @@
       WantedBy=default.target
   notify:
     - systemd daemon-reload
+    - systemd restart update-data.timer
 
 - name: Write Systemd Unit file for rerender-lowzoom-tiles.service
   copy:
