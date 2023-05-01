@@ -61,6 +61,8 @@
         api_hostname: api.openrailwaymap.org
         website_dir: /var/www/www.openrailwaymap.org
         openrailwaymap_user_home: /srv/openrailwaymap
+        api_v2:
+          directory: /opt/OpenRailwayMap-api
 
 - hosts: blog
   become: yes

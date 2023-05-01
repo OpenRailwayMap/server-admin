@@ -15,6 +15,14 @@ Header set Access-Control-Allow-Origin "*"
 ProxyPass /.well-known !
 {% endif %}
 
+ProxyPass /v2 !
+WSGIScriptAlias /v2 /opt/OpenRailwayMap-api/api.py
+WSGIProcessGroup api_v2
+
+<Location /v2>
+    Require all granted
+</Location>
+
 ProxyPreserveHost On
 ProxyPass / http://localhost:9002/
 ProxyPassReverse / http://localhost:9002/

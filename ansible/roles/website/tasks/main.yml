@@ -177,6 +177,57 @@
     enabled: yes
     state: started
 
+- name: Install required packages from APT for API version 2
+  apt:
+    name:
+      - python3-werkzeug
+      - python3-psycopg2
+      - apache2
+      - libapache2-mod-wsgi-py3
+
+- name: Create directory for Git repository
+  file:
+    path: '{{ api_v2.directory }}'
+    owner: root
+    group: root
+    state: directory
+    mode: '0755'
+
+- name: Clone Git repository of the API
+  git:
+    dest: '{{ api_v2.directory }}'
+    repo: https://github.com/OpenRailwayMap/OpenRailwayMap-api.git
+    version: 433417e704ec20c40281030701231b917afdc05e
+
+- name: Create database extension Unaccent
+  become: true
+  become_user: postgres
+  postgresql_ext:
+    db: '{{ osm_dbname }}'
+    name: 'unaccent'
+
+- name: Create database views and indexes for the APIv2
+  become: true
+  become_user: osmimport
+  community.postgresql.postgresql_script:
+    login_user: osmimport
+    db: '{{ osm_dbname }}'
+    path: '{{ api_v2.directory }}/{{ item }}'
+  loop:
+    - 'prepare_facilities.sql'
+    - 'prepare_milestones.sql'
+
+- name: Grant SELECT permission to user openrailwaymap
+  become: true
+  become_user: postgres
+  ignore_errors: '{{ ansible_check_mode }}'
+  postgresql_privs:
+    role: openrailwaymap
+    type: table
+    objs: openrailwaymap_ref,openrailwaymap_facilities_for_search
+    privs: 'SELECT'
+    database: '{{ osm_dbname }}'
+
 - name: Enable Apache modules proxy, proxy_http, headers and rewrite
   apache2_module:
     name: '{{ item }}'
@@ -185,6 +236,7 @@
     - 'proxy'
     - 'proxy_http'
     - 'headers'
+    - 'wsgi'
   notify:
     - systemd restart apache2
 
