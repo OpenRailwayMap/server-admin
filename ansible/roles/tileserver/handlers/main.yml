@@ -2,3 +2,7 @@
   systemd:
     name: postgresql
     state: reloaded
+- name: systemd restart update-data.timer
+  systemd:
+    name: update-data.timer
+    state: restarted

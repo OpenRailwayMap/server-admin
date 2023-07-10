@@ -74,15 +74,6 @@
     owner: root
     group: root
 
-- name: Create cronjob for SSL certificate renewal
-  cron:
-    name: 'LetsEncrypt certificate renewal'
-    day: '10'
-    minute: '34'
-    hour: '4'
-    job: '/bin/bash /opt/acme-scripts/new_certificate.sh'
-    user: root
-
 - name: 'Write letsencrypt-acme-challenges.conf'
   copy:
     dest: '/etc/apache2/conf-available/letsencrypt-acme-challenges.conf'
@@ -110,8 +101,59 @@
     name: apache2
     state: started
 
+- name: Create Systemd unit for SSL certificate renewal
+  copy:
+    dest: '/etc/systemd/system/letsencrypt-update.service'
+    mode: 0644
+    owner: root
+    group: root
+    content: |
+      [Unit]
+      Description=Get new LetsEncrypt SSL certificate
+      After=syslog.target network.target
+      Requires=apache2.service
+
+      [Service]
+      Type=simple
+      ExecStart=/bin/bash /opt/acme-scripts/new_certificate.sh
+      User=root
+      Group=root
+      StandardOutput=journal
+      StandardError=journal
+      SyslogIdentifier=letsencrypt-update
+  notify:
+    - systemd daemon-reload
+
+- name: Create Systemd timer for SSL certificate renewal
+  copy:
+    dest: '/etc/systemd/system/letsencrypt-update.timer'
+    mode: 0644
+    owner: root
+    group: root
+    content: |
+      [Unit]
+      Description=Get new LetsEncrypt SSL certificate
+
+      [Timer]
+      OnCalendar=monthly
+      Persistent=true
+      Unit=letsencrypt-update.service
+
+      [Install]
+      WantedBy=timers.target
+  notify:
+    - systemd daemon-reload
+    - systemd restart letsencrypt-update.timer
+    - systemd enable letsencrypt-update.timer
+
 - name: 'Flush handlers before retrieving the certificate for the first time'
   meta: flush_handlers
+
+- name: Enable letsencrypt-update.timer
+  systemd:
+    name: "letsencrypt-update.timer"
+    enabled: yes
+    state: started
 
 - name: Fetch a certificate for the first time
   check_mode: no

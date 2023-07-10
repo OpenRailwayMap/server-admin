@@ -1,0 +1,9 @@
+- name: systemd restart letsencrypt-update.timer
+  systemd:
+    name: letsencrypt-update.timer
+    state: restarted
+
+- name: systemd enable letsencrypt-update.timer
+  systemd:
+    name: letsencrypt-update.timer
+    enabled: yes
