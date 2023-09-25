@@ -66,6 +66,13 @@
       notify:
         - systemd reload tirex-backend-manager
 
+- name: Enable Apache module mod_remoteip
+  apache2_module:
+    name: remoteip
+    state: present
+  notify:
+    - systemd restart apache2
+
 - name: Enable Apache module mod_ssl
   apache2_module:
     name: ssl

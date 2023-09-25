@@ -34,8 +34,13 @@ Header set Access-Control-Allow-Origin "*"
     <RequireAll>
         Require all granted
         Require not ip 5.35.80.253
+
 	# Tile scraping 2021-12-28
         Require not ip 5.166.235.3
+
+        # Requests with invalid URLs (missing style name), 300k requests per day, user-agent is a Samsung TV
+        Require not ip 185.109.16.136
+        Require not ip 185.109.16.135
     </RequireAll>
 </Location>
 
@@ -47,26 +52,32 @@ Alias /tile-util/ /var/www/tile-util/
 RewriteEngine on
 
 # Lacking attribution and high traffic
-RewriteCond "%{HTTP_USER_AGENT}" "railon.vonatDroid"
+RewriteCond "%{HTTP_USER_AGENT}" "railon.vonatDroid" [OR]
+## Access denied above, kept here as next step if it does not help.
+## RewriteCond expr "%{REMOTE_ADDR} -ipmatch '185.109.16.136'" [OR]
+## RewriteCond expr "%{REMOTE_ADDR} -ipmatch '185.109.16.135'" [OR]
+# More than 20k tile requets per day but website is not public (looks like for-charge service)
+RewriteCond "%{HTTP_REFERER}" "//(www\.)?geliospro\.com/"
 RewriteRule "." "/tile-util/black.png" [PT]
+
 
 # Generic user agents
 # Dalvik, an Android HTTP library
 RewriteCond "%{HTTP_USER_AGENT}" "^Dalvik/[0-9.]+ \(Linux; U; Android" [OR]
 # Dart:io, a NodeJS HTTP library
 RewriteCond "%{HTTP_USER_AGENT}" "^Dart/\d+\.\d+ \(dart:io\)$" [OR]
+# python-requests, a Python HTTP library
+RewriteCond "%{HTTP_USER_AGENT}" "^python-requests/" [OR]
 # Empty user agents
 RewriteCond "%{HTTP_USER_AGENT}" "^$"
 RewriteRule "." "-" [R=400,L]
 
 # More than 20k tile requets per day but website is not public (looks like for-charge service)
-RewriteCond "%{HTTP_REFERER}" "//(www\.)?geliospro\.com/" [OR]
-RewriteCond "%{HTTP_REFERER}" "//tapiagps\.mx/"
-RewriteRule "." "-" [R=429,L]
+RewriteCond "%{HTTP_REFERER}" "//tapiagps\.mx/" [OR]
 
 # Monitoring tool doing test requests every second for three map styles, Deutsche Bahn IP
-# RewriteCond "%{HTTP_USER_AGENT}" "SynxHealthTest"
-# RewriteRule "." "-" [R=429,L]
+RewriteCond "%{HTTP_USER_AGENT}" "SynxHealthTest"
+RewriteRule "." "-" [R=429,L]
 
 ErrorLog {{ apache2_logdir }}/{{ tileserver.hostname }}.error.log
 CustomLog {{ apache2_logdir }}/{{ tileserver.hostname }}.access.log combined
