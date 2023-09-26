@@ -74,6 +74,8 @@ RewriteRule "." "-" [R=400,L]
 
 # More than 20k tile requets per day but website is not public (looks like for-charge service)
 RewriteCond "%{HTTP_REFERER}" "//tapiagps\.mx/" [OR]
+RewriteCond "%{HTTP_REFERER}" "//rw.tideen.com:38172/" [OR]
+RewriteCond "%{HTTP_REFERER}" "//live1.trackandsnap.com/" [OR]
 
 # Monitoring tool doing test requests every second for three map styles, Deutsche Bahn IP
 RewriteCond "%{HTTP_USER_AGENT}" "SynxHealthTest"
