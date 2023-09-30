@@ -38,9 +38,9 @@ Header set Access-Control-Allow-Origin "*"
 	# Tile scraping 2021-12-28
         Require not ip 5.166.235.3
 
-        # Requests with invalid URLs (missing style name), 300k requests per day, user-agent is a Samsung TV
-        Require not ip 185.109.16.136
-        Require not ip 185.109.16.135
+## Samsung Smart TV, see below
+#        Require not ip 185.109.16.136
+#        Require not ip 185.109.16.135
     </RequireAll>
 </Location>
 
@@ -53,12 +53,13 @@ RewriteEngine on
 
 # Lacking attribution and high traffic
 RewriteCond "%{HTTP_USER_AGENT}" "railon.vonatDroid" [OR]
-## Access denied above, kept here as next step if it does not help.
-## RewriteCond expr "%{REMOTE_ADDR} -ipmatch '185.109.16.136'" [OR]
-## RewriteCond expr "%{REMOTE_ADDR} -ipmatch '185.109.16.135'" [OR]
 # More than 20k tile requets per day but website is not public (looks like for-charge service)
 RewriteCond "%{HTTP_REFERER}" "//(www\.)?geliospro\.com/"
 RewriteRule "." "/tile-util/black.png" [PT]
+
+# Requests with invalid URLs (missing style name), 300k requests per day, user-agent is a Samsung TV
+RewriteCond "%{HTTP_USER_AGENT}" "SMART-TV; Linux; Tizen 4.0"
+RewriteRule "^/[0-9]" "/tile-util/black.png" [PT]
 
 
 # Generic user agents
@@ -75,7 +76,12 @@ RewriteRule "." "-" [R=400,L]
 # More than 20k tile requets per day but website is not public (looks like for-charge service)
 RewriteCond "%{HTTP_REFERER}" "//tapiagps\.mx/" [OR]
 RewriteCond "%{HTTP_REFERER}" "//rw.tideen.com:38172/" [OR]
-RewriteCond "%{HTTP_REFERER}" "//live1.trackandsnap.com/"
+RewriteCond "%{HTTP_REFERER}" "//live1.trackandsnap.com/" [OR]
+# More than 20k tile request per IP and day but strange user agents and no referers
+RewriteCond "%{HTTP_USER_AGENT}" "Mozilla/4.7[35]"
+## Requests with invalid URLs (missing style name), 300k requests per day, user-agent is a Samsung TV
+#RewriteCond expr "%{REMOTE_ADDR} -ipmatch '185.109.16.136'" [OR]
+#RewriteCond expr "%{REMOTE_ADDR} -ipmatch '185.109.16.135'"
 RewriteRule "." "-" [R=429,L]
 
 ## Monitoring tool doing test requests every second for three map styles
