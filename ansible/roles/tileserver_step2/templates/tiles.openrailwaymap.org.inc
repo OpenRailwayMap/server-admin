@@ -61,6 +61,11 @@ RewriteRule "." "/tile-util/black.png" [PT]
 RewriteCond "%{HTTP_USER_AGENT}" "SMART-TV; Linux; Tizen 4.0"
 RewriteRule "^/[0-9]" "/tile-util/black.png" [PT]
 
+# User-agent of a browser more than 10 years old and no referer
+RewriteCond "%{HTTP_USER_AGENT}" "^Opera/9\."
+# Empty user agents
+RewriteCond "%{HTTP_REFERER}" "^$"
+RewriteRule "." "-" [R=400,L]
 
 # Generic user agents
 # Dalvik, an Android HTTP library
