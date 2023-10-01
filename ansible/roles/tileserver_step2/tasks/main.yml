@@ -335,7 +335,51 @@
     enabled: yes
     state: started
 
-- name: Enable update-data and rerender-lowzoom-tiles timers
+- name: Create Systemd service file for deleting old metatiles regularly
+  copy:
+    dest: /etc/systemd/system/delete_old_metatiles.service
+    mode: 0644
+    owner: root
+    group: root
+    content: |
+      [Unit]
+      Description=Delete old metatiles
+      After=network.target
+
+      [Service]
+      Type=simple
+      ExecStart=/bin/bash {{ tileserver_script_dir }}/scripts/delete_old_metatiles.sh
+      User=tirex
+      Group=tirex
+      StandardOutput=journal
+      StandardError=journal
+      SyslogIdentifier=delete_old_metatiles
+      Nice=+1
+  notify:
+    - systemd daemon-reload
+
+- name: Write Systemd Timer for delete_old_metatiles.timer
+  copy:
+    dest: '/etc/systemd/system/delete_old_metatiles.timer'
+    mode: 0644
+    owner: root
+    group: root
+    content: |
+      [Unit]
+      Description=Delete old metatiles every month
+
+      [Timer]
+      OnUnitActiveSec=30d
+      OnBootSec=15d
+      Unit=delete_old_metatiles.service
+
+      [Install]
+      WantedBy=default.target
+  notify:
+    - systemd daemon-reload
+    - systemd restart delete_old_metatiles.timer
+
+- name: Enable update-data, rerender-lowzoom-tiles and delete_old_metatiles.timer
   systemd:
     name: "{{ item }}"
     enabled: yes
@@ -343,6 +387,7 @@
   loop:
     - "update-data.timer"
     - "rerender-lowzoom-tiles.timer"
+    - "delete_old_metatiles.timer"
 
 - debug: # noqa unnamed-task
     msg: 'Tirex is ready to render tiles now. Please start bulk-rendering of tiles on zoom levels 0 to 12 using the following command:\ntirex-batch --prio 15 map=standard,maxspeed,signals z=0-12 bbox=-180,-80,180,80'

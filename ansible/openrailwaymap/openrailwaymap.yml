@@ -14,36 +14,9 @@
     - name: 'Tile server (steps until data import)'
       import_role:
         name: roles/tileserver
-      vars:
-        osm_dbname: gis
-        tileserver_script_dir: /opt/OpenRailwayMap-server-config
-        cartocss_dir: /opt/OpenRailwayMap-CartoCSS
-        osm_data_dir: /nvme/data/planet
-        flatnodes_dir: /nvme/data/flatnodes
-        tile_expiry_dir: /nvme/data/tileupdate
     - name: 'Tile server (steps after data import)'
       import_role:
         name: roles/tileserver_step2
-      vars:
-        osm_dbname: gis
-        cartocss_dir: /opt/OpenRailwayMap-CartoCSS
-        apache2:
-          max_request_workers: 450
-          server_limit: 20
-        tileserver:
-          styles:
-            - standard
-            - maxspeed
-            - signals
-            - electrification
-            - gauge
-          development_tools: true
-          hostname: tiles.openrailwaymap.org
-          hostname_aliases:
-            - a.tiles.openrailwaymap.org
-            - b.tiles.openrailwaymap.org
-            - c.tiles.openrailwaymap.org
-            - tiles.buegelfalte.openrailwaymap.org
 
 - hosts: all
   become: yes

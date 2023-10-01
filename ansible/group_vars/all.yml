@@ -1,6 +1,32 @@
 ---
 ansible_python_interpreter: python3
 apache2_logdir: /var/log/apache2
+apache2:
+  max_request_workers: 450
+  server_limit: 20
+
+tileserver:
+  styles:
+    - standard
+    - maxspeed
+    - signals
+    - electrification
+    - gauge
+  development_tools: true
+  hostname: tiles.openrailwaymap.org
+  hostname_aliases:
+    - a.tiles.openrailwaymap.org
+    - b.tiles.openrailwaymap.org
+    - c.tiles.openrailwaymap.org
+    - tiles.buegelfalte.openrailwaymap.org
+
+osm_dbname: gis
+tileserver_script_dir: /opt/OpenRailwayMap-server-config
+cartocss_dir: /opt/OpenRailwayMap-CartoCSS
+osm_data_dir: /nvme/data/planet
+flatnodes_dir: /nvme/data/flatnodes
+tile_expiry_dir: /nvme/data/tileupdate
+
 users:
   - name: michael
     root: true

@@ -14,3 +14,7 @@
   systemd:
     name: tirex-master
     state: reloaded
+- name: systemd restart delete_old_metatiles.timer
+  systemd:
+    name: delete_old_metatiles.timer
+    state: restarted
