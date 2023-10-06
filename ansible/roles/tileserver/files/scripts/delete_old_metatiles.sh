@@ -17,11 +17,11 @@ function delete_metatiles () {
 
 for STYLE in standard maxspeed gauge electrification signals ; do
     delete_metatiles 19 41 $STYLE
-    delete_metatiles 18 41 $STYLE
-    delete_metatiles 17 41 $STYLE
-    delete_metatiles 16 51 $STYLE
-    delete_metatiles 15 61 $STYLE
-    delete_metatiles 14 71 $STYLE
-    delete_metatiles 13 81 $STYLE
+    delete_metatiles 18 61 $STYLE
+    delete_metatiles 17 81 $STYLE
+    delete_metatiles 16 91 $STYLE
+    delete_metatiles 15 121 $STYLE
+    delete_metatiles 14 141 $STYLE
+    delete_metatiles 13 181 $STYLE
 done
 echo "Removed old metatiles." 
