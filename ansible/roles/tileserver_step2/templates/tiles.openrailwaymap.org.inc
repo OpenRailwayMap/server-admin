@@ -65,7 +65,7 @@ RewriteRule "^/[0-9]" "/tile-util/black.png" [PT]
 RewriteCond "%{HTTP_USER_AGENT}" "^Opera/9\."
 # Empty user agents
 RewriteCond "%{HTTP_REFERER}" "^$"
-RewriteRule "." "-" [R=400,L]
+RewriteRule "." "-" [F]
 
 # Generic user agents
 # Dalvik, an Android HTTP library
@@ -76,7 +76,7 @@ RewriteCond "%{HTTP_USER_AGENT}" "^Dart/\d+\.\d+ \(dart:io\)$" [OR]
 RewriteCond "%{HTTP_USER_AGENT}" "^python-requests/" [OR]
 # Empty user agents
 RewriteCond "%{HTTP_USER_AGENT}" "^$"
-RewriteRule "." "-" [R=400,L]
+RewriteRule "." "-" [F]
 
 # More than 20k tile requets per day but website is not public (looks like for-charge service)
 RewriteCond "%{HTTP_REFERER}" "//tapiagps\.mx/" [OR]
