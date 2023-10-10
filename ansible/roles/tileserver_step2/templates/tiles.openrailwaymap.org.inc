@@ -82,8 +82,12 @@ RewriteRule "." "-" [F]
 RewriteCond "%{HTTP_REFERER}" "//tapiagps\.mx/" [OR]
 RewriteCond "%{HTTP_REFERER}" "//rw.tideen.com:38172/" [OR]
 RewriteCond "%{HTTP_REFERER}" "//live1.trackandsnap.com/" [OR]
+# More than 195k tile requets per day but website is not public (looks like for-charge service)
+RewriteCond "%{HTTP_REFERER}" "//rastreobusmen\.geovoy\.com/" [OR]
 # Requests with 12 years old Safari on iPad. More than 158k requests on a single day.
 RewriteCond expr "%{REMOTE_ADDR} -ipmatch '85.214.47.106'" [OR]
+# More than 190k tile request per IP, many requests with Internet Explorer 7 and no referrer
+RewriteCond expr "%{REMOTE_ADDR} -ipmatch '158.181.72.225'" [OR]
 # More than 20k tile request per IP and day but strange user agents and no referers
 RewriteCond "%{HTTP_USER_AGENT}" "Mozilla/4.7[35]"
 ## Requests with invalid URLs (missing style name), 300k requests per day, user-agent is a Samsung TV
