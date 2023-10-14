@@ -168,13 +168,13 @@
       oldname: important
       minprio: 10
       maxproc: 2
-      maxload: 8
+      maxload: 14
       # Does not exist upstream
     - bucket: expiredtiles
       oldname: expiredtiles
       minprio: 15
       maxproc: 2
-      maxload: 6
+      maxload: 9
       # Upstream called "background", minprio 20, maxproc 2, maxload 4
     - bucket: rerenderstyleupdate
       oldname: background
