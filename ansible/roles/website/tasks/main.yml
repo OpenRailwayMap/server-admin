@@ -92,9 +92,9 @@
     password: '*'
     system: yes
 
-- name: Create log directory for API
+- name: Create log file for API
   file:
-    state: directory
+    state: exists
     path: /var/log/orm-api
     owner: openrailwaymap
     group: adm
