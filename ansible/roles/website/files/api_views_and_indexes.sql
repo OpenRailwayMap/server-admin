@@ -1,16 +1,25 @@
 -- We have to create the indexes on a function because PostgreSQL does not support indexes on views
-CREATE OR REPLACE FUNCTION public.get_tags_hstore(railway TEXT, name TEXT, tags HSTORE)
+CREATE OR REPLACE FUNCTION public.get_tags_hstore(railway TEXT, name TEXT, ref TEXT, tags HSTORE)
     RETURNS HSTORE AS $$
 BEGIN
   -- See https://stackoverflow.com/questions/21909417/pgundefinedobject-error-type-hstore-does-not-exist-but-it-does/21910573#21910573
+  IF railway IS NOT NULL AND name IS NOT NULL AND ref IS NOT NULL THEN
+    RETURN public.hstore(ARRAY['railway'::text, 'name'::text, 'ref'::text], ARRAY[railway, name, ref]) OPERATOR(public.||) tags;
+  END IF;
   IF railway IS NOT NULL AND name IS NOT NULL THEN
     RETURN public.hstore(ARRAY['railway'::text, 'name'::text], ARRAY[railway, name]) OPERATOR(public.||) tags;
+  END IF;
+  IF railway IS NOT NULL AND ref IS NOT NULL THEN
+    RETURN public.hstore(ARRAY['railway'::text, 'ref'::text], ARRAY[railway, ref]) OPERATOR(public.||) tags;
   END IF;
   IF railway IS NOT NULL THEN
     RETURN public.hstore('railway'::text, railway) OPERATOR(public.||) tags;
   END IF;
   IF name IS NOT NULL THEN
     RETURN public.hstore('name'::text, name) OPERATOR(public.||) tags;
+  END IF;
+  IF ref IS NOT NULL THEN
+    RETURN public.hstore('ref'::text, ref) OPERATOR(public.||) tags;
   END IF;
   RETURN tags;
 END;
@@ -21,7 +30,7 @@ IMMUTABLE;
 CREATE OR REPLACE VIEW openrailwaymap_api_point AS
   SELECT
       osm_id,
-      get_tags_hstore(railway, name, tags) AS tags,
+      get_tags_hstore(railway, name, ref, tags) AS tags,
       way
     FROM planet_osm_point
     WHERE railway IS NOT NULL;
@@ -29,7 +38,7 @@ CREATE OR REPLACE VIEW openrailwaymap_api_point AS
 CREATE OR REPLACE VIEW openrailwaymap_api_line AS
   SELECT
       osm_id,
-      get_tags_hstore(railway, name, tags) AS tags,
+      get_tags_hstore(railway, name, ref, tags) AS tags,
       way
     FROM planet_osm_line
     WHERE railway IS NOT NULL;
@@ -38,7 +47,7 @@ CREATE OR REPLACE VIEW openrailwaymap_api_polygon AS
   SELECT
       osm_id,
       way_area,
-      get_tags_hstore(railway, name, tags) AS tags,
+      get_tags_hstore(railway, name, ref, tags) AS tags,
       way
     FROM planet_osm_polygon
     WHERE railway IS NOT NULL;
