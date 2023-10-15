@@ -94,11 +94,11 @@
 
 - name: Create log file for API
   file:
-    state: exists
+    state: file
     path: /var/log/orm-api
     owner: openrailwaymap
     group: adm
-    mode: 0750
+    mode: 0644
 
 - debug: # noqa unnamed-task
     msg: 'On Debian, the authentication method md5 is enabled for all users connecting from localhost via TCP/IP to any local database. Modify pg_hba.conf if your database is configured differently.'
