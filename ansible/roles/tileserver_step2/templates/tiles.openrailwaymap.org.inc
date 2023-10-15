@@ -53,13 +53,24 @@ RewriteEngine on
 
 # Lacking attribution and high traffic
 RewriteCond "%{HTTP_USER_AGENT}" "railon.vonatDroid" [OR]
+# 50k to 200k tile requets per day but website is not public (looks like for-charge service)
+# Responding with HTTP status 429 for about 5 days did not make this client to go away.
+RewriteCond "%{HTTP_REFERER}" "//rastreobusmen\.geovoy\.com/" [OR]
 # More than 20k tile requets per day but website is not public (looks like for-charge service)
 RewriteCond "%{HTTP_REFERER}" "//(www\.)?geliospro\.com/"
+# SEO website with ads and no meaningful content after a rough review (no HTTP 429 prior to black tile response)
+RewriteCond "%{HTTP_REFERER}" "//zugradar.info/"
 RewriteRule "." "/tile-util/black.png" [PT]
 
 # Requests with invalid URLs (missing style name), 300k requests per day, user-agent is a Samsung TV
 RewriteCond "%{HTTP_USER_AGENT}" "SMART-TV; Linux; Tizen 4.0"
 RewriteRule "^/[0-9]" "/tile-util/black.png" [PT]
+
+# Embedded, unpatched software
+RewriteCond "%{HTTP_USER_AGENT}" "^Mozilla/4\.0"
+# Empty user agents
+RewriteCond "%{HTTP_REFERER}" "^$"
+RewriteRule "." "-" [F]
 
 # User-agent of a browser more than 10 years old and no referer
 RewriteCond "%{HTTP_USER_AGENT}" "^Opera/9\."
@@ -82,12 +93,22 @@ RewriteRule "." "-" [F]
 RewriteCond "%{HTTP_REFERER}" "//tapiagps\.mx/" [OR]
 RewriteCond "%{HTTP_REFERER}" "//rw.tideen.com:38172/" [OR]
 RewriteCond "%{HTTP_REFERER}" "//live1.trackandsnap.com/" [OR]
-# More than 195k tile requets per day but website is not public (looks like for-charge service)
-RewriteCond "%{HTTP_REFERER}" "//rastreobusmen\.geovoy\.com/" [OR]
+RewriteCond "%{HTTP_REFERER}" "//utysmpo.uzgps.uz/?" [OR]
+RewriteCond "%{HTTP_REFERER}" "//tfc-colector.flash-its.eu/?" [OR]
+# More than 60k tile requets per day but website is commercial (but open to public)
+RewriteCond "%{HTTP_REFERER}" "//www.flatlooker.com/?"
+# More than 40k tile requets, commercial asset tracking
+RewriteCond "%{HTTP_REFERER}" "//glogist.ru/?"
+# More than 10k tile requets per day but website is not public (looks like for-charge service)
+RewriteCond "%{HTTP_REFERER}" "//servidormapa.com/?" [OR]
+RewriteCond "%{HTTP_REFERER}" "//gps.sharpsoftco.com/?" [OR]
+RewriteCond "%{HTTP_REFERER}" "//199.203.232.80/?" [OR]
 # Requests with 12 years old Safari on iPad. More than 158k requests on a single day.
 RewriteCond expr "%{REMOTE_ADDR} -ipmatch '85.214.47.106'" [OR]
-# More than 190k tile request per IP, many requests with Internet Explorer 7 and no referrer
+# More than 190k tile request per IP, most requests with openrailwaymap.org referer, some with Internet Explorer 7 and no referrer
+# Requests with referer requested zoom level 14 only.
 RewriteCond expr "%{REMOTE_ADDR} -ipmatch '158.181.72.225'" [OR]
+RewriteCond expr "%{REMOTE_ADDR} -ipmatch '158.181.73.249'" [OR]
 # More than 20k tile request per IP and day but strange user agents and no referers
 RewriteCond "%{HTTP_USER_AGENT}" "Mozilla/4.7[35]"
 ## Requests with invalid URLs (missing style name), 300k requests per day, user-agent is a Samsung TV
