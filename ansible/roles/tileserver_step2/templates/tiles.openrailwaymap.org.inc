@@ -89,6 +89,8 @@ RewriteCond "%{HTTP_USER_AGENT}" "^python-requests/" [OR]
 RewriteCond "%{HTTP_USER_AGENT}" "^$"
 RewriteRule "." "-" [F]
 
+# 100k tile requets per day for public realtime tracking of BDZ trains, lacking attribution
+RewriteCond "%{HTTP_REFERER}" "//radar\.bdz\.bg/" [OR]
 # More than 20k tile requets per day but website is not public (looks like for-charge service)
 RewriteCond "%{HTTP_REFERER}" "//tapiagps\.mx/" [OR]
 RewriteCond "%{HTTP_REFERER}" "//rw.tideen.com:38172/" [OR]
@@ -105,10 +107,15 @@ RewriteCond "%{HTTP_REFERER}" "//gps.sharpsoftco.com/?" [OR]
 RewriteCond "%{HTTP_REFERER}" "//199.203.232.80/?" [OR]
 # Requests with 12 years old Safari on iPad. More than 158k requests on a single day.
 RewriteCond expr "%{REMOTE_ADDR} -ipmatch '85.214.47.106'" [OR]
-# More than 190k tile request per IP, most requests with openrailwaymap.org referer, some with Internet Explorer 7 and no referrer
-# Requests with referer requested zoom level 14 only.
+# More than 190k tile request per IP (sometimes more then 300k requests per day) from TeleColumbus subnet, most requests with openrailwaymap.org referer, some with Internet Explorer 7 and no referrer
+# Requests with referer requested zoom level 13 or 14 only. 2023-10
 RewriteCond expr "%{REMOTE_ADDR} -ipmatch '158.181.72.225'" [OR]
+RewriteCond expr "%{REMOTE_ADDR} -ipmatch '158.181.73.177'" [OR]
 RewriteCond expr "%{REMOTE_ADDR} -ipmatch '158.181.73.249'" [OR]
+# Jiangmen Global Eyes Police Bureau, 16k requests per 10 hours
+RewriteCond expr "%{REMOTE_ADDR} -ipmatch '219.130.135.190'" [OR]
+# Korean IP, 550k requests per 10 hours, many IE7, 2023-10-17
+RewriteCond expr "%{REMOTE_ADDR} -ipmatch '59.31.87.129'" [OR]
 # More than 20k tile request per IP and day but strange user agents and no referers
 RewriteCond "%{HTTP_USER_AGENT}" "Mozilla/4.7[35]"
 ## Requests with invalid URLs (missing style name), 300k requests per day, user-agent is a Samsung TV
