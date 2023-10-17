@@ -123,9 +123,10 @@ RewriteCond "%{HTTP_USER_AGENT}" "Mozilla/4.7[35]"
 #RewriteCond expr "%{REMOTE_ADDR} -ipmatch '185.109.16.135'"
 RewriteRule "." "-" [R=429,L]
 
-## Monitoring tool doing test requests every second for three map styles
-#RewriteCond "%{HTTP_USER_AGENT}" "SynxHealthTest"
-#RewriteRule "." "-" [R=429,L]
+# Monitoring tool doing test requests every second for three map styles
+# Running on a DB IP, therefore difficult to ban
+RewriteCond "%{HTTP_USER_AGENT}" "SynxHealthTest"
+RewriteRule "." "-" [R=429,L]
 
 ErrorLog {{ apache2_logdir }}/{{ tileserver.hostname }}.error.log
 CustomLog {{ apache2_logdir }}/{{ tileserver.hostname }}.access.log combined
