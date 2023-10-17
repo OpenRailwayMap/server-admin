@@ -57,7 +57,7 @@ RewriteCond "%{HTTP_USER_AGENT}" "railon.vonatDroid" [OR]
 # Responding with HTTP status 429 for about 5 days did not make this client to go away.
 RewriteCond "%{HTTP_REFERER}" "//rastreobusmen\.geovoy\.com/" [OR]
 # More than 20k tile requets per day but website is not public (looks like for-charge service)
-RewriteCond "%{HTTP_REFERER}" "//(www\.)?geliospro\.com/"
+RewriteCond "%{HTTP_REFERER}" "//(www\.)?geliospro\.com/" [OR]
 # SEO website with ads and no meaningful content after a rough review (no HTTP 429 prior to black tile response)
 RewriteCond "%{HTTP_REFERER}" "//zugradar.info/"
 RewriteRule "." "/tile-util/black.png" [PT]
@@ -96,9 +96,9 @@ RewriteCond "%{HTTP_REFERER}" "//live1.trackandsnap.com/" [OR]
 RewriteCond "%{HTTP_REFERER}" "//utysmpo.uzgps.uz/?" [OR]
 RewriteCond "%{HTTP_REFERER}" "//tfc-colector.flash-its.eu/?" [OR]
 # More than 60k tile requets per day but website is commercial (but open to public)
-RewriteCond "%{HTTP_REFERER}" "//www.flatlooker.com/?"
+RewriteCond "%{HTTP_REFERER}" "//www.flatlooker.com/?" [OR]
 # More than 40k tile requets, commercial asset tracking
-RewriteCond "%{HTTP_REFERER}" "//glogist.ru/?"
+RewriteCond "%{HTTP_REFERER}" "//glogist.ru/?" [OR]
 # More than 10k tile requets per day but website is not public (looks like for-charge service)
 RewriteCond "%{HTTP_REFERER}" "//servidormapa.com/?" [OR]
 RewriteCond "%{HTTP_REFERER}" "//gps.sharpsoftco.com/?" [OR]
