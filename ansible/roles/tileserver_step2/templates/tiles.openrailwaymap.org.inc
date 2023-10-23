@@ -85,6 +85,8 @@ RewriteCond "%{HTTP_USER_AGENT}" "^Dalvik/[0-9.]+ \(Linux; U; Android" [OR]
 RewriteCond "%{HTTP_USER_AGENT}" "^Dart/\d+\.\d+ \(dart:io\)$" [OR]
 # python-requests, a Python HTTP library
 RewriteCond "%{HTTP_USER_AGENT}" "^python-requests/" [OR]
+# python-requests, a Python HTTP library
+RewriteCond "%{HTTP_USER_AGENT}" "^MOBAC/" [OR]
 # Empty user agents
 RewriteCond "%{HTTP_USER_AGENT}" "^$"
 RewriteRule "." "-" [F]
