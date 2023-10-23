@@ -58,9 +58,22 @@ RewriteCond "%{HTTP_USER_AGENT}" "railon.vonatDroid" [OR]
 RewriteCond "%{HTTP_REFERER}" "//rastreobusmen\.geovoy\.com/" [OR]
 # More than 20k tile requets per day but website is not public (looks like for-charge service)
 RewriteCond "%{HTTP_REFERER}" "//(www\.)?geliospro\.com/" [OR]
+# More than 60k tile requets per day but website is commercial (but open to public)
+RewriteCond "%{HTTP_REFERER}" "//www.flatlooker.com/?" [OR]
+# More than 20k tile requets per day but website is not public (looks like for-charge service)
+RewriteCond "%{HTTP_REFERER}" "//gps.sharpsoftco.com/?" [OR]
+# More than 10k tile requets per day but website is not public (looks like for-charge service)
+RewriteCond "%{HTTP_REFERER}" "//servidormapa.com/?" [OR]
+# More than 70k tile requets, commercial asset tracking
+RewriteCond "%{HTTP_REFERER}" "//glogist.ru/?" [OR]
 # SEO website with ads and no meaningful content after a rough review (no HTTP 429 prior to black tile response)
 RewriteCond "%{HTTP_REFERER}" "//zugradar.info/"
 RewriteRule "." "/tile-util/black.png" [PT]
+
+# Lacking attribution and high traffic, friendly attribution tile as response
+# 100k tile requets per day for public realtime tracking of BDZ trains, lacking attribution
+RewriteCond "%{HTTP_REFERER}" "//radar\.bdz\.bg/"
+RewriteRule "." "/tile-util/attribution-tile.png" [PT]
 
 # Requests with invalid URLs (missing style name), 300k requests per day, user-agent is a Samsung TV
 RewriteCond "%{HTTP_USER_AGENT}" "SMART-TV; Linux; Tizen 4.0"
@@ -91,21 +104,13 @@ RewriteCond "%{HTTP_USER_AGENT}" "^MOBAC/" [OR]
 RewriteCond "%{HTTP_USER_AGENT}" "^$"
 RewriteRule "." "-" [F]
 
-# 100k tile requets per day for public realtime tracking of BDZ trains, lacking attribution
-RewriteCond "%{HTTP_REFERER}" "//radar\.bdz\.bg/" [OR]
 # More than 20k tile requets per day but website is not public (looks like for-charge service)
 RewriteCond "%{HTTP_REFERER}" "//tapiagps\.mx/" [OR]
 RewriteCond "%{HTTP_REFERER}" "//rw.tideen.com:38172/" [OR]
 RewriteCond "%{HTTP_REFERER}" "//live1.trackandsnap.com/" [OR]
 RewriteCond "%{HTTP_REFERER}" "//utysmpo.uzgps.uz/?" [OR]
 RewriteCond "%{HTTP_REFERER}" "//tfc-colector.flash-its.eu/?" [OR]
-# More than 60k tile requets per day but website is commercial (but open to public)
-RewriteCond "%{HTTP_REFERER}" "//www.flatlooker.com/?" [OR]
-# More than 40k tile requets, commercial asset tracking
-RewriteCond "%{HTTP_REFERER}" "//glogist.ru/?" [OR]
 # More than 10k tile requets per day but website is not public (looks like for-charge service)
-RewriteCond "%{HTTP_REFERER}" "//servidormapa.com/?" [OR]
-RewriteCond "%{HTTP_REFERER}" "//gps.sharpsoftco.com/?" [OR]
 RewriteCond "%{HTTP_REFERER}" "//199.203.232.80/?" [OR]
 # Requests with 12 years old Safari on iPad. More than 158k requests on a single day.
 RewriteCond expr "%{REMOTE_ADDR} -ipmatch '85.214.47.106'" [OR]

@@ -227,13 +227,16 @@
     mode: 0755
     state: directory
 
-- name: Copy error tile to /var/www/tile-util
+- name: Copy error tiles to /var/www/tile-util
   copy:
-    src: black.png
-    dest: /var/www/tile-util/black.png
+    src: '{{ item }}'
+    dest: '/var/www/tile-util/{{ item }}'
     owner: root
     group: root
     mode: 0644
+  loop:
+    - black.png
+    - attribution-tile.png
 
 - name: Add tileserver configuration for Apache virtualhost
   template:
