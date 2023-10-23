@@ -33,6 +33,7 @@
     mode: '0755'
 
 - name: Clone Git repository of the website
+  register: website_git
   git:
     dest: '{{ website_dir }}'
     repo: https://github.com/OpenRailwayMap/OpenRailwayMap.git
@@ -40,31 +41,13 @@
     force: yes
     version: master
 
-- name: 'OpenRailwayMap API: Change database table prefix'
-  lineinfile:
-    backrefs: yes
-    path: '{{ website_dir }}/api/config.json'
-    regexp: '{{ item.regex }}'
-    line: '{{ item.replacement }}'
-  loop:
-    - {'regex': '^(\s*"prefix": *")openrailwaymap("\s*,\s*)$', 'replacement': '\1openrailwaymap_api\2'}
-    - {'regex': '^(\s*"database": *")openrailwaymap("\s*,\s*)$', 'replacement': '\1gis\2'}
-    - {'regex': '^(\s*"maxPoolSize": *")[^"]+("\s*,\s*)$', 'replacement': '\116\2'}
-
-- name: Create database views and indexes for the API
-  become: true
-  become_user: osmimport
-  postgresql_query:
-    login_user: osmimport
-    db: '{{ osm_dbname }}'
-    query: '{{ lookup("file", "files/api_views_and_indexes.sql") }}'
-
 - name: Download and install Leaflet and its plugins
   make:
     chdir: '{{ website_dir }}'
     target: install-deps
 
 - name: Build MapCSS styles, JOSM presets and locales
+  when: website_git.changed
   make:
     chdir: '{{ website_dir }}/{{ item }}'
     target: all
@@ -92,20 +75,8 @@
     password: '*'
     system: yes
 
-- name: Create log file for API
-  file:
-    state: file
-    path: /var/log/orm-api
-    owner: openrailwaymap
-    group: adm
-    mode: 0644
-
 - debug: # noqa unnamed-task
     msg: 'On Debian, the authentication method md5 is enabled for all users connecting from localhost via TCP/IP to any local database. Modify pg_hba.conf if your database is configured differently.'
-
-- name: Create a random password
-  set_fact:
-    api_postgresql_password: "{{ lookup('password', '/dev/null length=12') }}"
 
 - name: Create database user openrailwaymap for the API
   become: true
@@ -114,18 +85,6 @@
     name: openrailwaymap
     db: 'postgres'
     encrypted: yes
-    password: '{{ api_postgresql_password }}'
-  notify:
-    - systemd restart orm-api
-
-- name: Store database password for user openrailwaymap
-  copy:
-    dest: '{{ openrailwaymap_user_home }}/.pgpass'
-    owner: openrailwaymap
-    group: openrailwaymap
-    mode: 0600
-    content: |
-      localhost:5432:{{ osm_dbname }}:openrailwaymap:{{ api_postgresql_password }}
   notify:
     - systemd restart orm-api
 
@@ -138,44 +97,6 @@
     objs: ALL_IN_SCHEMA
     privs: 'SELECT'
     database: '{{ osm_dbname }}'
-
-- name: Change PostgreSQL version in the Systemd unit file of the API
-  lineinfile:
-    path: '{{ website_dir }}/api/orm-api.service'
-    regexp: '{{ item.regex }}'
-    line: '{{ item.replacement }}'
-  loop:
-    - {'regex': '^Requires=postgresql-9.6.service$', 'replacement': 'Requires=postgresql.service'}
-    - {'regex': '^After=postgresql-9.6.service$', 'replacement': 'After=postgresql.service'}
-
-- name: Install Rsyslogd configuration for the API
-  become: yes
-  make:
-    chdir: '{{ website_dir }}/api'
-    target: install-rsyslog
-  notify:
-    - systemd restart rsyslog
-
-- name: Build and install Systemd unit file of the API
-  become: yes
-  make:
-    chdir: '{{ website_dir }}/api'
-    target: install-systemd
-  notify:
-    - systemd daemon-reload
-
-- name: 'Install API (npm)'
-  npm:
-    path: '{{ website_dir }}/api'
-  notify:
-    - systemd restart orm-api
-
-- name: systemd start and enable orm-api.service
-  systemd:
-    daemon_reload: yes
-    name: orm-api
-    enabled: yes
-    state: started
 
 - name: Install required packages from APT for API version 2
   apt:

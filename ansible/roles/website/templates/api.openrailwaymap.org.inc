@@ -5,8 +5,13 @@ ProxyPass /server-status !
 
 ProxyPass /timestamp !
 Alias "/timestamp" "/nvme/data/timestamp.txt"
+Alias "/v2/timestamp" "/nvme/data/timestamp.txt"
 Header set Access-Control-Allow-Origin "*"
 <location /timestamp>
+    ForceType text/plain
+    Require all granted
+</location>
+<location /v2/timestamp>
     ForceType text/plain
     Require all granted
 </location>
