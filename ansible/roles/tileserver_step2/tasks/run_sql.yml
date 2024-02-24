@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: MIT
+- name: Read SQL script
+  slurp:
+    src: '{{ item }}'
+  register: sql_script
+  no_log: yes
+
+# TODO handle recreation of existing views if schema changes
+- name: Execute SQL
+  become: true
+  become_user: osmimport
+  postgresql_query:
+    db: '{{ osm_dbname }}'
+    login_user: osmimport
+    query: '{{ sql_script["content"] | b64decode }}'
