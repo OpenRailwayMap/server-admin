@@ -114,6 +114,9 @@ if [ "$ROUTING" = 1 ]; then
     update_routing_graph
 fi
 
+echo "Running additional update scripts in /opt/OpenRailwayMap-server-config/post-update.d/"
+run-parts --exit-on-error -v /opt/OpenRailwayMap-server-config/post-update.d/
+
 REPLICATION_TIMESTAMP=$($OSMIUM fileinfo -g header.option.osmosis_replication_timestamp $PLANET_FILE)
 echo "replication timestamp is $REPLICATION_TIMESTAMP"
 date --date="$REPLICATION_TIMESTAMP" +%s > $TIMESTAMP_PATH

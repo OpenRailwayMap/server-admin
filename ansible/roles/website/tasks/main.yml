@@ -138,6 +138,14 @@
     - 'prepare_facilities.sql'
     - 'prepare_milestones.sql'
 
+- name: Enable updates of materialized views
+  copy:
+    src: update_api_views.sh
+    dest: /opt/OpenRailwayMap-server-config/post-update.d/
+    owner: root
+    group: root
+    mode: 0644
+
 - name: Grant SELECT permission to user openrailwaymap
   become: true
   become_user: postgres

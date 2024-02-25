@@ -109,13 +109,16 @@
   apt:
     name: wget,gdal-bin,nodejs,npm,libwww-perl,mapnik-utils,bc,git,osmium-tool,python3-pyosmium,pyosmium
 
-- name: Create directory for server-admin repository
+- name: Create directories for scripts
   file:
-    path: '{{ tileserver_script_dir }}/scripts'
+    path: '{{ item }}'
     owner: root
     group: root
     state: directory
     mode: '0755'
+  loop:
+    - '{{ tileserver_script_dir }}/scripts'
+    - '{{ tileserver_script_dir }}/post-update.d'
 
 - name: Copy scripts # noqa risky-file-permissions
   ansible.builtin.copy:
