@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: MIT
+- name: Add filter for unwanted monitoring tools
+  copy:
+    dest: '/etc/fail2ban/filter.d/apache-abusive-monitoring.local'
+    mode: 0644
+    owner: root
+    group: root
+    content: |
+      [Definition]
+      failregex = ^<HOST> .* 429 [0-9]+ "-" "SynxHealthTest"$
+  notify:
+    - reload fail2ban
+
+- name: Customise fail2ban
+  copy:
+    dest: '/etc/fail2ban/jail.d/apache-abusive-monitoring.local'
+    mode: 0644
+    owner: root
+    group: root
+    content: |
+      [apache-abusive-monitoring]
+      enabled = true
+      port = http,https
+      filter = apache-abusive-monitoring
+      logpath  = %(apache_access_log)s
+      maxretry = 60
+      bantime = 8h
+      findtime = 1h
+      # Avoid accidential banning of Deutsche Bahn in order to keep email inbox small :-)
+      ignoreips = 81.200.197.0/24
+  notify:
+    - reload fail2ban
+
+- name: Customise fail2ban
+  copy:
+    dest: '/etc/fail2ban/jail.local'
+    mode: 0644
+    owner: root
+    group: root
+    content: |
+        [DEFAULT]
+        bantime = 20m
+        findtime = 10m
+        maxretry = 15
+        [sshd]
+        enabled = true
+  notify:
+    - reload fail2ban

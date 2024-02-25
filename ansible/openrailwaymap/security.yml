@@ -16,21 +16,8 @@
     apt:
       name: fail2ban
 
-  - name: Customise fail2ban
-    copy:
-      dest: '/etc/fail2ban/jail.local'
-      mode: 0644
-      owner: root
-      group: root
-      content: |
-          [DEFAULT]
-          bantime = 20m
-          findtime = 10m
-          maxretry = 15
-          [sshd]
-          enabled = true
-    notify:
-      - reload fail2ban
+  - name: Fail2ban configuration
+    include_tasks: fail2ban_custom.yml
 
   - name: Install ufw
     apt:
