@@ -57,7 +57,7 @@ RewriteCond "%{HTTP_USER_AGENT}" "railon.vonatDroid" [OR]
 # Responding with HTTP status 429 for about 5 days did not make this client to go away.
 RewriteCond "%{HTTP_REFERER}" "//rastreobusmen\.geovoy\.com/" [OR]
 # more than 20k tile requets per day, website is not public
-# Responding with HTTP status 429 for multiple wees did not make this client to go away.
+# Responding with HTTP status 429 for multiple weeks did not make this client to go away.
 RewriteCond "%{HTTP_REFERER}" "//live1.trackandsnap.com/" [OR]
 RewriteCond "%{HTTP_REFERER}" "//utysmpo\.uzgps.uz/?" [OR]
 # More than 20k tile requets per day but website is not public (looks like for-charge service)
