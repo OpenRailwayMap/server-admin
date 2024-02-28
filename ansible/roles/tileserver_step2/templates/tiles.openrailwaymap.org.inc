@@ -127,10 +127,7 @@ RewriteCond expr "%{REMOTE_ADDR} -ipmatch '219.130.135.190'" [OR]
 # Korean IP, 550k requests per 10 hours, many IE7, 2023-10-17
 RewriteCond expr "%{REMOTE_ADDR} -ipmatch '59.31.87.129'" [OR]
 # More than 20k tile request per IP and day but strange user agents and no referers
-RewriteCond "%{HTTP_USER_AGENT}" "Mozilla/4.7[35]" [OR]
-## Requests with invalid URLs (missing style name), 300k requests per day, user-agent is a Samsung TV
-#RewriteCond expr "%{REMOTE_ADDR} -ipmatch '185.109.16.136'" [OR]
-#RewriteCond expr "%{REMOTE_ADDR} -ipmatch '185.109.16.135'"
+RewriteCond "%{HTTP_USER_AGENT}" "Mozilla/4.7[35]"
 RewriteRule "." "-" [R=429,L]
 
 # Monitoring tool doing test requests every second for three map styles
