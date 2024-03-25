@@ -55,6 +55,7 @@ function apply_diff_database {
     if [ "$OSM2PGSQL_RETURNCODE" -gt 0 ] ; then
         echo "Osm2pgsql failed with return code $OSM2PGSQL_RETURNCODE, storing diff file in $LAST_DERIVED_DIFF"
         mv "$DERIVED_DIFF" "$LAST_DERIVED_DIFF"
+	exit $OSM2PGSQL_RETURNCODE
     else
         echo "updating materialized views"
         psql -v ON_ERROR_STOP=1 --echo-errors -d $DATABASE_NAME -f $MAPSTYLE_DIR/sql/update_station_importance.sql
