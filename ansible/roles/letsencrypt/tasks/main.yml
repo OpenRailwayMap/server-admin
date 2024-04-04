@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
 - name: Install acme-tiny
   apt:
-    name: [acme-tiny, apache2, openssl]
+    name: [acme-tiny, apache2, openssl, python3-cryptography]
 
 - name: Create user and group acme for acme-tiny
   user:
