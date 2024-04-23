@@ -110,6 +110,10 @@ RewriteCond "%{HTTP_USER_AGENT}" "^Dart/\d+\.\d+ \(dart:io\)$" [OR]
 RewriteCond "%{HTTP_USER_AGENT}" "^python-requests/" [OR]
 # python-requests, a Python HTTP library
 RewriteCond "%{HTTP_USER_AGENT}" "^MOBAC/" [OR]
+# Wget, non-interactive network downloader
+RewriteCond "%{HTTP_USER_AGENT}" "^Wget/" [OR]
+# Go HTTP client
+RewriteCond "%{HTTP_USER_AGENT}" "^Go-http-client/" [OR]
 # Empty user agents
 RewriteCond "%{HTTP_USER_AGENT}" "^$"
 RewriteRule "." "-" [F]
