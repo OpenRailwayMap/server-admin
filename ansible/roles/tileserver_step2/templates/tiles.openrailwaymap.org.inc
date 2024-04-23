@@ -68,8 +68,14 @@ RewriteCond "%{HTTP_REFERER}" "//www.flatlooker.com/?" [OR]
 RewriteCond "%{HTTP_REFERER}" "//gps.sharpsoftco.com/?" [OR]
 # More than 10k tile requets per day but website is not public (looks like for-charge service)
 RewriteCond "%{HTTP_REFERER}" "//servidormapa.com/?" [OR]
+RewriteCond "%{HTTP_REFERER}" "//gps\.teambyte\.al/" [OR]
+# More than 20k tile requets per day but website is not public (looks like for-charge service)
+RewriteCond "%{HTTP_REFERER}" "//libellule\.sudcontractors\.com/?" [OR]
+RewriteCond "%{HTTP_REFERER}" "//sc-libellule\.com/?" [OR]
 # More than 70k tile requets, commercial asset tracking
 RewriteCond "%{HTTP_REFERER}" "//glogist.ru/?" [OR]
+# Lacking attribution and more than 10k tile requests per day
+RewriteCond "%{HTTP_REFERER}" "//fow\.vicc\.wang/?" [OR]
 # SEO website with ads and no meaningful content after a rough review (no HTTP 429 prior to black tile response)
 RewriteCond "%{HTTP_REFERER}" "//zugradar.info/"
 RewriteRule "." "/tile-util/black.png" [PT]
@@ -108,13 +114,10 @@ RewriteCond "%{HTTP_USER_AGENT}" "^MOBAC/" [OR]
 RewriteCond "%{HTTP_USER_AGENT}" "^$"
 RewriteRule "." "-" [F]
 
-# Lacking attribution and more than 20k tile requests per day
-RewriteCond "%{HTTP_REFERER}" "//fow\.vicc\.wang/?" [OR]
+# More than 10k tile requets per day but website is not public (looks like for-charge service)
+RewriteCond "%{HTTP_REFERER}" "//www\.transferoviarcalatori\.ro/?" [OR]
 # More than 20k tile requets per day but website is not public (looks like for-charge service)
-RewriteCond "%{HTTP_REFERER}" "//libellule\.sudcontractors\.com/?" [OR]
-RewriteCond "%{HTTP_REFERER}" "//sc-libellule\.com/?" [OR]
 RewriteCond "%{HTTP_REFERER}" "//tapiagps\.mx/" [OR]
-RewriteCond "%{HTTP_REFERER}" "//gps\.teambyte\.al/" [OR]
 RewriteCond "%{HTTP_REFERER}" "//atlas2\.org/" [OR]
 # More than 10k tile requets per day but website is not public (looks like for-charge service)
 # More than 190k tile request per IP (sometimes more then 300k requests per day) from TeleColumbus subnet, most requests with openrailwaymap.org referer, some with Internet Explorer 7 and no referrer
@@ -122,10 +125,14 @@ RewriteCond "%{HTTP_REFERER}" "//atlas2\.org/" [OR]
 RewriteCond expr "%{REMOTE_ADDR} -ipmatch '158.181.72.225'" [OR]
 RewriteCond expr "%{REMOTE_ADDR} -ipmatch '158.181.73.177'" [OR]
 RewriteCond expr "%{REMOTE_ADDR} -ipmatch '158.181.73.249'" [OR]
+# More than 20k tile requets per 14 hours
+RewriteCond expr "%{REMOTE_ADDR} -ipmatch '80.156.193.26'" [OR]
 # Jiangmen Global Eyes Police Bureau, 16k requests per 10 hours
 RewriteCond expr "%{REMOTE_ADDR} -ipmatch '219.130.135.190'" [OR]
 # Korean IP, 550k requests per 10 hours, many IE7, 2023-10-17
 RewriteCond expr "%{REMOTE_ADDR} -ipmatch '59.31.87.129'" [OR]
+# Korean IP, 122k requests per 18 hours, many IE7, 2024-0423-
+RewriteCond expr "%{REMOTE_ADDR} -ipmatch '213.121.90.57'" [OR]
 # More than 20k tile request per IP and day but strange user agents and no referers
 RewriteCond "%{HTTP_USER_AGENT}" "Mozilla/4.7[35]"
 RewriteRule "." "-" [R=429,L]

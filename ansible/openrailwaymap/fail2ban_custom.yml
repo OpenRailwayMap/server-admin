@@ -23,8 +23,8 @@
       port = http,https
       filter = apache-abusive-monitoring
       logpath  = %(apache_access_log)s
-      maxretry = 60
-      bantime = 8h
+      maxretry = 30
+      bantime = 96h
       findtime = 1h
       # Avoid accidential banning of Deutsche Bahn in order to keep email inbox small :-)
       ignoreips = 81.200.197.0/24

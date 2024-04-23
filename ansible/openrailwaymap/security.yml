@@ -50,6 +50,12 @@
       proto: tcp
     notify: ufw reload
     loop:
+      - from_ip: 213.121.90.57
+        to_port: 80
+        comment: "SynxHealthTest, one test request per second, most frequent source IP"
+      - from_ip: 213.121.90.57
+        to_port: 443
+        comment: "SynxHealthTest, one test request per second, most frequent source IP"
       - from_ip: 87.234.54.154
         to_port: 80
         comment: "SynxHealthTest, one test request per second, most frequent source IP"
