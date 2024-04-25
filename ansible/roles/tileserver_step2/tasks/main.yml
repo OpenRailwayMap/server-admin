@@ -59,10 +59,13 @@
       notify:
         - systemd reload tirex-backend-manager
 
-- name: Enable Apache module mod_remoteip
+- name: Enable Apache module mod_remoteip and http2
   apache2_module:
-    name: remoteip
+    name: '{{ item }}'
     state: present
+  loop:
+    - remoteip
+    - http2
   notify:
     - systemd restart apache2
 

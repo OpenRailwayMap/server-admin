@@ -157,7 +157,7 @@
     privs: 'SELECT'
     database: '{{ osm_dbname }}'
 
-- name: Enable Apache modules proxy, proxy_http, headers and rewrite
+- name: Enable Apache modules proxy, proxy_http, headers, http2 and rewrite
   apache2_module:
     name: '{{ item }}'
     state: present
@@ -166,6 +166,7 @@
     - 'proxy_http'
     - 'headers'
     - 'wsgi'
+    - 'http2'
   notify:
     - systemd restart apache2
 
