@@ -7,10 +7,7 @@
       - unzip
       - zip
       - python3-pip
-      - npm
-      - nodejs
       - wget
-      - php-pgsql
       - php-fpm
       - apache2
       - python3-pil
@@ -56,16 +53,6 @@
     - 'styles'
     - 'locales'
 
-- name: Create database extension PostGIS-Topology and PostGIS-SFCGAL
-  become: true
-  become_user: postgres
-  postgresql_ext:
-    db: '{{ osm_dbname }}'
-    name: '{{ item }}'
-  loop:
-    - 'postgis_topology'
-    - 'postgis_sfcgal'
-
 - name: Create system user openrailwaymap to run the API
   user:
     name: openrailwaymap
@@ -87,16 +74,6 @@
     encrypted: yes
   notify:
     - systemd restart orm-api
-
-- name: 'GRANT SELECT ON ALL TABLES IN SCHEMA public TO openrailwaymap'
-  become: true
-  become_user: postgres
-  postgresql_privs:
-    role: openrailwaymap
-    type: table
-    objs: ALL_IN_SCHEMA
-    privs: 'SELECT'
-    database: '{{ osm_dbname }}'
 
 - name: Install required packages from APT for API version 2
   apt:
