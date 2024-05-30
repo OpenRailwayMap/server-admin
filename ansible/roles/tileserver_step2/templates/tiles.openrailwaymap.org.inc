@@ -101,6 +101,12 @@ RewriteCond "%{HTTP_USER_AGENT}" "^Opera/9\."
 RewriteCond "%{HTTP_REFERER}" "^$"
 RewriteRule "." "-" [F]
 
+# User-agent of a browser and no referer
+RewriteCond "%{HTTP_USER_AGENT}" "Gecko/[0-9]+ Firefox/[0-9.]+$"
+# Empty user agents
+RewriteCond "%{HTTP_REFERER}" "^$"
+RewriteRule "." "-" [F]
+
 # Generic user agents
 # Dalvik, an Android HTTP library
 RewriteCond "%{HTTP_USER_AGENT}" "^Dalvik/[0-9.]+ \(Linux; U; Android" [OR]
