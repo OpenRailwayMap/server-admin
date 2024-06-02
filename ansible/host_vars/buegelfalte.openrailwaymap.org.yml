@@ -1,3 +1,13 @@
 pg_version: 11
 website_hostname_aliases:
   - buegelfalte.openrailwaymap.org
+
+apache2:
+  sites:
+    redirect-http.inc:
+      enabled: no
+      content: |-
+        RewriteEngine On
+        RewriteCond %{REQUEST_URI} !^/.well-known/acme-challenge
+        RewriteCond %{HTTPS} off
+        RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]

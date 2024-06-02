@@ -1,10 +1,10 @@
 - name: Install required packages from APT
   apt:
-    name: [php-fpm, apache2, php-xml]
+    name: [php-fpm, php-xml]
 
 - name: Create directory for Git repository
   file:
-    path: '{{ blog.directory }}'
+    path: '/var/www/blog'
     owner: root
     group: root
     state: directory
@@ -12,37 +12,11 @@
 
 - name: Clone Git repository of the blog
   git:
-    dest: '{{ blog.directory }}'
+    dest: '/var/www/blog'
     repo: https://github.com/OpenRailwayMap/openrailwaymap-blog.git
     # We need to call it with force:yes because our database layout requires to overwrite api/config.json
     force: yes
     version: master
-
-- name: Enable/Disable Apache modules
-  apache2_module:
-    name: '{{ item.name }}'
-    state: '{{ item.state }}'
-  loop:
-    - name: 'proxy_fcgi'
-      state: 'present'
-    - name: 'setenvif'
-      state: 'present'
-    - name: 'php7.3'
-      state: 'absent'
-    - name: 'mpm_prefork'
-      state: 'absent'
-    - name: 'mpm_event'
-      state: 'present'
-  notify:
-    - systemd restart apache2
-
-- name: Enable default configuration for php-fpm
-  command:
-    cmd: a2enconf php7.3-fpm
-    chdir: /etc/apache2/conf-available
-    creates: '/etc/apache2/conf-enabled/php7.3-fpm.conf'
-  notify:
-    - systemd reload apache2
 
 - name: Configure php-fmp pool
   replace:
@@ -60,25 +34,3 @@
       line: 'pm.max_spare_servers = 6'
   notify:
     - systemd restart php-fpm
-
-- name: Add blog VirtualHost configuration of Apache
-  template:
-    src: '{{ item }}'
-    dest: '/etc/apache2/sites-available/{{ item }}'
-    owner: root
-    group: root
-    mode: 0664
-  loop:
-    - 'blog.openrailwaymap.org.inc'
-    - 'blog.openrailwaymap.org.conf'
-  register: apache_virtualhost_files
-  notify:
-    - systemd reload apache2
-
-- name: Enable Apache VirtualHost configuration for API and website
-  command:
-    cmd: 'a2ensite blog.openrailwaymap.org.conf'
-    chdir: /etc/apache2/sites-available
-    creates: '/etc/apache2/sites-enabled/blog.openrailwaymap.org.conf'
-  notify:
-    - systemd reload apache2

@@ -1,4 +1,12 @@
 # SPDX-License-Identifier: MIT
+- hosts: all
+  become: yes
+  tags: webserver
+  tasks:
+    - name: 'Webserver configuration'
+      import_role:
+        name: roles/webserver
+
 - hosts: letsencrypt
   become: yes
   tags: letsencrypt
@@ -27,12 +35,6 @@
         name: roles/website
       vars:
         osm_dbname: gis
-        website_hostname: www.openrailwaymap.org
-        website_hostname_aliases:
-          - openrailwaymap.org
-          - buegelfalte.openrailwaymap.org
-        api_hostname: api.openrailwaymap.org
-        website_dir: /var/www/www.openrailwaymap.org
         openrailwaymap_user_home: /srv/openrailwaymap
         api_v2:
           directory: /opt/OpenRailwayMap-api
@@ -45,10 +47,6 @@
       import_role:
         name: roles/blog
       vars:
-        blog:
-          hostname: blog.openrailwaymap.org
-          hostname_aliases: []
-          directory: /var/www/blog
 
 - hosts: mailservers
   become: yes
@@ -61,7 +59,6 @@
         mail:
           mailman2: false
           mailman3: true
-          http_hostname: lists.openrailwaymap.org
 
 - hosts: backup_access
   become: yes

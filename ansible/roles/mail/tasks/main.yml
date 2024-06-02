@@ -318,28 +318,6 @@
         - 'mailman3-full_3.2.1-3_all.deb'
         - 'mailman3-web_0+20180916-11_all.deb'
 
-    - name: Add VirtualHost configuration of Apache
-      template:
-        src: '{{ item }}'
-        dest: '/etc/apache2/sites-available/{{ item }}'
-        owner: root
-        group: root
-        mode: 0664
-      loop:
-        - 'mailman.conf'
-        - 'mailman.inc'
-      register: apache_conf
-      notify:
-        - systemd reload apache2
-
-    - name: Enable Apache VirtualHost configuration
-      when: apache_conf.changed
-      command:
-        cmd: 'a2ensite mailman.conf'
-        chdir: /etc/apache2/sites-available
-      notify:
-        - systemd reload apache2
-
     - name: Enable peer authentication for PostgreSQL for user mailman3
       postgresql_pg_hba:
         contype: local

@@ -1,0 +1,18 @@
+apache:
+  modules:
+    remoteip:
+    tile:
+    rewrite:
+    alias:
+  sites:
+    tileserver_site.conf:
+      enabled: no
+  configurations:
+    max_request_workers.conf:
+      content: |
+        <IfModule mpm_event_module>
+            # MaxRequestWorkers could be raised up to ServerLimit * ThreadsPerChild (defaults to 16 and 25)
+            # For default of ThreadsPerChild, see mods-available/mpm_event.conf
+            MaxRequestWorkers 450
+            ServerLimit 20
+        </IfModule>

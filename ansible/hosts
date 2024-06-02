@@ -1,5 +1,8 @@
 buegelfalte.openrailwaymap.org
 
+[tileservers]
+buegelfalte.openrailwaymap.org
+
 [letsencrypt]
 buegelfalte.openrailwaymap.org
 

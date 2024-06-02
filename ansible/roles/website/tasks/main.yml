@@ -23,7 +23,7 @@
 
 - name: Create directory for Git repository
   file:
-    path: '{{ website_dir }}'
+    path: '/var/www/www.openrailwaymap.org'
     owner: root
     group: root
     state: directory
@@ -32,7 +32,7 @@
 - name: Clone Git repository of the website
   register: website_git
   git:
-    dest: '{{ website_dir }}'
+    dest: '/var/www/www.openrailwaymap.org'
     repo: https://github.com/OpenRailwayMap/OpenRailwayMap.git
     # We need to call it with force:yes because our database layout requires to overwrite api/config.json
     force: yes
@@ -40,13 +40,13 @@
 
 - name: Download and install Leaflet and its plugins
   make:
-    chdir: '{{ website_dir }}'
+    chdir: '/var/www/www.openrailwaymap.org'
     target: install-deps
 
 - name: Build MapCSS styles, JOSM presets and locales
   when: website_git.changed
   make:
-    chdir: '{{ website_dir }}/{{ item }}'
+    chdir: '/var/www/www.openrailwaymap.org/{{ item }}'
     target: all
   loop:
     - 'josm-presets'
@@ -80,8 +80,6 @@
     name:
       - python3-werkzeug
       - python3-psycopg2
-      - apache2
-      - libapache2-mod-wsgi-py3
 
 - name: Create directory for Git repository
   file:
@@ -133,46 +131,3 @@
     objs: openrailwaymap_ref,openrailwaymap_facilities_for_search
     privs: 'SELECT'
     database: '{{ osm_dbname }}'
-
-- name: Enable Apache modules proxy, proxy_http, headers, http2 and rewrite
-  apache2_module:
-    name: '{{ item }}'
-    state: present
-  loop:
-    - 'proxy'
-    - 'proxy_http'
-    - 'headers'
-    - 'wsgi'
-    - 'http2'
-  notify:
-    - systemd restart apache2
-
-- name: Ensure that files included by Apache configuration are present
-  when: "'letsencrypt' in group_names"
-  include_tasks: '../../../includes/redirect-and-acme-challenge-includes.yml'
-
-- name: Add website and API VirtualHost configuration of Apache
-  template:
-    src: '{{ item }}'
-    dest: '/etc/apache2/sites-available/{{ item }}'
-    owner: root
-    group: root
-    mode: 0664
-  loop:
-    - 'www.openrailwaymap.org.inc'
-    - 'www.openrailwaymap.org.conf'
-    - 'api.openrailwaymap.org.inc'
-    - 'api.openrailwaymap.org.conf'
-  notify:
-    - systemd reload apache2
-
-- name: Enable Apache VirtualHost configuration for API and website
-  command:
-    cmd: 'a2ensite {{ item }}'
-    chdir: /etc/apache2/sites-available
-    creates: '/etc/apache2/sites-enabled/{{ item }}'
-  loop:
-    - www.openrailwaymap.org.conf
-    - api.openrailwaymap.org.conf
-  notify:
-    - systemd reload apache2

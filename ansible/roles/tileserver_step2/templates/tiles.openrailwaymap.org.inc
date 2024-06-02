@@ -152,5 +152,5 @@ RewriteRule "." "-" [R=429,L]
 RewriteCond "%{HTTP_USER_AGENT}" "SynxHealthTest"
 RewriteRule "." "-" [R=429,L]
 
-ErrorLog {{ apache2_logdir }}/{{ tileserver.hostname }}.error.log
-CustomLog {{ apache2_logdir }}/{{ tileserver.hostname }}.access.log combined
+ErrorLog /var/log/apache2/{{ tileserver.hostname }}.error.log
+CustomLog /var/log/apache2/{{ tileserver.hostname }}.access.log combined
