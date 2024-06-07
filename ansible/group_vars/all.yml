@@ -19,9 +19,6 @@ tileserver:
 osm_dbname: gis
 tileserver_script_dir: /opt/OpenRailwayMap-server-config
 cartocss_dir: /opt/OpenRailwayMap-CartoCSS
-osm_data_dir: /nvme/data/planet
-flatnodes_dir: /nvme/data/flatnodes
-tile_expiry_dir: /nvme/data/tileupdate
 
 users:
   - name: michael

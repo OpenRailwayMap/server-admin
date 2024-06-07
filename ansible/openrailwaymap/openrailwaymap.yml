@@ -23,6 +23,7 @@
       import_role:
         name: roles/tileserver
     - name: 'Tile server (steps after data import)'
+      when: 'osm_import_status == "complete"'
       import_role:
         name: roles/tileserver_step2
 

@@ -1,0 +1,4 @@
+timestamp_directory: /var/data
+osm_data_dir: /var/data/planet
+flatnodes_dir: /var/data/flatnodes
+tile_expiry_dir: /var/data/tileupdate

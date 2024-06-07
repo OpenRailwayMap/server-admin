@@ -1,20 +1,11 @@
 # SPDX-License-Identifier: MIT
 - name: Install database packages using apt
   apt:
-    name: [postgresql, postgis]
+    name: [postgresql, postgis, 'postgresql-{{pg_version}}-postgis-3']
 
 - name: Install pyscopg2 because it is a dependency for Ansible's PostgreSQL module
   apt:
     name: python3-psycopg2
-
-- name: Create /nvme/postgresql for fast PostgreSQL tablespace
-  file:
-    path: /nvme/postgresql
-    owner: postgres
-    group: postgres
-    mode: 0700
-    state: directory
-  register: postgres_directory
 
 - name: Install helpful packages for map style debugging
   apt:
@@ -24,14 +15,6 @@
   systemd:
     name: postgresql
     state: started
-
-- name: Create PostgreSQL tablespace on NVME
-  become: yes
-  become_user: postgres
-  postgresql_tablespace:
-    name: nvme
-    owner: postgres
-    location: /nvme/postgresql
 
 - name: Create system user osmimport
   user:
@@ -50,6 +33,7 @@
     state: directory
     mode: '0755'
   loop:
+    - '{{ timestamp_directory }}'
     - '{{ flatnodes_dir }}'
     - '{{ tile_expiry_dir }}'
     - '{{ osm_data_dir }}/tmp'
@@ -69,7 +53,6 @@
     encoding: "utf-8"
     state: present
     owner: osmimport
-    tablespace: nvme
 
 - name: Create database extension PostGIS and Hstore
   become: true
@@ -124,6 +107,13 @@
   ansible.builtin.copy:
     dest: '{{ tileserver_script_dir }}/'
     src: 'files/scripts'
+    owner: root
+    group: root
+
+- name: Configure OSM import # noqa risky-file-permissions
+  ansible.builtin.template:
+    dest: '{{ tileserver_script_dir }}/scripts/config.cfg'
+    src: 'config.cfg'
     owner: root
     group: root
 
@@ -245,24 +235,14 @@
     repo: https://github.com/OpenRailwayMap/OpenRailwayMap-CartoCSS.git
     version: 9f38e151a70ff7b91f88623c17b812a69b62995c
 
-- name: Run import
-  command: "systemd-run osm_import {{ tileserver_script_dir }}/scripts/import_osm.sh"
+- name: Check if osm_import runs
+  include_tasks: osm_import_active.yml
+
+- name: Start OSM data import
+  when: 'osm_import_status == "inactive"'
+  command: "systemd-run -u osm_import --uid=osmimport --gid=osmimport --description='OSM data import' /bin/bash {{ tileserver_script_dir }}/scripts/import.sh"
   args:
-    creates: /nvme/data/timestamp.txt
+    creates: '{{ timestamp_directory }}/timestamp.txt'
 
-- name: 'Is the import (still) running?' # noqa command-instead-of-module
-  command: systemctl is-active osm_import
-  failed_when: False
-  changed_when: False
-  ignore_errors: True
-  register: osm_import
-  check_mode: no
-
-- name: 'Does the timestamp file exist already'
-  stat:
-    path: '/nvme/data/timestamp.txt'
-  register: timestamp_file
-
-- set_fact: # noqa unnamed-task
-    download_status: "{% if not osm_import or (osm_import.stdout == 'inactive' and timestamp_file.stat.exists) %}complete{% else %}incomplete{% endif %}"
-  check_mode: no
+- name: Check if osm_import runs
+  include_tasks: osm_import_active.yml

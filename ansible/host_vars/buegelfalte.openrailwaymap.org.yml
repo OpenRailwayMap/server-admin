@@ -1,5 +1,9 @@
 debian_version: buster
 pg_version: 11
+timestamp_directory: /nvme/data
+osm_data_dir: /nvme/data/planet
+flatnodes_dir: /nvme/data/flatnodes
+tile_expiry_dir: /nvme/data/tileupdate
 website_hostname_aliases:
   - buegelfalte.openrailwaymap.org
 

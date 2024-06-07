@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: MIT
+- name: 'Is the import (still) running and not in failure state?' # noqa command-instead-of-module
+  command: systemctl is-active osm_import
+  failed_when: 'osm_import.stdout == "failed"'
+  changed_when: 'osm_import.stdout == "active"'
+  ignore_errors: False
+  register: osm_import
+  check_mode: no
+
+- name: 'Does the timestamp file exist already'
+  stat:
+    path: '{{ timestamp_directory }}/timestamp.txt'
+  register: timestamp_file
+
+- set_fact: # noqa unnamed-task
+    osm_import_status: "{% if not osm_import or (osm_import.stdout == 'inactive' and timestamp_file.stat.exists) %}complete{% else %}incomplete{% endif %}"
+  check_mode: no
