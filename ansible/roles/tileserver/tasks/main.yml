@@ -217,7 +217,7 @@
 
 - name: Install fonts for map style
   apt:
-    name: [fonts-noto-cjk, fonts-noto-hinted, fonts-noto-unhinted, fonts-noto-color-emoji, fonts-hanazono, ttf-unifont]
+    name: [fonts-noto-cjk, fonts-noto-hinted, fonts-noto-unhinted, fonts-noto-color-emoji, fonts-hanazono, fonts-unifont]
 
 - name: Create directory for CartoCSS map style repository
   file:
