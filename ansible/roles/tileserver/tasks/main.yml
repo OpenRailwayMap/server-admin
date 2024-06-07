@@ -217,7 +217,18 @@
 
 - name: Install fonts for map style
   apt:
-    name: [fonts-noto-cjk, fonts-noto-hinted, fonts-noto-unhinted, fonts-noto-color-emoji, fonts-hanazono, fonts-unifont]
+    name: [fonts-noto-cjk, fonts-noto-hinted, fonts-noto-unhinted, fonts-noto-color-emoji, fonts-hanazono]
+
+- name: Install Unifont map style
+  block:
+    - name: Install Unifont (Debian Buster)
+      when: 'debian_version == "buster"'
+      apt:
+        name: [ttf-unifont]
+    - name: Install Unifont (other versions of Debian)
+      when: 'debian_version != "buster"'
+      apt:
+        name: [fonts-unifont]
 
 - name: Create directory for CartoCSS map style repository
   file:

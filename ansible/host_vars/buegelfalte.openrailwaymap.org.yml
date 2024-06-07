@@ -1,3 +1,4 @@
+debian_version: buster
 pg_version: 11
 website_hostname_aliases:
   - buegelfalte.openrailwaymap.org
