@@ -32,4 +32,4 @@
 
   - name: Install some other utility packages
     apt:
-      name: [htop, screen, time, goaccess]
+      name: [vim, htop, tmux, time]
