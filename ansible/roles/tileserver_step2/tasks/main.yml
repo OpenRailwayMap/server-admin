@@ -220,34 +220,6 @@
     - black.png
     - attribution-tile.png
 
-- name: Add tileserver configuration for Apache virtualhost
-  template:
-    src: '{{ item }}'
-    dest: '/etc/apache2/sites-available/{{ item }}'
-    owner: root
-    group: root
-    mode: 0664
-  loop:
-    - 'tiles.openrailwaymap.org.inc'
-    - 'tiles.openrailwaymap.org.conf'
-  notify:
-    - systemd reload apache2
-
-- name: Enable mod_tile because it is enabled by its Debian package by default
-  apache2_module:
-    name: tile
-    state: present
-  notify:
-    - systemd reload apache2
-
-- name: Enable tileserver configuration
-  command:
-    cmd: a2ensite tiles.openrailwaymap.org.conf
-    chdir: /etc/apache2/sites-available
-    creates: '/etc/apache2/sites-enabled/tiles.openrailwaymap.org.conf'
-  notify:
-    - systemd reload apache2
-
 - name: Create Tirex configuration for all map styles
   copy:
     dest: '/etc/tirex/renderer/mapnik/{{ item }}.conf'

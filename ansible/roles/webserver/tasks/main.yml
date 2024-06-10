@@ -10,30 +10,22 @@
     name:
       - libapache2-mod-wsgi-py3
 
-- name: Enable/Disable Apache modules
-  apache2_module:
-    name: '{{ item.key }}'
-    state: '{{ item.value.state | default("present") }}'
-  loop: '{{ apache.modules | dict2items }}'
-  notify:
-    - systemd restart apache2
-
 - name: Apache configurations
   block:
     - name: 'Write {{ item.key }}'
       loop: '{{ apache.configurations | dict2items }}'
-      when: item.key.content is defined and item.key.state | default("present") == "present"
+      when: item.value.content is defined and item.value.state | default("present") == "present"
       copy:
         dest: "/etc/apache2/conf-available/{{ item.key }}"
         owner: root
         group: root
         mode: 0644
-        content: '{{ item.key.content }}'
+        content: '{{ item.value.content }}'
       notify:
         - systemd reload apache2
     - name: 'Disable configuration {{ item.key }}'
       loop: '{{ apache.configurations | dict2items }}'
-      when: 'not item.key.enabled | default("yes")'
+      when: 'not item.value.enabled | default("yes")'
       command:
         cmd: "a2disconf {{ item.key }}"
         chdir: /etc/apache2/conf-available
@@ -42,7 +34,7 @@
         - systemd reload apache2
     - name: 'Enable configuration {{ item.key }}'
       loop: '{{ apache.configurations | dict2items }}'
-      when: 'item.key.enabled | default("yes")'
+      when: 'item.value.enabled | default("yes")'
       command:
         cmd: "a2enconf {{ item.key }}"
         chdir: /etc/apache2/conf-available
@@ -54,18 +46,18 @@
   block:
     - name: 'Write {{ item.key }}'
       loop: '{{ apache.sites | dict2items }}'
-      when: 'item.key.content is defined and item.key.state | default("present") == "present"'
+      when: 'item.value.content is defined and item.value.state | default("present") == "present"'
       copy:
         dest: "/etc/apache2/sites-available/{{ item.key }}"
         owner: root
         group: root
         mode: 0644
-        content: '{{ item.key.content }}'
+        content: '{{ item.value.content }}'
       notify:
         - systemd reload apache2
     - name: 'Disable site {{ item.key }}'
       loop: '{{ apache.sites | dict2items }}'
-      when: 'not item.key.enabled | default("yes")'
+      when: 'not item.value.enabled | default("yes")'
       command:
         cmd: "a2dissite {{ item.key }}"
         chdir: /etc/apache2/sites-available
@@ -74,10 +66,18 @@
         - systemd reload apache2
     - name: 'Enable site {{ item.key }}'
       loop: '{{ apache.sites | dict2items }}'
-      when: 'item.key.enabled | default("yes")'
+      when: 'item.value.enabled | default("yes")'
       command:
         cmd: "a2ensite {{ item.key }}"
         chdir: /etc/apache2/sites-available
         creates: '/etc/apache2/sites-enabled/{{ item.key }}'
       notify:
         - systemd reload apache2
+
+- name: Enable/Disable Apache modules
+  apache2_module:
+    name: '{{ item.key }}'
+    state: '{{ item.value.state | default("present") }}'
+  loop: '{{ apache.modules | dict2items }}'
+  notify:
+    - systemd restart apache2

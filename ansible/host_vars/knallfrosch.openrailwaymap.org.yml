@@ -1,2 +1,3 @@
 debian_version: bookworm
 pg_version: 15
+postgis_version: 3

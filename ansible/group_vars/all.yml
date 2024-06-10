@@ -1,25 +1,6 @@
 ---
 ansible_python_interpreter: python3
 
-tileserver:
-  styles:
-    - standard
-    - maxspeed
-    - signals
-    - electrification
-    - gauge
-  development_tools: true
-  hostname: tiles.openrailwaymap.org
-  hostname_aliases:
-    - a.tiles.openrailwaymap.org
-    - b.tiles.openrailwaymap.org
-    - c.tiles.openrailwaymap.org
-    - tiles.buegelfalte.openrailwaymap.org
-
-osm_dbname: gis
-tileserver_script_dir: /opt/OpenRailwayMap-server-config
-cartocss_dir: /opt/OpenRailwayMap-CartoCSS
-
 users:
   - name: michael
     root: true
@@ -55,6 +36,7 @@ apache2:
       enabled: yes
   sites:
     www.openrailwaymap.org.conf:
+      enabled: yes
       content: |
         <VirtualHost *:80>
             ServerName www.openrailwaymap.org
@@ -110,6 +92,7 @@ apache2:
         DirectoryIndex index.php
         ProxyPassMatch "^/(.*\.php)$" "unix:/run/php/php7.3-fpm.sock|fcgi://localhost/var/www/www.openrailwaymap.org/"
     api.openrailwaymap.org.conf:
+      enabled: yes
       content: |
         <VirtualHost *:80>
             ServerName api.openrailwaymap.org
@@ -191,6 +174,7 @@ apache2:
         LogLevel info ssl:warn
         CustomLog /var/log/apache2/api.openrailwaymap.org.access.log combined
     blog.openrailwaymap.org.conf:
+      enabled: yes
       content: |
         <VirtualHost *:80>
             ServerName blog.openrailwaymap.org
@@ -226,6 +210,7 @@ apache2:
 
         DirectoryIndex index.php
     mailman.conf:
+      enabled: yes
       content: |
         <VirtualHost *:80>
             ServerName lists.openrailwaymap.org

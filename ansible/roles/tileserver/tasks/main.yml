@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
 - name: Install database packages using apt
   apt:
-    name: [postgresql, postgis, 'postgresql-{{pg_version}}-postgis-3']
+    name: [postgresql, postgis, 'postgresql-{{pg_version}}-postgis-{{postgis_version}}']
 
 - name: Install pyscopg2 because it is a dependency for Ansible's PostgreSQL module
   apt:
