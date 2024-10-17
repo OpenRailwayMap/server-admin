@@ -176,12 +176,18 @@ apache:
         RewriteCond "%{HTTP_USER_AGENT}" "^Dart/\d+\.\d+ \(dart:io\)$" [OR]
         # python-requests, a Python HTTP library
         RewriteCond "%{HTTP_USER_AGENT}" "^python-requests/" [OR]
+        # OK HTTP library
+        RewriteCond "%{HTTP_USER_AGENT}" "^okhttp/" [OR]
         # python-requests, a Python HTTP library
         RewriteCond "%{HTTP_USER_AGENT}" "^MOBAC/" [OR]
         # Wget, non-interactive network downloader
         RewriteCond "%{HTTP_USER_AGENT}" "^Wget/" [OR]
         # Go HTTP client
         RewriteCond "%{HTTP_USER_AGENT}" "^Go-http-client/" [OR]
+        # Cloudflare, referrer (b|c).tiles.openrailwaymap.org
+        RewriteCond "%{HTTP_REFERER}" "^Cloudflare-Workers" [OR]
+        # unset
+        RewriteCond "%{HTTP_REFERER}" "^-$" [OR]
         # Empty user agents
         RewriteCond "%{HTTP_USER_AGENT}" "^$"
         RewriteRule "." "-" [F]
@@ -191,6 +197,19 @@ apache:
         # More than 20k tile requets per day but website is not public (looks like for-charge service)
         RewriteCond "%{HTTP_REFERER}" "//tapiagps\.mx/" [OR]
         RewriteCond "%{HTTP_REFERER}" "//atlas2\.org/" [OR]
+        # 131k requests/day, root website has no content
+        RewriteCond "%{HTTP_REFERER}" "//railway\.chienwen\.net/" [OR]
+        # Non-public live tracking (Traccar instance), 30k requests/day
+        RewriteCond "%{HTTP_REFERER}" "//(www\.)?golivetrack\.com/" [OR]
+        # Non-public live tracking, 26k requests/day
+        RewriteCond "%{HTTP_REFERER}" "pacificnational.comi\.au/" [OR]
+        # Non-public live tracking, 24k requests/day
+        RewriteCond "%{HTTP_REFERER}" "//track\.gpsdome\.net/" [OR]
+        RewriteCond "%{HTTP_REFERER}" "//heatmap\.zloco\.pl/" [OR]
+        # Non-public live tracking, 17k requests/day
+        RewriteCond "%{HTTP_REFERER}" "//plataforma\.mundialgps\.com/" [OR]
+        # Non-public, 17k requests/day
+        RewriteCond "%{HTTP_REFERER}" "//greencargo\.outsystemsenterprise\.com/" [OR]
         # More than 10k tile requets per day but website is not public (looks like for-charge service)
         # More than 190k tile request per IP (sometimes more then 300k requests per day) from TeleColumbus subnet, most requests with openrailwaymap.org referer, some with Internet Explorer 7 and no referrer
         # Requests with referer requested zoom level 13 or 14 only. 2023-10
@@ -205,6 +224,12 @@ apache:
         RewriteCond expr "%{REMOTE_ADDR} -ipmatch '59.31.87.129'" [OR]
         # Korean IP, 122k requests per 18 hours, many IE7, 2024-0423-
         RewriteCond expr "%{REMOTE_ADDR} -ipmatch '213.121.90.57'" [OR]
+        # OVH Poland, 57k per day, browser without referer
+        RewriteCond expr "%{REMOTE_ADDR} -ipmatch '146.59.69.202'" [OR]
+        # Vodafone West, 52k per day
+        RewriteCond expr "%{REMOTE_ADDR} -ipmatch '78.94.48.98'" [OR]
+        # Vodafone West, QGIS, 45k per day
+        RewriteCond expr "%{REMOTE_ADDR} -ipmatch '95.223.72.184'" [OR]
         # More than 20k tile request per IP and day but strange user agents and no referers
         RewriteCond "%{HTTP_USER_AGENT}" "Mozilla/4.7[35]"
         RewriteRule "." "-" [R=429,L]
