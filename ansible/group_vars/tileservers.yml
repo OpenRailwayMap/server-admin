@@ -140,6 +140,8 @@ apache:
         RewriteCond "%{HTTP_REFERER}" "//glogist.ru/?" [OR]
         # Lacking attribution and more than 10k tile requests per day
         RewriteCond "%{HTTP_REFERER}" "//fow\.vicc\.wang/?" [OR]
+        # Non-public live tracking (Traccar instance), 30k requests/day. 395k requests/day after changing response to HTTP 429.
+        RewriteCond "%{HTTP_REFERER}" "//(www\.)?golivetrack\.com/" [OR]
         # SEO website with ads and no meaningful content after a rough review (no HTTP 429 prior to black tile response)
         RewriteCond "%{HTTP_REFERER}" "//zugradar.info/"
         RewriteRule "." "/tile-util/black.png" [PT]
@@ -167,6 +169,7 @@ apache:
 
         # User-agent of a browser and no referer
         RewriteCond "%{HTTP_USER_AGENT}" "Gecko/[0-9]+ Firefox/[0-9.]+$"
+        #RewriteCond "%{HTTP_USER_AGENT}" "(Gecko/[0-9]+ Firefox/[0-9.]+| Safari/[0-9]+.[0-9]+)$"
         # Empty user agents
         RewriteCond "%{HTTP_REFERER}" "^$"
         RewriteRule "." "-" [F]
@@ -201,8 +204,6 @@ apache:
         RewriteCond "%{HTTP_REFERER}" "//atlas2\.org/" [OR]
         # 131k requests/day, root website has no content
         RewriteCond "%{HTTP_REFERER}" "//railway\.chienwen\.net/" [OR]
-        # Non-public live tracking (Traccar instance), 30k requests/day
-        RewriteCond "%{HTTP_REFERER}" "//(www\.)?golivetrack\.com/" [OR]
         # Non-public live tracking, 26k requests/day
         RewriteCond "%{HTTP_REFERER}" "pacificnational.comi\.au/" [OR]
         # Non-public live tracking, 24k requests/day
