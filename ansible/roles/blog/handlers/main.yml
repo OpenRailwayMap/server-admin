@@ -1,4 +1,4 @@
 - name: systemd restart php-fpm
   systemd:
-    name: php7.3-fpm.service
+    name: 'php{{php_version}}-fpm.service'
     state: restarted

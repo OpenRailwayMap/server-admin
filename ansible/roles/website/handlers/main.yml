@@ -1,8 +1,0 @@
-- name: systemd restart rsyslog
-  systemd:
-    name: rsyslog
-    state: restarted
-- name: systemd restart orm-api
-  systemd:
-    name: orm-api
-    state: restarted

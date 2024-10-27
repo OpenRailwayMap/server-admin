@@ -77,13 +77,6 @@
   notify:
     - systemd reload postgresql
 
-- name: Create database user for tile rendering
-  become: true
-  become_user: postgres
-  postgresql_user:
-    name: tirex
-    db: '{{ osm_dbname }}'
-
 - name: Install Osm2pgsql
   apt:
     name: osm2pgsql

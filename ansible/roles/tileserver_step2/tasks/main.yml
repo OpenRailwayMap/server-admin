@@ -1,4 +1,15 @@
 # SPDX-License-Identifier: MIT
+- name: Set variables depending on Debian version
+  block:
+    - set_fact:
+        tile_cache_dir: "/var/lib/tirex/tiles"
+        tirex_user: tirex
+      when: 'debian_version == "buster"'
+    - set_fact:
+        tile_cache_dir: "/var/cache/tirex/tiles"
+        tirex_user: _tirex
+      when: 'debian_version != "buster"'
+
 - name: Create database functions and views for the map style
   include_tasks: run_sql.yml
   loop:
@@ -30,44 +41,64 @@
       where: "railway = 'signal' AND tags ? 'railway:signal:electricity'"
       table: planet_osm_line
 
+- name: Create database user for tile rendering
+  become: true
+  become_user: postgres
+  postgresql_user:
+    name: '{{ tirex_user }}'
+    db: '{{ osm_dbname }}'
+
 - name: 'GRANT SELECT ON ALL TABLES IN SCHEMA public TO tirex'
   become: true
   become_user: postgres
   postgresql_privs:
-    role: tirex
+    role: '{{ tirex_user }}'
     type: table
     objs: ALL_IN_SCHEMA
     privs: 'SELECT'
     database: '{{ osm_dbname }}'
 
 - name: Install Carto and build Mapnik XML style file
-  become: yes
-  become_user: osmimport
   block:
-    - name: Install Carto
+    - name: Set Carto path
+      when: "debian_version == 'buster'"
+      set_fact:
+        carto_path: '{{ cartocss_dir }}/node_modules/carto/bin/carto'
+    - name: Set Carto path
+      when: "debian_version != 'buster'"
+      set_fact:
+        carto_path: 'carto'
+
+    - name: Install Make and NPM using APT
+      when: "debian_version == 'buster'"
+      apt:
+        name: [make, npm]
+    - name: Install Carto using NPM
+      when: "debian_version == 'buster'"
+      become: yes
+      become_user: osmimport
       npm:
         name: carto
         version: '1.2.0'
         path: '{{ cartocss_dir }}'
+    - name: Install Carto using APT
+      when: "debian_version != 'buster'"
+      apt:
+        name: [node-carto, make]
 
     - name: Build Mapnik XML style files
+      become: yes
+      become_user: osmimport
       make:
         chdir: '{{ cartocss_dir }}'
         target: all
         params:
-          CARTO: '{{ cartocss_dir }}/node_modules/carto/bin/carto'
+          CARTO: '{{ carto_path }}'
       notify:
         - systemd reload tirex-backend-manager
 
-- name: Enable Apache module mod_ssl
-  apache2_module:
-    name: ssl
-    state: present
-  notify:
-    - systemd restart apache2
-  when: "'letsencrypt' in group_names"
-
 - name: Create /var/www/tiles to avoid a2dismod and a2dissite (and their counterparts) return status code != 0 due to missing document root
+  when: "debian_version == 'buster'"
   file:
     path: '/var/www/tiles'
     owner: root
@@ -76,67 +107,71 @@
     mode: '0755'
 
 - name: Install mod_tile, tirex-core and tirex-backend-mapnik
-  apt:
-    deb: '{{ item }}'
-  loop:
-    - '/root/packages/tirex-core_0.6.1_amd64.deb'
-    - '/root/packages/tirex-backend-mapnik_0.6.1_amd64.deb'
-    - '/root/packages/libapache2-mod-tile_0.4-12~precise2_amd64.deb'
+  block:
+    - name: Install Tirex and mod_tile from self built packages
+      when: "debian_version == 'buster'"
+      apt:
+        deb: '{{ item }}'
+      loop:
+        - '/root/packages/tirex-core_0.6.1_amd64.deb'
+        - '/root/packages/tirex-backend-mapnik_0.6.1_amd64.deb'
+        - '/root/packages/libapache2-mod-tile_0.4-12~precise2_amd64.deb'
+    - name: Install Tirex and mod_tile from Debian repository
+      when: "debian_version != 'buster'"
+      apt:
+        name: [tirex, libapache2-mod-tile]
   notify:
     # Tirex and Apache are only restarted/reloaded if Ansible had to change something on the remote host (i.e. we install new package)
     - systemd reload apache2
     - systemd restart tirex-backend-manager
     - systemd restart tirex-master
 
-- name: Create symlink from /var/lib/mod_tile to /var/lib/tirex/tiles
+- name: Create symlink from /var/lib/mod_tile to tile cache directory
   file:
-    src: /var/lib/tirex/tiles
+    src: '{{ tile_cache_dir }}'
     path: /var/lib/mod_tile
     state: link
     force: yes
 
-- name: Ensure that /var/lib/tirex/tiles is owned by tirex:tirex
+- name: "Ensure that tile cache directory is owned by Tirex's user"
   file:
-    path: /var/lib/tirex/tiles
+    path: '{{ tile_cache_dir }}'
     state: directory
-    owner: tirex
-    group: tirex
+    owner: '{{ tirex_user }}'
+    group: '{{ tirex_user }}'
     mode: 0755
   notify:
     - systemd reload tirex-backend-manager
     - systemd reload tirex-master
 
-- name: 'Tirex: Change Mapnik plugin path in /etc/tirex/renderer/mapnik.conf'
-  lineinfile:
-    path: /etc/tirex/renderer/mapnik.conf
-    regexp: '^plugindir=/usr/lib/mapnik/(3\.0/)?input/?$'
-    line: 'plugindir=/usr/lib/mapnik/3.0/input/'
+- name: Changes to Tirex configuration on Debian Buster
   notify:
     - systemd reload tirex-backend-manager
+  when: "debian_version == 'buster'"
+  block:
+    - name: 'Tirex: Change Mapnik plugin path in /etc/tirex/renderer/mapnik.conf'
+      lineinfile:
+        path: /etc/tirex/renderer/mapnik.conf
+        regexp: '^plugindir=/usr/lib/mapnik/(3\.0/)?input/?$'
+        line: 'plugindir=/usr/lib/mapnik/3.0/input/'
 
-- name: 'Tirex: Set syslog facility to daemon in /etc/tirex/renderer/mapnik.conf'
-  lineinfile:
-    path: /etc/tirex/renderer/mapnik.conf
-    regexp: '^#? *syslog_facility=daemon$'
-    line: 'syslog_facility=daemon'
-  notify:
-    - systemd reload tirex-backend-manager
+    - name: 'Tirex: Set syslog facility to daemon in /etc/tirex/renderer/mapnik.conf'
+      lineinfile:
+        path: /etc/tirex/renderer/mapnik.conf
+        regexp: '^#? *syslog_facility=daemon$'
+        line: 'syslog_facility=daemon'
 
-- name: 'Tirex: Change Mapnik fonts path in /etc/tirex/renderer/mapnik.conf'
-  lineinfile:
-    path: /etc/tirex/renderer/mapnik.conf
-    regexp: '^fontdir=/usr/(lib/mapnik|share)/fonts/?$'
-    line: 'fontdir=/usr/share/fonts/'
-  notify:
-    - systemd reload tirex-backend-manager
+    - name: 'Tirex: Change Mapnik fonts path in /etc/tirex/renderer/mapnik.conf'
+      lineinfile:
+        path: /etc/tirex/renderer/mapnik.conf
+        regexp: '^fontdir=/usr/(lib/mapnik|share)/fonts/?$'
+        line: 'fontdir=/usr/share/fonts/'
 
-- name: 'Tirex: Enable recursive search in Mapnik fonts path in /etc/tirex/renderer/mapnik.conf'
-  lineinfile:
-    path: /etc/tirex/renderer/mapnik.conf
-    regexp: '^#?fontdir_recurse='
-    line: 'fontdir_recurse=1'
-  notify:
-    - systemd reload tirex-backend-manager
+    - name: 'Tirex: Enable recursive search in Mapnik fonts path in /etc/tirex/renderer/mapnik.conf'
+      lineinfile:
+        path: /etc/tirex/renderer/mapnik.conf
+        regexp: '^#?fontdir_recurse='
+        line: 'fontdir_recurse=1'
 
 - name: 'Tirex: Configure buckets'
   lineinfile:
@@ -194,6 +229,7 @@
     target: all
 
 - name: Deactivate default tileserver page
+  when: "debian_version == 'buster'"
   command:
     cmd: a2dissite tileserver_site.conf
     chdir: /etc/apache2/sites-available
@@ -220,6 +256,21 @@
     - black.png
     - attribution-tile.png
 
+- name: Enable Apache module tile
+  apache2_module:
+    name: tile
+    state: present
+  notify:
+    - systemd reload apache2
+
+- name: "Create /etc/tirex/renderer/mapnik"
+  file:
+    path: /etc/tirex/renderer/mapnik
+    owner: root
+    group: root
+    state: directory
+    mode: 0755
+
 - name: Create Tirex configuration for all map styles
   copy:
     dest: '/etc/tirex/renderer/mapnik/{{ item }}.conf'
@@ -244,8 +295,8 @@
 - name: Create tile cache directories
   file:
     path: '/var/lib/tirex/tiles/{{ item }}'
-    owner: tirex
-    group: tirex
+    owner: '{{ tirex_user }}'
+    group: '{{ tirex_user }}'
     mode: 0755
     state: directory
   loop: "{{ tileserver.styles }}"
@@ -279,8 +330,8 @@
       [Service]
       Type=simple
       ExecStart=/bin/bash {{ tileserver_script_dir }}/scripts/delete_old_metatiles.sh
-      User=tirex
-      Group=tirex
+      User={{ tirex_user }}
+      Group={{ tirex_user }}
       StandardOutput=journal
       StandardError=journal
       SyslogIdentifier=delete_old_metatiles

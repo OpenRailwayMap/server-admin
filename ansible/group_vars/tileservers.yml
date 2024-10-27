@@ -20,7 +20,7 @@ tileserver:
 apache:
   modules:
     remoteip:
-    tile:
+    # Module tile not listed here because it is enabled during tileserver setup.
     rewrite:
     alias:
   sites:
@@ -60,6 +60,7 @@ apache:
         ServerAdmin info@openrailwaymap.org
 
         DocumentRoot /var/www/tiles
+        <IfModule tile_module>
         {% if 'letsencrypt' in group_names %}
         LogLevel info tile:warn ssl:warn
         {% else %}
@@ -82,6 +83,7 @@ apache:
         ModTileEnableTileThrottlingXForward 0
         ModTileThrottlingTiles 10000 1
         ModTileThrottlingRenders 128 0.2
+        </IfModule>
 
         Header set Access-Control-Allow-Origin "*"
 

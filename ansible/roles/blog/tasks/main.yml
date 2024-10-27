@@ -18,9 +18,20 @@
     force: yes
     version: master
 
+- name: Get PHP version
+  register: cmd
+  command:
+    argv:
+      - php
+      - "-r"
+      - "print(implode('.', array_slice(explode('.', phpversion()), 0, 2)));"
+
+- set_fact:
+    php_version: '{{ cmd.stdout }}'
+
 - name: Configure php-fmp pool
   replace:
-    path: /etc/php/7.3/fpm/pool.d/www.conf
+    path: '/etc/php/{{ php_version }}/fpm/pool.d/www.conf'
     regexp: '{{ item.regexp }}'
     replace: '{{ item.line }}'
   loop:

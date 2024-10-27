@@ -17,6 +17,7 @@
 
 - name: Install pojson from Pip
   pip:
+    break_system_packages: yes
     executable: pip3
     name: pojson
     state: present
@@ -72,8 +73,6 @@
     name: openrailwaymap
     db: 'postgres'
     encrypted: yes
-  notify:
-    - systemd restart orm-api
 
 - name: Install required packages from APT for API version 2
   apt:
