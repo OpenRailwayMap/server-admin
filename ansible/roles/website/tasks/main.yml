@@ -92,7 +92,7 @@
   git:
     dest: '{{ api_v2.directory }}'
     repo: https://github.com/OpenRailwayMap/OpenRailwayMap-api.git
-    version: d030c50c6c38bb6117df5ac0d0cba3251be06a6f
+    version: b9609d949605ec79776dbe3520a36edf7a3ae19d
 
 - name: Create database extension Unaccent
   become: true
@@ -118,7 +118,7 @@
     dest: /opt/OpenRailwayMap-server-config/post-update.d/
     owner: root
     group: root
-    mode: 0644
+    mode: 0755
 
 - name: Grant SELECT permission to user openrailwaymap
   become: true
