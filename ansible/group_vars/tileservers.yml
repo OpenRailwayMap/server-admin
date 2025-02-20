@@ -229,8 +229,6 @@ apache:
         RewriteCond expr "%{REMOTE_ADDR} -ipmatch '59.31.87.129'" [OR]
         # Korean IP, 122k requests per 18 hours, many IE7, 2024-0423-
         RewriteCond expr "%{REMOTE_ADDR} -ipmatch '213.121.90.57'" [OR]
-        # OVH Poland, 57k per day, browser without referer
-        RewriteCond expr "%{REMOTE_ADDR} -ipmatch '146.59.69.202'" [OR]
         # Vodafone West, 52k per day
         RewriteCond expr "%{REMOTE_ADDR} -ipmatch '78.94.48.98'" [OR]
         # Vodafone West, QGIS, 45k per day
