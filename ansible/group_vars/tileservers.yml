@@ -193,9 +193,9 @@ apache:
         # Go HTTP client
         RewriteCond "%{HTTP_USER_AGENT}" "^Go-http-client/" [OR]
         # Cloudflare, referrer (b|c).tiles.openrailwaymap.org
-        RewriteCond "%{HTTP_REFERER}" "^Cloudflare-Workers" [OR]
+        RewriteCond "%{HTTP_USER_AGENT}" "^Cloudflare-Workers" [OR]
         # unset
-        RewriteCond "%{HTTP_REFERER}" "^-$" [OR]
+        RewriteCond "%{HTTP_USER_AGENT}" "^-$" [OR]
         # Empty user agents
         RewriteCond "%{HTTP_USER_AGENT}" "^$"
         RewriteRule "." "-" [F]
