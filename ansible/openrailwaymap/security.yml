@@ -14,7 +14,7 @@
 
   - name: Install fail2ban
     apt:
-      name: fail2ban
+      name: [fail2ban, python3-systemd]
 
   - name: Fail2ban configuration
     include_tasks: fail2ban_custom.yml

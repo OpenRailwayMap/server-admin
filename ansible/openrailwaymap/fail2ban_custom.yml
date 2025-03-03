@@ -67,5 +67,6 @@
         maxretry = 15
         [sshd]
         enabled = true
+        {% if ansible_distribution_major_version|int >= 12 and ansible_distribution == "Debian" %}backend = systemd{% endif %}
   notify:
     - reload fail2ban
