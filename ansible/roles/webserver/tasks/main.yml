@@ -5,7 +5,7 @@
       - apache2
 
 - name: Install requirements for mod_wsgi
-  when: '"wsgi" in apache2.modules and (apache2.modules.wsgi is none or not apache2.modules.wsgi.enabled is defined or apache2.modules.wsgi.enabled|default("yes") == "yes")'
+  when: '"wsgi" in apache.modules and (apache.modules.wsgi is none or not apache.modules.wsgi.enabled is defined or apache.modules.wsgi.enabled|default("yes") == "yes")'
   apt:
     name:
       - libapache2-mod-wsgi-py3

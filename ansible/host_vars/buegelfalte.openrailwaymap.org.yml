@@ -1,19 +1,14 @@
 debian_version: buster
 pg_version: 11
 postgis_version: "2.5"
+php_version: "7.3"
 timestamp_directory: /nvme/data
 osm_data_dir: /nvme/data/planet
 flatnodes_dir: /nvme/data/flatnodes
 tile_expiry_dir: /nvme/data/tileupdate
 website_hostname_aliases:
   - buegelfalte.openrailwaymap.org
-
-apache2:
-  sites:
-    redirect-http.inc:
-      enabled: no
-      content: |-
-        RewriteEngine On
-        RewriteCond %{REQUEST_URI} !^/.well-known/acme-challenge
-        RewriteCond %{HTTPS} off
-        RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+apache:
+  configurations:
+    php7.3-fpm.conf:
+      enabled: yes

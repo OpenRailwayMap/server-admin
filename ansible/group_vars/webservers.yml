@@ -1,0 +1,21 @@
+apache:
+  modules:
+    http2:
+    rewrite:
+    setenvif:
+    php7.3:
+      state: absent
+    php8.2:
+      state: absent
+    mpm_prefork:
+      state: absent
+    mpm_event:
+      state: present
+  sites:
+    redirect-http.inc:
+      enabled: no
+      content: |-
+        RewriteEngine On
+        RewriteCond %{REQUEST_URI} !^/.well-known/acme-challenge
+        RewriteCond %{HTTPS} off
+        RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]

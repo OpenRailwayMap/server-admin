@@ -1,0 +1,40 @@
+apache:
+  modules:
+    proxy_fcgi:
+  sites:
+    blog.openrailwaymap.org.conf:
+      enabled: yes
+      content: |
+        <VirtualHost *:80>
+            ServerName blog.openrailwaymap.org
+            Include /etc/apache2/sites-available/redirect-http.inc
+        </VirtualHost>
+        <VirtualHost *:443>
+            SSLEngine on
+            SSLCertificateFile /etc/letsencrypt/openrailwaymap.org/openrailwaymap.org-chain.crt
+            SSLCertificateKeyFile /etc/letsencrypt/openrailwaymap.org/domain.key
+            SSLProtocol all -SSLv3 -TLSv1 -TLSv1.1
+            SSLCipherSuite ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384
+            SSLHonorCipherOrder off
+            SSLSessionTickets off
+
+            Include /etc/apache2/sites-available/blog.openrailwaymap.org.inc
+        </VirtualHost>
+    blog.openrailwaymap.org.inc:
+      enabled: no
+      content: |
+        DocumentRoot /var/www/blog
+        ServerName blog.openrailwaymap.org
+
+        <Directory /var/www/blog>
+            AllowOverride None
+        </Directory>
+
+        AddType application/json .json
+        ProxyPassMatch "^/(.*\.php)$" "unix:/run/php/php{{php_version}}-fpm.sock|fcgi://localhost/var/www/blog/"
+
+        ErrorLog /var/log/apache2/blog.openrailwaymap.org.error.log
+        LogLevel info
+        CustomLog /var/log/apache2/blog.openrailwaymap.org.access.log combined
+
+        DirectoryIndex index.php

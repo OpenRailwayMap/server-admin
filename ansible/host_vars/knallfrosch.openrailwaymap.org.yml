@@ -1,17 +1,14 @@
 debian_version: bookworm
 pg_version: 15
+php_version: "8.2"
 postgis_version: 3
 
 apache:
+  configurations:
+    php8.2-fpm.conf:
+      enabled: yes
   modules:
     remoteip:
     # Module tile not listed here because it is enabled during tileserver setup.
     rewrite:
     alias:
-  sites:
-    tiles.openrailwaymap.org.conf:
-      enabled: yes
-      content: |
-        <VirtualHost *:80>
-            Include /etc/apache2/sites-available/tiles.openrailwaymap.org.inc
-        </VirtualHost>
