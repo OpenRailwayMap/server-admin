@@ -115,7 +115,7 @@
 - name: Enable updates of materialized views
   copy:
     src: update_api_views.sh
-    dest: /opt/OpenRailwayMap-server-config/post-update.d/
+    dest: /opt/OpenRailwayMap-server-config/post-update.d/update_api_views
     owner: root
     group: root
     mode: 0755
