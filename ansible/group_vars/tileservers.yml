@@ -171,14 +171,18 @@ apache:
         RewriteCond "%{HTTP_REFERER}" "^$"
         RewriteRule "." "-" [F]
 
-        # User-agent of a browser and no referer
+        # User-agent of a browser and no referer requesting tiles
         RewriteCond "%{HTTP_USER_AGENT}" "Gecko/[0-9]+ Firefox/[0-9.]+$"
         RewriteCond "%{HTTP_REFERER}" "^$"
+        # Exclude requests not for tiles. Otherwise /index.html and its assets are forbidden as well.
+        RewriteCond "%{PATH_INFO}" "\.png$"
         RewriteRule "." "-" [F]
 
-        # User-agent of a desktop browser and no referer
+        # User-agent of a desktop browser and no referer requesting tiles
         RewriteCond "%{HTTP_USER_AGENT}" "^Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
         RewriteCond "%{HTTP_REFERER}" "^$"
+        # Exclude requests not for tiles. Otherwise /index.html and its assets are forbidden as well.
+        RewriteCond "%{PATH_INFO}" "\.png$"
         RewriteRule "." "-" [F]
 
         # generic referer, likely not public accessible
