@@ -7,5 +7,5 @@ DIR=/opt/OpenRailwayMap-api/
 
 for FILE in update_milestones.sql update_facilities.sql ; do
     echo "Running queries in ${DIR}/${FILE} against database $DBNAME"
-    sudo -u osmimport psql -d "$DBNAME" -f "${DIR}/${FILE}"
+    psql -d "$DBNAME" -f "${DIR}/${FILE}"
 done
