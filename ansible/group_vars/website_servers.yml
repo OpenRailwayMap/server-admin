@@ -87,9 +87,15 @@ apache:
     api.openrailwaymap.org.inc:
       enabled: no
       content: |
-        ServerName  api.openrailwaymap.org
+        ServerName api.openrailwaymap.org
         DocumentRoot /var/www/www.openrailwaymap.org
+        Alias /robots.txt /var/www/common/ban_all_robots.txt
+        <Directory /var/www/common/ >
+            Require all granted
+        </Directory>
+
         #ProxyPass /server-status !
+
         #ProxyPass /timestamp !
         Alias "/timestamp" "/nvme/data/timestamp.txt"
         Alias "/v2/timestamp" "/nvme/data/timestamp.txt"
@@ -143,9 +149,3 @@ apache:
         ErrorLog /var/log/apache2/api.openrailwaymap.org.error.log
         LogLevel info ssl:warn
         CustomLog /var/log/apache2/api.openrailwaymap.org.access.log combined
-
-        ErrorLog /var/log/apache2/blog.openrailwaymap.org.error.log
-        LogLevel info
-        CustomLog /var/log/apache2/blog.openrailwaymap.org.access.log combined
-
-        #DirectoryIndex index.php

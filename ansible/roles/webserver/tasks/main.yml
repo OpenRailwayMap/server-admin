@@ -81,3 +81,21 @@
   loop: '{{ apache.modules | dict2items }}'
   notify:
     - systemd restart apache2
+
+- name: Create /var/www/common
+  file:
+    path: /var/www/common
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Create /var/www/common/ban_all_robots.txt
+  copy:
+    dest: /var/www/common/ban_all_robots.txt
+    owner: root
+    group: root
+    mode: '0644'
+    content: |
+      User-agent: *
+      Disallow: /

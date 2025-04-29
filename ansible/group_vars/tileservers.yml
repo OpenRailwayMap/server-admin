@@ -60,6 +60,10 @@ apache:
         ServerAdmin info@openrailwaymap.org
 
         DocumentRoot /var/www/tiles
+        Alias /robots.txt /var/www/common/ban_all_robots.txt
+        <Directory /var/www/common/ >
+            Require all granted
+        </Directory>
         <IfModule tile_module>
         {% if 'letsencrypt' in group_names %}
         LogLevel info tile:warn ssl:warn
