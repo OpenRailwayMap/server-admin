@@ -376,6 +376,7 @@
       loop:
         - {'regexp': "^ADMINS = \\(\\n( *)\\('[^']*', '[^']*'\\), *\\n\\)", 'line': "ADMINS = (\\n    ('OpenRailwayMap Mailman Admin', 'info@openrailwaymap.org'),\\n)"}
         - {'regexp': "^    #? *'django.contrib.admindocs', *$", 'line': "    'django.contrib.admindocs',"}
+        - {'regexp': "^( *)#?( *'django_mailman3\\.lib\\.auth\\.fedora', *)$", 'line': "\\1#\\2"}
         - {'regexp': "^#? *SECURE_PROXY_SSL_HEADER = \\('HTTP_X_FORWARDED_PROTO', 'https'\\)", 'line': "SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')"}
         - {'regexp': "^#? *SESSION_COOKIE_SECURE =.[^\n]*$", 'line': "SESSION_COOKIE_SECURE = True"}
         - {'regexp': "^#? *SECURE_CONTENT_TYPE_NOSNIFF =.[^\n]*$", 'line': "SECURE_CONTENT_TYPE_NOSNIFF = True"}
@@ -389,14 +390,13 @@
       notify:
         - systemd restart mailman3-web
 
-#    # The OpenStreetMap logo is not installed because it is not included in the Mailman 3 source code.
-#    - name: Copy OpenStreetMap logo
-#      copy:
-#        src: openstreetmap.png
-#        dest: /var/lib/mailman3/web/static/django-mailman3/img/login/
-#        mode: 0644
-#        owner: root
-#        group: root
+    # The python3-django-hyperkitty package does not copy its assets to /var/lib/mailman3/web/static
+    # Therefore, we need a separate Alias for it in the Apache configuration.
+    - name: Add custom alias for /mailman3/static/hyperkitty in /etc/mailman3/apache.conf
+      lineinfile:
+        path: /etc/mailman3/apache.conf
+        insertbefore: '^ *Alias /mailman3/static '
+        line: 'Alias /mailman3/static/hyperkitty /usr/share/python3-django-hyperkitty/static/hyperkitty'
 
         # It is likely that running a migration is not necessary.
     - name: 'Run django-admin migrate'
