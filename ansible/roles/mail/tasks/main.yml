@@ -1,13 +1,23 @@
 # SPDX-License-Identifier: MIT
+- name: Install Unbound
+  apt:
+    name: [unbound, unbound-anchor, dns-root-data]
+
+- name: Update resolv.conf
+  register: resolvconf
+  lineinfile:
+    path: /etc/resolv.conf
+    regexp: '^nameserver '
+    line: 'nameserver 127.0.0.1'
+
+- name: Trigger resolvconf update
+  when: resolvconf.changed
+  command: "resolvconf -u"
+
 - name: Install Postfix
   apt:
-    name: [postfix, postfix-pcre, postgrey]
+    name: [postfix, postfix-pcre, mailutils]
 
-- name: Add localhost.localdomain to Postgrey whitelist
-  lineinfile:
-    path: /etc/postgrey/whitelist_clients
-    regexp: '^localhost.localdomain$'
-    line: 'localhost.localdomain'
 
 - name: set /etc/mailname
   copy:
@@ -18,13 +28,10 @@
     content: |
       {{ inventory_hostname }}
 
-# - name: Ensure that Postfix and Postgrey do not run
+# - name: Ensure that Postfix does not run
 #   systemd:
-#     name: '{{ item }}'
+#     name: postfix
 #     state: stopped
-#   loop:
-#     - postfix
-#     - postgrey
 
 - name: Generate our own DH parameters, see http://www.postfix.org/postconf.5.html#smtp_tls_policy_maps for details
   openssl_dhparam:
@@ -37,8 +44,9 @@
 - name: 'virtual_alias_map and bad_senders'
   include_tasks: write_and_hash.yml
   loop:
-    - {'src': 'virtual_alias_map', 'dest': '/etc/postfix/virtual_alias_map', 'cmd': 'postalias'}
+    - {'src': 'virtual_alias_map', 'dest': '/etc/postfix/virtual_alias_map', 'cmd': 'postmap', 'template': true}
     - {'src': 'bad_senders', 'dest': '/etc/postfix/bad_senders', 'cmd': 'postmap'}
+    - {'line': 'root: michael@michreichert.de', 'dest': '/etc/aliases', 'cmd': 'postalias'}
 
 - name: Write /etc/postfix/main.cf
   template:
@@ -68,61 +76,10 @@
     mode: 0644
     src: '{{ item }}'
   loop:
-    - 'postscreen_access.cidr'
     - 'header_checks.pcre'
+    #- 'postscreen_access.cidr'
   notify:
     - systemd reload postfix
-
-- name: Install Amavis from APT
-  apt:
-    name: [amavisd-new, amavisd-milter]
-
-# - name: Ensure that Amavis does not run
-#   systemd:
-#     name: '{{ item }}'
-#     state: stopped
-#   loop:
-#     - amavisd-new
-#     - amavisd-milter
-
-- name: Create directory for Amavis where to place the socket of the Milter
-  file:
-    path: /var/spool/postfix/amavis
-    owner: amavis
-    group: amavis
-    recurse: no
-    mode: 0755
-    state: directory
-
-- name: Add user postfix to group amavis in order to access Amavis socket
-  user:
-    append: yes
-    groups: amavis
-    name: postfix
-
-- name: Write custom Amavis configuration to /etc/amavis/conf.d/50-user
-  copy:
-    dest: /etc/amavis/conf.d/50-user
-    src: 50-user
-    owner: root
-    group: root
-    mode: 0644
-  notify:
-    - systemd restart amavis
-
-- name: Configure socket path for Amavisd-milter which is accessible by chroot-ed Postfix
-  lineinfile:
-    path: /etc/default/amavisd-milter
-    regexp: '{{ item.regexp }}'
-    line: '{{ item.line }}'
-  loop:
-    - {'regexp': '^#?MILTERSOCKET=/var/spool/postfix/amavis/amavis.sock', 'line': 'MILTERSOCKET=/var/spool/postfix/amavis/amavis.sock'}
-    - {'regexp': '^#?MILTERSOCKETOWNER="postfix:postfix"', 'line': 'MILTERSOCKETOWNER=postfix:postfix'}
-    - {'regexp': '^#?MILTERSOCKETMODE="0660"', 'line': 'MILTERSOCKETMODE="0660"'}
-  notify:
-    - systemd daemon-reload
-    - systemd restart amavis
-    - systemd restart amavisd-milter
 
 - name: Install OpenDKIM
   block:
@@ -161,8 +118,8 @@
     - name: Create OpenDKIM key
       command:
         chdir: /etc/opendkim
-        cmd: 'opendkim-genkey --selector=2020 --bits=2048 --directory=keys'
-        creates: /etc/opendkim/keys/2020.private
+        cmd: 'opendkim-genkey --selector=2025 --bits=2048 --directory=keys'
+        creates: /etc/opendkim/keys/2025.private
       register: opendkim_key_creation
 
     - name: Make OpenDKIM key readable for user opendkim
@@ -173,19 +130,19 @@
         group: root
         mode: 0600
       loop:
-        - '2020.private'
-        - '2020.txt'
+        - '2025.private'
+        - '2025.txt'
 
     - name: Print public OpenDKIM key
       when: opendkim_key_creation.changed
       block:
-        - name: Read /etc/opendkim/keys/2020.txt
+        - name: Read /etc/opendkim/keys/2025.txt
           slurp:
-            src: /etc/opendkim/keys/2020.txt
+            src: /etc/opendkim/keys/2025.txt
           register: opendkim_public_key
         - name: Print public OpenDKIM key
           debug:
-            msg: 'Please publish the following DNS entry with your public DKIM key:\n{{ opendkim.public_key }}'
+            msg: 'Please publish the following DNS entry with your public DKIM key:\n{{ opendkim_public_key }}'
 
     - name: Write /etc/opendkim/keytable
       copy:
@@ -194,7 +151,7 @@
         group: root
         mode: 0644
         content: |
-          default    %:2020:/etc/opendkim/keys/2020.private
+          default    openrailwaymap.org:2025:/etc/opendkim/keys/2025.private
       notify:
         - systemd restart opendkim
 
@@ -206,6 +163,7 @@
         mode: 0644
         content: |
           *@openrailwaymap.org default
+          *@{{ inventory_hostname }} default
       notify:
         - systemd restart opendkim
 
@@ -223,9 +181,110 @@
     name: postfix
     groups: opendkim
 
-- name: Install Spamassassin
+- name: Add rspamd-stable repository
+  block:
+    - name: Create directory /etc/apt/keyrings/
+      file:
+        path: /etc/apt/keyrings/
+        state: directory
+        owner: root
+        group: root
+        mode: 0755
+    - name: Check if Rspamd GPG key exists already
+      register: rspamd_key
+      stat:
+        path: /etc/apt/keyrings/rspamd-apt-stable.gpg
+    - when: not rspamd_key.stat.exists
+      ansible.builtin.get_url:
+        url: https://rspamd.com/apt-stable/gpg.key
+        dest: /etc/apt/keyrings/rspamd-apt-stable.asc
+        checksum: sha256:218ef36314c2e4c8a0b05702cf7489c12e18e69916e805d806e6464d87277bec
+    - when: not rspamd_key.stat.exists
+      shell:
+        cmd: 'gpg --dearmor < /etc/apt/keyrings/rspamd-apt-stable.asc > /etc/apt/keyrings/rspamd.gpg'
+        creates: /etc/apt/keyrings/rspamd.gpg
+    - ansible.builtin.apt_repository:
+        repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/rspamd.gpg] http://rspamd.com/apt-stable/ {{ ansible_distribution_release }} main"
+        state: present
+
+- name: Install Rspamd
   apt:
-    name: spamassassin
+    name: [rspamd, redis-server]
+
+- name: Configure Rspamd
+  notify: [systemctl restart rspamd]
+  copy:
+    dest: '{{ item.dest }}'
+    owner: root
+    group: root
+    mode: 0644
+    content: '{{ item.content }}'
+  loop:
+    - dest: '/etc/rspamd/local.d/milter_headers.conf'
+      content: |
+        use = ["x-spamd-bar", "x-spam-level", "authentication-results"];
+        authenticated_headers = ["authentication-results"];
+    - dest: /etc/rspamd/local.d/redis.conf
+      content: |
+        servers = "127.0.0.1";
+    - dest: /etc/rspamd/override.d/classifier-bayes.conf
+      content: |
+        autolearn = true;
+    - dest: /etc/rspamd/local.d/multimap.conf
+      content: |
+        WHITELIST_IP {
+            type = "ip";
+            map = "$CONFDIR/local.d/whitelist_ip.map";
+            description = "Local ip whitelist";
+            action = "accept";
+        }
+        WHITELIST_FROM {
+            type = "from";
+            map = "$CONFDIR/local.d/whitelist_from.map";
+            description = "Local from whitelist";
+            action = "accept";
+        }
+        BLACKLIST_IP {
+            type = "ip";
+            map = "$CONFDIR/local.d/blacklist_ip.map";
+            description = "Local ip blacklist";
+            action = "reject";
+        }
+        BLACKLIST_FROM {
+            type = "from";
+            map = "$CONFDIR/local.d/blacklist_from.map";
+            description = "Local from blacklist";
+            action = "reject";
+        }
+    # Disable DKIM (TODO drop OpenDKIM, use Rspamd)
+    - dest: /etc/rspamd/local.d/dkim_signing.conf
+      content: "enabled = false;"
+    # Disable ARC (TODO drop OpenDKIM, use Rspamd)
+    - dest: /etc/rspamd/local.d/arc.conf
+      content: "enabled = false;"
+    # Disable greylist (TODO drop Postgrey, use Rspamd)
+    - dest: /etc/rspamd/local.d/greylist.conf
+      content: "enabled = false;"
+
+- name: Create white and blacklist files
+  file:
+    state: touch
+    owner: root
+    group: root
+    mode: 0644
+    path: '/etc/rspamd/local.d/{{ item }}'
+  loop:
+    - whitelist_ip.map
+    - whitelist_from.map
+    - blacklist_ip.map
+    - blacklist_from.map
+
+- debug:
+    msg: Plase set Rspamd password has in /etc/rspamd/local.d/worker-controller.inc. You can generate it using "rspamadm pw"
+
+- debug:
+    msg: 'You can connect to the Rspamd web frontend using a SSH tunnel ("ssh -NL 8080:localhost:11334 {{ansible_user}}@{{inventory_hostname}}") and then access the frontend at http://localhost:8080/'
+
 - name: Mailman 3 setup
   when: mail.mailman3
   block:
@@ -234,21 +293,9 @@
         cmd: 'debconf-set-selections'
         stdin: "{{ lookup('file', 'mailman3_debconf_settings') }}"
 
-    - name: Install packages of Mailman 3 dependencies from APT
+    - name: Install packages of Mailman 3 from APT
       apt:
-        name: [lynx, postgresql, python3-django, python3-django-captcha, sox, flite]
-
-    - name: Install our self-build Mailman 3 packages
-      apt:
-        deb: '/root/packages/{{ item }}'
-      loop:
-        - 'python3-django-allauth_0.40.0+ds-3_all.deb'
-        - 'mailman3_3.2.1-3_all.deb'
-        - 'python3-django-mailman3_1.3.0-4_all.deb'
-        - 'python3-django-hyperkitty_1.2.2-2_all.deb'
-        - 'python3-django-postorius_1.2.4-2_all.deb'
-        - 'mailman3-full_3.2.1-3_all.deb'
-        - 'mailman3-web_0+20180916-11_all.deb'
+        name: [mailman3-full, postgresql, python3-django-mailman3, python3-django-captcha, sox, flite, uwsgi]
 
     - name: Enable peer authentication for PostgreSQL for user mailman3
       postgresql_pg_hba:
@@ -291,11 +338,13 @@
       blockinfile:
         path: /etc/mailman3/mailman-web.py
         block: |
-          INSTALLED_APPS = INSTALLED_APPS + tuple(['allauth.socialaccount.providers.openstreetmap', 'captcha'])
-          ACCOUNT_SIGNUP_FORM_CLASS = 'django_mailman3.forms.CaptchaSignupForm'
-          import shutil
-          CAPTCHA_FLITE_PATH = shutil.which('flite')
-          CAPTCHA_SOX_PATH = shutil.which('sox')
+          #INSTALLED_APPS = INSTALLED_APPS + tuple(['captcha'])
+          #INSTALLED_APPS = INSTALLED_APPS + tuple(['allauth.socialaccount.providers.openstreetmap', 'captcha'])
+          #ACCOUNT_SIGNUP_FORM_CLASS = 'django_mailman3.forms.CaptchaSignupForm'
+          #import shutil
+          #CAPTCHA_FLITE_PATH = shutil.which('flite')
+          #CAPTCHA_SOX_PATH = shutil.which('sox')
+          #SHOW_ANONYMOUS_SUBSCRIBE_FORM = False
           # Footer links
           FOOTER_LINKS = [
               {
@@ -325,7 +374,7 @@
         regexp: '{{ item.regexp }}'
         replace: '{{ item.line }}'
       loop:
-        - {'regexp': "^ADMINS = \\(\\n( *)\\('[^']*', '[^']*'\\), *\\n\\)", 'line': "ADMINS = (\\n    ('OpenRailwayMap Mailman Admin', 'info@openrailwaymap.org')\\n)"}
+        - {'regexp': "^ADMINS = \\(\\n( *)\\('[^']*', '[^']*'\\), *\\n\\)", 'line': "ADMINS = (\\n    ('OpenRailwayMap Mailman Admin', 'info@openrailwaymap.org'),\\n)"}
         - {'regexp': "^    #? *'django.contrib.admindocs', *$", 'line': "    'django.contrib.admindocs',"}
         - {'regexp': "^#? *SECURE_PROXY_SSL_HEADER = \\('HTTP_X_FORWARDED_PROTO', 'https'\\)", 'line': "SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')"}
         - {'regexp': "^#? *SESSION_COOKIE_SECURE =.[^\n]*$", 'line': "SESSION_COOKIE_SECURE = True"}
@@ -336,31 +385,31 @@
         - {'regexp': "^#? *X_FRAME_OPTIONS =.[^\n]*$", 'line': "X_FRAME_OPTIONS = 'DENY'"}
         - {'regexp': "^#? *EMAILNAME =.[^\n]*$", 'line': "EMAILNAME = 'openrailwaymap.org'"}
         - {'regexp': "^#?( *)'HOST': '[^']+',[^\n]*$", 'line': "\\1'HOST': '',"}
-        - {'regexp': "^#?(    +)#? *'allauth.socialaccount.providers.github', *$", 'line': "\\1'allauth.socialaccount.providers.github',"}
+#        - {'regexp': "^#?(    +)#? *'allauth.socialaccount.providers.github', *$", 'line': "\\1'allauth.socialaccount.providers.github',"}
       notify:
         - systemd restart mailman3-web
 
-    # The OpenStreetMap logo is not installed because it is not included in the Mailman 3 source code.
-    - name: Copy OpenStreetMap logo
-      copy:
-        src: openstreetmap.png
-        dest: /var/lib/mailman3/web/static/django-mailman3/img/login/
-        mode: 0644
-        owner: root
-        group: root
+#    # The OpenStreetMap logo is not installed because it is not included in the Mailman 3 source code.
+#    - name: Copy OpenStreetMap logo
+#      copy:
+#        src: openstreetmap.png
+#        dest: /var/lib/mailman3/web/static/django-mailman3/img/login/
+#        mode: 0644
+#        owner: root
+#        group: root
 
-          #        # It is likely that running a migration is not necessary.
-          #        - name: 'Run django-admin migrate'
-          #          become: yes
-          #          become_user: 'www-data'
-          #          django_manage:
-          #            app_path: '/usr/share/mailman3-web/'
-          #            python_path: '/usr/share/mailman3-web'
-          #            command: 'migrate'
-          #              # settings imports settings_local at the end of the file
-          #            settings: 'settings'
-          #          notify:
-          #            - systemd restart mailman3-web
+        # It is likely that running a migration is not necessary.
+    - name: 'Run django-admin migrate'
+      become: yes
+      become_user: 'www-data'
+      django_manage:
+        app_path: '/usr/share/mailman3-web/'
+        python_path: '/usr/share/mailman3-web'
+        command: 'migrate'
+          # settings imports settings_local at the end of the file
+        settings: 'settings'
+      notify:
+        - systemd restart mailman3-web
 
     - name: Change Postorius site name
       become: yes
@@ -386,23 +435,7 @@
         regexp: '^base_url: .*$'
         line: 'base_url: http://127.0.0.1/mailman3/hyperkitty/'
 
-
-- name: Write Spamassassin configuration to /etc/spamassassin/local.cf
-  copy:
-    dest: /etc/spamassassin/local.cf
-    src: local.cf
-    owner: root
-    group: root
-    mode: 0644
-  notify:
-    - systemd restart amavis
-
-- name: systemctl start amavis amavisd-milter postfix
+- name: systemctl start postfix
   systemd:
-    name: '{{ item }}'
+    name: 'postfix'
     state: started
-  loop:
-    - amavis
-    - amavisd-milter
-    - postfix
-    - postgrey

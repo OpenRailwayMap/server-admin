@@ -9,13 +9,10 @@
 # service type  private unpriv  chroot  wakeup  maxproc command + args
 #               (yes)   (yes)   (no)    (never) (100)
 # ==========================================================================
-# Postscreen service
-smtp      inet  n       -       y       -       1       postscreen
-# SMTP daemon after Postscreen to pass emails to Amavis
-smtpd     pass  -       -       y       -       -       smtpd
+### SMTP connections from the internet
+### Authentication not permitted
+smtp      inet  n       -       y       -       -       smtpd  
     -o smtpd_sasl_auth_enable=no
-# TLS support for Postscreen
-tlsproxy  unix  -       -       y       -       0       tlsproxy
 #smtp      inet  n       -       y       -       -       smtpd
 #smtp      inet  n       -       y       -       1       postscreen
 #smtpd     pass  -       -       y       -       -       smtpd
@@ -60,7 +57,7 @@ proxymap  unix  -       -       n       -       -       proxymap
 proxywrite unix -       -       n       -       1       proxymap
 smtp      unix  -       -       y       -       -       smtp
 relay     unix  -       -       y       -       -       smtp
-        -o syslog_name=postfix/$service_name
+#        -o syslog_name=postfix/$service_name
 #       -o smtp_helo_timeout=5 -o smtp_connect_timeout=5
 showq     unix  n       -       y       -       -       showq
 error     unix  -       -       y       -       -       error
@@ -71,7 +68,7 @@ virtual   unix  -       n       n       -       -       virtual
 lmtp      unix  -       -       y       -       -       lmtp
 anvil     unix  -       -       y       -       1       anvil
 scache    unix  -       -       y       -       1       scache
-postlog   unix-dgram n  -       n       -       1       postlogd
+#postlog   unix-dgram n  -       n       -       1       postlogd
 #
 # ====================================================================
 # Interfaces to non-Postfix software. Be sure to examine the manual

@@ -1,22 +1,43 @@
 # SPDX-License-Identifier: MIT
-- name: 'Create {{ item }}'
+- name: 'Create {{ item.dest }}'
+  when: item.src is defined and not item.template|default(false)
   copy:
     dest: '{{ item.dest }}'
     owner: root
     group: root
     mode: 0644
     src: '{{ item.src }}'
-  register: map_result
+  register: map_result1
+
+- name: 'Create {{ item.dest }} from template'
+  when: item.src is defined and item.template|default(false)
+  template:
+    dest: '{{ item.dest }}'
+    owner: root
+    group: root
+    mode: 0644
+    src: '{{ item.src }}'
+  register: map_result2
+
+- name: 'Edit {{ item.dest }}'
+  when: item.line is defined
+  lineinfile:
+    path: '{{ item.dest }}'
+    owner: root
+    group: root
+    mode: 0644
+    line: '{{ item.line }}'
+  register: map_result3
 
 - name: Run postmap if required on virtual_alias_map
-  command:
+  shell:
     cmd: '{{ item.cmd }} hash:{{ item.dest }}'
     chdir: /etc/postfix
-  when: map_result.changed # noqa 503
+  when: map_result1.changed|default(false) or map_result2.changed|default(false) or map_result3.changed|default(false)
   register: postmap_result
 
 - name: Reload Postfix because postmap was executed
   systemd:
     name: postfix
     state: reloaded
-  when: postmap_result.changed # noqa 503
+  when: postmap_result.changed

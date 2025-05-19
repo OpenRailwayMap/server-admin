@@ -17,33 +17,50 @@ append_dot_mydomain = no
 
 readme_directory = no
 
-# See http://www.postfix.org/COMPATIBILITY_README.html -- default to 2 on
-# fresh installs.
-compatibility_level = 2
+compatibility_level = 3.6
 
 # TLS parameters
-smtpd_tls_cert_file=/etc/letsencrypt/openrailwaymap.org/openrailwaymap.org-chain.crt
-smtpd_tls_key_file=/etc/letsencrypt/openrailwaymap.org/domain.key
+smtpd_tls_cert_file=/etc/letsencrypt/{{ letsencrypt.ssl_domain }}/{{ letsencrypt.ssl_domain }}-chain.crt
+smtpd_tls_key_file=/etc/letsencrypt/{{ letsencrypt.ssl_domain }}/domain.key
 #smtpd_use_tls=yes
 
 # TLS incoming connections
+smtpd_tls_auth_only = yes
 smtpd_tls_security_level = may
 smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache
 smtp_tls_security_level = dane
 smtp_dns_support_level = dnssec
-smtp_tls_protocols = !SSLv2, !SSLv3
-smtp_tls_ciphers = high
+smtpd_tls_mandatory_protocols = >=TLSv1.2
+smtpd_tls_protocols           = >=TLSv1.2
+smtp_tls_mandatory_protocols  = >=TLSv1.2
+smtp_tls_protocols            = >=TLSv1.2
+tls_preempt_cipherlist = no
+tls_eecdh_auto_curves = X25519 prime256v1 secp384r1
+smtp_tls_mandatory_ciphers = medium
+smtpd_tls_mandatory_ciphers = medium
+tls_medium_cipherlist = ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:DHE-RSA-CHACHA20-POLY1305
 smtpd_tls_dh1024_param_file = /etc/postfix/dh2048.pem
 
 
-# See /usr/share/doc/postfix/TLS_README.gz in the postfix-doc package for
-# information on enabling SSL in the smtp client.
-
-myhostname = buegelfalte.openrailwaymap.org
+## See /usr/share/doc/postfix/TLS_README.gz in the postfix-doc package for
+## information on enabling SSL in the smtp client.
+myhostname = {{ inventory_hostname }}
 alias_maps = hash:/etc/aliases
+
+{% if mail.mailman3 %}
+# no special treatment for owner-*@ and *-request@ addresses
+owner_request_special = yes
+# Mailman aliases
+local_recipient_maps = hash:/var/lib/mailman3/data/postfix_lmtp
+transport_maps = hash:/var/lib/mailman3/data/postfix_lmtp
+relay_domains = hash:/var/lib/mailman3/data/postfix_domains
+{% endif %}
+
+# Aliases (we do not have local mailboxes)
+virtual_alias_maps = hash:/etc/postfix/virtual_alias_map
 alias_database = hash:/etc/aliases
 myorigin = /etc/mailname
-mydestination = $myhostname, buegelfalte.openrailwaymap.org, openrailwaymap.org, localhost.openrailwaymap.org, localhost
+mydestination = $myhostname, {{ inventory_hostname }}, openrailwaymap.org, localhost.openrailwaymap.org, localhost
 relayhost = 
 mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128
 mailbox_size_limit = 0
@@ -51,10 +68,18 @@ recipient_delimiter = +
 inet_interfaces = all
 inet_protocols = all
 
-# Filter mail with Amavis (via amavisd-milter), sign emails submitted from localhost with correct domain
+## Mail Queue Settings
+maximal_queue_lifetime = 24h
+bounce_queue_lifetime = 24h
+maximal_backoff_time = 15m
+minimal_backoff_time = 5m
+queue_run_delay = 5m
+
+# Filter mail with Rspamd, sign emails submitted from localhost with correct domain
 milter_default_action = accept
-milter_protocol = 2
-smtpd_milters = unix:amavis/amavis.sock,
+milter_protocol = 6
+milter_mail_macros =  i {auth_type} {auth_authen} {auth_author} {mail_addr} {mail_host} {mail_mailer} {client_addr} {client_name}
+smtpd_milters = inet:localhost:11332
                 unix:opendkim/opendkim.sock
 non_smtpd_milters = unix:opendkim/opendkim.sock
 
@@ -73,15 +98,16 @@ smtpd_helo_restrictions =   permit_mynetworks
 #                            reject_unknown_client_hostname
 
 # Restrictions for relay access (recipient domain not one of our domains)
+# TODO Consider using the following instead
+# smtpd_relay_restrictions = reject_non_fqdn_recipient reject_unknown_recipient_domain permit_mynetworks reject_unauth_destination
 smtpd_relay_restrictions = permit_mynetworks permit_sasl_authenticated defer_unauth_destination
 
 # Additional restrictions in for in the context of a client RCPT TO command
 # They are applied after stmptd_relay_restrictions 
 # 1. reject bad senders (addresses and domains)
-# 2. greylisting
+# 2. greylisting (not handled here but by Rspamd)
 smtpd_recipient_restrictions =
     check_sender_access hash:/etc/postfix/bad_senders
-    check_policy_service inet:127.0.0.1:10023
 
 # Additional rules based on message headers
 # These rules can serve as simple spam filters
@@ -89,25 +115,9 @@ header_checks = pcre:/etc/postfix/header_checks.pcre
 
 # Reject clients sending too early
 smtpd_data_restrictions = reject_unauth_pipelining
+# Reject clients trying SMTP Smuggling (https://www.postfix.org/smtp-smuggling.html)
+smtpd_forbid_unauth_pipelining = yes
+smtpd_forbid_bare_newline = yes
 
-## Early checks for clients, here: check against IP blacklist
-## DNSBL is disabled.
-postscreen_access_list = permit_mynetworks
-                         cidr:/etc/postfix/postscreen_access.cidr
-postscreen_blacklist_action = drop
-postscreen_greet_action = drop
-#postscreen_dnsbl_threshold = 2
-#postscreen_dnsbl_sites = dnsbl.sorbs.net*1, bl.spamcop.net*1, ix.dnsbl.manitu.net*2, zen.spamhaus.org*2
-#postscreen_dnsbl_action = drop
-
-# aliases (we do not have local mailboxes)
-virtual_alias_maps = hash:/etc/postfix/virtual_alias_map
-
-{% if mail.mailman3 %}
-# no special treatment for owner-*@ and *-request@ addresses
-owner_request_special = yes
-# Mailman aliases
-transport_maps = hash:/var/lib/mailman3/data/postfix_lmtp
-local_recipient_maps = hash:/var/lib/mailman3/data/postfix_lmtp
-relay_domains = hash:/var/lib/mailman3/data/postfix_domains
-{% endif %}
+# Do not allow to harvest email addresses
+disable_vrfy_command = yes

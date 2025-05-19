@@ -3,6 +3,10 @@ pg_version: 15
 php_version: "8.2"
 postgis_version: 3
 
+letsencrypt:
+  ssl_domain: openrailwaymap.org
+  certificate_alt_names: 'DNS:knallfrosch.openrailwaymap.org,DNS:openrailwaymap.org,DNS:www.openrailwaymap.org,DNS:tiles.openrailwaymap.org,DNS:a.tiles.openrailwaymap.org,DNS:b.tiles.openrailwaymap.org,DNS:c.tiles.openrailwaymap.org,DNS:api.openrailwaymap.org,DNS:blog.openrailwaymap.org'
+
 apache:
   configurations:
     php8.2-fpm.conf:

@@ -1,0 +1,5 @@
+pg_version: 15
+
+letsencrypt:
+  ssl_domain: openrailwaymap.org
+  certificate_alt_names: 'DNS:wal.openrailwaymap.org,DNS:lists.openrailwaymap.org'

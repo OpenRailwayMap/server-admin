@@ -11,6 +11,7 @@
       - libapache2-mod-wsgi-py3
 
 - name: Apache configurations
+  when: apache.configurations is defined
   block:
     - name: 'Write {{ item.key }}'
       loop: '{{ apache.configurations | dict2items }}'

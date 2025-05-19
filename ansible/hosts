@@ -1,9 +1,11 @@
 buegelfalte.openrailwaymap.org
 knallfrosch.openrailwaymap.org
+wal.openrailwaymap.org
 
 [webservers]
 buegelfalte.openrailwaymap.org
 knallfrosch.openrailwaymap.org
+wal.openrailwaymap.org
 
 [tileservers]
 buegelfalte.openrailwaymap.org
@@ -12,6 +14,7 @@ knallfrosch.openrailwaymap.org
 [letsencrypt]
 buegelfalte.openrailwaymap.org
 knallfrosch.openrailwaymap.org
+wal.openrailwaymap.org
 
 [blog]
 buegelfalte.openrailwaymap.org
@@ -23,6 +26,7 @@ knallfrosch.openrailwaymap.org
 
 [mailservers]
 buegelfalte.openrailwaymap.org
+wal.openrailwaymap.org
 
 [backup_access]
 buegelfalte.openrailwaymap.org
