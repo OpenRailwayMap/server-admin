@@ -85,7 +85,9 @@ non_smtpd_milters = unix:opendkim/opendkim.sock
 
 # Restriction controlling access to the Postfix SMTP server
 # Their purpose is to reject clients where reverse DNS fails
-smtpd_client_restrictions = permit_mynetworks reject_unknown_client_hostname
+smtpd_client_restrictions = permit_mynetworks
+                            reject_unknown_client_hostname
+                            check_client_access cidr:/etc/postfix/bad_clients
 
 # Restriction in the HELO context
 smtpd_helo_required = yes

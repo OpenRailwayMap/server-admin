@@ -46,6 +46,7 @@
   loop:
     - {'src': 'virtual_alias_map', 'dest': '/etc/postfix/virtual_alias_map', 'cmd': 'postmap', 'template': true}
     - {'src': 'bad_senders', 'dest': '/etc/postfix/bad_senders', 'cmd': 'postmap'}
+    - {'src': 'bad_clients', 'dest': '/etc/postfix/bad_clients'}
     - {'line': 'root: michael@michreichert.de', 'dest': '/etc/aliases', 'cmd': 'postalias'}
 
 - name: Write /etc/postfix/main.cf

@@ -33,11 +33,11 @@
   shell:
     cmd: '{{ item.cmd }} hash:{{ item.dest }}'
     chdir: /etc/postfix
-  when: map_result1.changed|default(false) or map_result2.changed|default(false) or map_result3.changed|default(false)
+  when: "item.cmd is defined and (map_result1.changed|default(false) or map_result2.changed|default(false) or map_result3.changed|default(false))"
   register: postmap_result
 
 - name: Reload Postfix because postmap was executed
   systemd:
     name: postfix
     state: reloaded
-  when: postmap_result.changed
+  when: postmap_result.changed|default(false) or map_result1.changed|default(false) or map_result2.changed|default(false) or map_result3.changed|default(false)
