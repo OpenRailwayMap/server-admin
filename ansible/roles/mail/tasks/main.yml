@@ -250,12 +250,38 @@
             map = "$CONFDIR/local.d/blacklist_ip.map";
             description = "Local ip blacklist";
             action = "reject";
+            message = "spam host rejected";
         }
         BLACKLIST_FROM {
             type = "from";
             map = "$CONFDIR/local.d/blacklist_from.map";
             description = "Local from blacklist";
             action = "reject";
+            message = "spam sender rejected";
+        }
+        BULK_SENDERS {
+            type = "asn";
+            map = "$CONFDIR/local.d/bulk_senders.map";
+            description = "Bulk senders (newsletter senders like MailChimp, SendGrid) tend to often relay spam";
+            score = 4.0;
+        }
+        LIST_HEADER_LIST_ID {
+            type = "header";
+            header = "List-Id";
+            map = "regexp;$CONFDIR/local.d/regexp_not_empty.map";
+            regexp = true;
+            description = "List header List-Id present";
+            score = 1.0;
+            symbol = "LIST_ID_PRESENT";
+        }
+        LIST_HEADER_LIST_UNSUBSCRIBE {
+            type = "header";
+            header = "List-Unsubscribe";
+            map = "regexp;$CONFDIR/local.d/regexp_not_empty.map";
+            regexp = true;
+            description = "List header List-Unsubscribe present";
+            score = 1.0;
+            symbol = "LIST_UNSUBSCRIBE_PRESENT";
         }
     # Disable DKIM (TODO drop OpenDKIM, use Rspamd)
     - dest: /etc/rspamd/local.d/dkim_signing.conf
@@ -272,10 +298,23 @@
     mode: 0644
     path: '/etc/rspamd/local.d/{{ item }}'
   loop:
-    - whitelist_ip.map
     - whitelist_from.map
     - blacklist_ip.map
     - blacklist_from.map
+
+- name: Create Rspamd configuration files
+  notify: [systemctl restart rspamd]
+  copy:
+    owner: root
+    group: root
+    mode: 0644
+    src: 'rspamd/{{ item }}'
+    dest: '/etc/rspamd/local.d/{{ item }}'
+  loop:
+    - whitelist_ip.map
+    - bulk_senders.map
+    - groups.conf
+    - regexp_not_empty.map
 
 - debug:
     msg: Plase set Rspamd password has in /etc/rspamd/local.d/worker-controller.inc. You can generate it using "rspamadm pw"
