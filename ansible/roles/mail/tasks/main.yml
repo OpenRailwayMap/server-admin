@@ -263,9 +263,6 @@
     # Disable ARC (TODO drop OpenDKIM, use Rspamd)
     - dest: /etc/rspamd/local.d/arc.conf
       content: "enabled = false;"
-    # Disable greylist (TODO drop Postgrey, use Rspamd)
-    - dest: /etc/rspamd/local.d/greylist.conf
-      content: "enabled = false;"
 
 - name: Create white and blacklist files
   file:
