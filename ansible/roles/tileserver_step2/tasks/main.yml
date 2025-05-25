@@ -370,5 +370,20 @@
     - "rerender-lowzoom-tiles.timer"
     - "delete_old_metatiles.timer"
 
+- name: Create /usr/lib/nagios/plugins
+  file:
+    path: /usr/lib/nagios/plugins
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Copy monitoring plugin for mod_tile
+  copy:
+    src: 'monitoring/mod-tile/check_mod_tile.py'
+    dest: '/usr/lib/nagios/plugins'
+    owner: root
+    group: root
+    mode: '0755'
+
 - debug: # noqa unnamed-task
     msg: 'Tirex is ready to render tiles now. Please start bulk-rendering of tiles on zoom levels 0 to 12 using the following command:\ntirex-batch --prio 15 map=standard,maxspeed,signals z=0-12 bbox=-180,-80,180,80'
