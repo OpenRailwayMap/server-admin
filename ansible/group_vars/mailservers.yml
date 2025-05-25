@@ -1,3 +1,20 @@
+backup_directories:
+  /var/lib/mailman/archives/public/:
+    source: /var/lib/mailman/archives/public/
+    target_directory: /home/openrailwaymap/var_lib_mailman_archives_public
+  /var/lib/mailman3:
+    source: /var/lib/mailman3
+    target_directory: /home/openrailwaymap/mailman/var_lib_mailman3
+  postgres_mailman3:
+    source: mailman3
+    target_directory: /home/openrailwaymap/mailman/postgres_mailman3
+    pre_run: postgresql_dump
+  postgres_mailman3web:
+    source: mailman3web
+    target_directory: /home/openrailwaymap/mailman/postgres_mailman3web
+    pre_run: postgresql_dump
+
+
 apache:
   modules:
     alias:

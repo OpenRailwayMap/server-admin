@@ -28,8 +28,8 @@ knallfrosch.openrailwaymap.org
 buegelfalte.openrailwaymap.org
 wal.openrailwaymap.org
 
-[backup_access]
-buegelfalte.openrailwaymap.org
+[backup]
+wal.openrailwaymap.org
 
 [munin_nodes]
 buegelfalte.openrailwaymap.org

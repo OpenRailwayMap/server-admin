@@ -1,0 +1,124 @@
+- name: Create SSH key
+  openssh_keypair:
+    path: /root/.ssh/id_backup
+    type: ed25519
+    owner: root
+    group: root
+
+- name: Try log into storage box with the SSH key
+  register: ssh_test_result
+  ignore_errors: true
+  command:
+    cmd: "ssh -o StrictHostKeyChecking=accept-new -p{{ backup_port}} -o PasswordAuthentication=no -i /root/.ssh/id_backup {{ backup_user_host }} ls"
+
+- when: "ssh_test_result.rc != 0 and not ansible_check_mode"
+  block:
+    - slurp:
+        src: /root/.ssh/id_backup.pub
+      register: ssh_public_key
+    - fail:
+        msg: "Please install SSH public key on backup host using following command and rerun Ansible afterwards: echo '{{ ssh_public_key.content | b64decode }}' | ssh -p{{ backup_port }} {{ backup_user_host }} install-ssh-key"
+
+- name: Create backup target directory
+  command:
+    cmd: "ssh -o StrictHostKeyChecking=accept-new -p{{ backup_port }} -o PasswordAuthentication=no -i /root/.ssh/id_backup {{ backup_user_host }} mkdir -p '/home/{{ item.value.target_directory }}'"
+  loop: '{{ backup_directories|dict2items }}'
+
+- name: Install Duplicity
+  apt:
+    name: [duplicity, python3-paramiko]
+
+- name: Create /srv/duplicity-wrapper
+  file:
+    name: /srv/duplicity-wrapper
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Copy Duplicity wrapper script to target host
+  copy:
+    src: duplicity-wrapper/
+    dest: /srv/duplicity-wrapper/
+    directory_mode: '0755'
+    mode: '0644'
+    owner: root
+    group: root
+  notify:
+    - systemctl restart backup.service
+
+- name: Write configuration for Duplicity wrapper script
+  copy:
+    content: '{{ backup_directories | to_json(indent=4, sort_keys=True) }}'
+    owner: root
+    group: root
+    mode: '0644'
+    dest: '/etc/backups.json'
+  notify:
+    - systemctl restart backup.service
+
+- name: Copy and import GPG public key
+  block:
+    - name: Check if GPG key exists
+      ignore_errors: true
+      register: gpg_key_check
+      command:
+        cmd: 'gpg --list-keys {{ backup_gpg_key }}'
+    - name: Import GPG key
+      when: gpg_key_check.rc != 0
+      notify:
+        - systemctl restart backup.service
+      command:
+        cmd: 'gpg --import'
+        stdin: "{{ lookup('ansible.builtin.file', '429E328366E5389EF67C2BEFF584D91B0C18A48E.asc') }}"
+
+- name: Create Systemd unit for backup.service
+  notify:
+    - systemctl daemon-reload
+    - systemctl restart backup.service
+  copy:
+    owner: root
+    group: root
+    mode: '0644'
+    dest: /etc/systemd/system/backup.service
+    content: |
+        [Unit]
+        Description=Backups
+
+        [Service]
+        RuntimeMaxSec=12hours
+        ExecStart=/usr/bin/python3 /srv/duplicity-wrapper/multi_duplicity.py -H {{ backup_user_host }}:{{backup_port}} -k /root/.ssh/id_backup -g {{ backup_gpg_key }} -l INFO /etc/backups.json
+
+        [Install]
+        WantedBy=default.target
+
+- name: Create Systemd timer for backups 
+  notify:
+    - systemctl daemon-reload
+  copy:
+    owner: root
+    group: root
+    mode: '0644'
+    dest: /etc/systemd/system/backup.timer
+    content: |
+        [Unit]
+        Description=Backups (Timer)
+
+        [Timer]
+        OnCalendar=00:02:05
+        RandomizedDelaySec=600
+        Unit=backup.service
+
+        [Install]
+        WantedBy=default.target
+
+- name: Enable Systemd backup.timer
+  systemd_service:
+    name: backup.timer
+    state: started
+    enabled: true
+
+# TODO
+# * Create Systemd unit and timer for daily execution of Duplicty with
+#   `duplicity --no-encryption --ssh-options="-oIdentityFile=/root/.ssh/id_backup -oPasswordAuthentication=no" /etc/sympa/ rsync://u439027@u439027.your-storagebox.de:23//home/sympa-backup/etc_sympa`
+# * Configure Duplicity keep time

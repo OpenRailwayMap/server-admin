@@ -1,0 +1,8 @@
+- name: systemctl daemon-reload
+  systemd_service:
+    daemon_reload: true
+
+- name: systemctl restart backup.service
+  systemd_service:
+    name: backup.service
+    state: restarted

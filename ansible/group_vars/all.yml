@@ -16,3 +16,7 @@ users:
     root: true
     ssh_public_keys:
       - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINhAgXnd5Gx6vfKbJa/PZLFcyrcQ04HZ3wu9cSb9BEtv eike@caliban.sf-tec.de"
+
+backup_gpg_key: '429E328366E5389EF67C2BEFF584D91B0C18A48E'
+backup_user_host: u462966@u462966.your-storagebox.de
+backup_port: 23

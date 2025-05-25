@@ -60,20 +60,13 @@
           mailman2: false
           mailman3: true
 
-- hosts: backup_access
+- hosts: backup
   become: yes
   tags: backup
   tasks:
-    - name: 'Prepare for backup access'
+    - name: 'Prepare backup'
       import_role:
-        name: roles/backup_access
-      vars:
-        backup_user_in_groups:
-          - user: backup
-            groups: list
-        postgresql_backup_user:
-          username: backup
-          databases: ['mailman3web', 'mailman3']
+        name: roles/backup
 
 - hosts: munin_nodes
   become: yes
