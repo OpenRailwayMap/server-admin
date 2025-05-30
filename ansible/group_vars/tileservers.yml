@@ -243,6 +243,12 @@ apache:
         RewriteCond "%{HTTP_REFERER}" "tesaliagestion\.com/" [OR]
         # Stadler Rail, various referrers *.rds.stadlerrail.*, in total almost 200k requests/day, service not available to the public
         RewriteCond "%{HTTP_REFERER}" "//web\.rds\.stadlerrail\.ch/" [OR]
+        # 698k requests/day, hidden behind login, website interceptes key presses and right-clicks
+        RewriteCond "%{HTTP_REFERER}" "//urbexology.com/" [OR]
+        # 33k requests/day
+        RewriteCond "%{HTTP_REFERER}" "//forkagro.com/" [OR]
+        # 32k requests/day, non-public tracking website
+        RewriteCond "%{HTTP_REFERER}" "//avl1.teltopak.com.pk/" [OR]
         # More than 10k tile requets per day but website is not public (looks like for-charge service)
         # More than 190k tile request per IP (sometimes more then 300k requests per day) from TeleColumbus subnet, most requests with openrailwaymap.org referer, some with Internet Explorer 7 and no referrer
         # Requests with referer requested zoom level 13 or 14 only. 2023-10
