@@ -150,6 +150,18 @@ apache:
         RewriteCond "%{HTTP_REFERER}" "//greencargo\.outsystemsenterprise\.com/" [OR]
         # Non-public live tracking, 24k requests/day, HTTP 429 without effect
         RewriteCond "%{HTTP_REFERER}" "//track\.gpsdome\.net/" [OR]
+        # More than 20k requests/day, hostname cannot be resolved, HTTP 429 since 2025-02-20
+        RewriteCond "%{HTTP_REFERER}" "//vt\.kcvtp\.azds\.ns\.nl/" [OR]
+        # 15k requests per 16 hours, non-public tracking, HTTP 429 since 2025-02-20
+        RewriteCond "%{HTTP_REFERER}" "//gps\.almaks\.rs/" [OR]
+        # 18k requests per 16 hours, non-public tracking, HTTP 429 since 2025-02-20
+        RewriteCond "%{HTTP_REFERER}" "trackerworldwide\.com/" [OR]
+        # More than 10k tile requets per day but website is not public (looks like for-charge service), HTTP 429 since 2024-04-23
+        RewriteCond "%{HTTP_REFERER}" "//www\.transferoviarcalatori\.ro/?" [OR]
+        # Non-public live tracking, 17k requests/day, HTTP 429 since 2024-10-17
+        RewriteCond "%{HTTP_REFERER}" "//plataforma\.mundialgps\.com/" [OR]
+        # 15k requests per 16 hours, non-public tracking
+        RewriteCond "%{HTTP_REFERER}" "//gps\.seccom\.ba/" [OR]
         # SEO website with ads and no meaningful content after a rough review (no HTTP 429 prior to black tile response)
         RewriteCond "%{HTTP_REFERER}" "//zugradar.info/"
         RewriteRule "." "/tile-util/black.png" [PT]
@@ -218,8 +230,6 @@ apache:
         RewriteCond "%{HTTP_USER_AGENT}" "^$"
         RewriteRule "." "-" [F]
 
-        # More than 10k tile requets per day but website is not public (looks like for-charge service)
-        RewriteCond "%{HTTP_REFERER}" "//www\.transferoviarcalatori\.ro/?" [OR]
         # More than 20k tile requets per day but website is not public (looks like for-charge service)
         RewriteCond "%{HTTP_REFERER}" "//tapiagps\.mx/" [OR]
         RewriteCond "%{HTTP_REFERER}" "//atlas2\.org/" [OR]
@@ -227,18 +237,8 @@ apache:
         RewriteCond "%{HTTP_REFERER}" "pacificnational.com\.au/" [OR]
         # Non-public live tracking, 24k requests/day
         RewriteCond "%{HTTP_REFERER}" "//heatmap\.zloco\.pl/" [OR]
-        # More than 20k requests/day, hostname cannot be resolved
-        RewriteCond "%{HTTP_REFERER}" "//vt\.kcvtp\.azds\.ns\.nl/" [OR]
         # More than 20k requests/day, GitHub HTTP 404
         RewriteCond "%{HTTP_REFERER}" "//taibeled\.github\.io/" [OR]
-        # Non-public live tracking, 17k requests/day
-        RewriteCond "%{HTTP_REFERER}" "//plataforma\.mundialgps\.com/" [OR]
-        # 18k requests per 16 hours, non-public tracking
-        RewriteCond "%{HTTP_REFERER}" "trackerworldwide\.com/" [OR]
-        # 15k requests per 16 hours, non-public tracking
-        RewriteCond "%{HTTP_REFERER}" "//gps\.seccom\.ba/" [OR]
-        # 15k requests per 16 hours, non-public tracking
-        RewriteCond "%{HTTP_REFERER}" "//gps\.almaks\.rs/" [OR]
         # 13k requests per 16 hours, non-public tracking
         RewriteCond "%{HTTP_REFERER}" "tesaliagestion\.com/" [OR]
         # Stadler Rail, various referrers *.rds.stadlerrail.*, in total almost 200k requests/day, service not available to the public
