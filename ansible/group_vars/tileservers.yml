@@ -243,6 +243,8 @@ apache:
         RewriteCond "%{HTTP_REFERER}" "//web\.rds\.stadlerrail\.ch/" [OR]
         # 698k requests/day, hidden behind login, website interceptes key presses and right-clicks
         RewriteCond "%{HTTP_REFERER}" "//urbexology.com/" [OR]
+        # 48k requests within 11 hours, service not available to the public
+        RewriteCond "%{HTTP_REFERER}" "gpsrastreo\.xyz/" [OR]
         # 33k requests/day
         RewriteCond "%{HTTP_REFERER}" "//forkagro.com/" [OR]
         # 32k requests/day, non-public tracking website
