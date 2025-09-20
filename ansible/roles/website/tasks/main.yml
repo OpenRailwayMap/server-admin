@@ -127,6 +127,6 @@
   postgresql_privs:
     role: openrailwaymap
     type: table
-    objs: openrailwaymap_ref,openrailwaymap_facilities_for_search
+    objs: openrailwaymap_ref,openrailwaymap_facilities_for_search,openrailwaymap_milestones,openrailwaymap_tracks_with_ref
     privs: 'SELECT'
     database: '{{ osm_dbname }}'
