@@ -13,8 +13,8 @@
 - name: Apache configurations
   when: apache.configurations is defined
   block:
-    - name: 'Write {{ item.key }}'
-      loop: '{{ apache.configurations | dict2items }}'
+    - name: 'Write Apache configuration files'
+      loop: '{{ apache.configurations|default({}) | dict2items }}'
       when: item.value.content is defined and item.value.state | default("present") == "present"
       copy:
         dest: "/etc/apache2/conf-available/{{ item.key }}"
@@ -24,8 +24,8 @@
         content: '{{ item.value.content }}'
       notify:
         - systemd reload apache2
-    - name: 'Disable configuration {{ item.key }}'
-      loop: '{{ apache.configurations | dict2items }}'
+    - name: 'Disable Apache configurations'
+      loop: '{{ apache.configurations|default({}) | dict2items }}'
       when: 'not item.value.enabled | default("yes")'
       command:
         cmd: "a2disconf {{ item.key }}"
@@ -33,8 +33,8 @@
         removes: '/etc/apache2/conf-enabled/{{ item.key }}'
       notify:
         - systemd reload apache2
-    - name: 'Enable configuration {{ item.key }}'
-      loop: '{{ apache.configurations | dict2items }}'
+    - name: 'Enable Apache configurations'
+      loop: '{{ apache.configurations|default({}) | dict2items }}'
       when: 'item.value.enabled | default("yes")'
       command:
         cmd: "a2enconf {{ item.key }}"
@@ -45,8 +45,8 @@
 
 - name: Apache sites
   block:
-    - name: 'Write {{ item.key }}'
-      loop: '{{ apache.sites | dict2items }}'
+    - name: 'Write Apache sites'
+      loop: '{{ apache.sites | default({}) | dict2items }}'
       when: 'item.value.content is defined and item.value.state | default("present") == "present"'
       copy:
         dest: "/etc/apache2/sites-available/{{ item.key }}"
@@ -56,8 +56,8 @@
         content: '{{ item.value.content }}'
       notify:
         - systemd reload apache2
-    - name: 'Disable site {{ item.key }}'
-      loop: '{{ apache.sites | dict2items }}'
+    - name: 'Disable Apache sites'
+      loop: '{{ apache.sites | default({}) | dict2items }}'
       when: 'not item.value.enabled | default("yes")'
       command:
         cmd: "a2dissite {{ item.key }}"
@@ -65,8 +65,8 @@
         removes: '/etc/apache2/sites-enabled/{{ item.key }}'
       notify:
         - systemd reload apache2
-    - name: 'Enable site {{ item.key }}'
-      loop: '{{ apache.sites | dict2items }}'
+    - name: 'Enable Apache sites'
+      loop: '{{ apache.sites | default({}) | dict2items }}'
       when: 'item.value.enabled | default("yes")'
       command:
         cmd: "a2ensite {{ item.key }}"
@@ -79,7 +79,7 @@
   apache2_module:
     name: '{{ item.key }}'
     state: '{{ item.value.state | default("present") }}'
-  loop: '{{ apache.modules | dict2items }}'
+  loop: '{{ apache.modules | default({}) | dict2items }}'
   notify:
     - systemd restart apache2
 
