@@ -3,9 +3,10 @@ knallfrosch.openrailwaymap.org
 wal.openrailwaymap.org
 
 [webservers]
-buegelfalte.openrailwaymap.org
-knallfrosch.openrailwaymap.org
 wal.openrailwaymap.org
+
+[webservers:children]
+website_servers
 
 [tileservers]
 buegelfalte.openrailwaymap.org
