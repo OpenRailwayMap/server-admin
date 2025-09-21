@@ -71,7 +71,7 @@ apache:
         LogLevel info tile:warn
         {% endif %}
 
-        ModTileRenderdSocketName /var/lib/tirex/modtile.sock
+        ModTileRenderdSocketName {{ (ansible_distribution_version >= '12.9') | ternary('/run/tirex/modtile.sock', '/var/lib/tirex/modtile.sock') }}
         ModTileTileDir           /var/lib/tirex/tiles
         {% for style in tileserver.styles -%}
         AddTileConfig            /{{ style }} {{ style }}
