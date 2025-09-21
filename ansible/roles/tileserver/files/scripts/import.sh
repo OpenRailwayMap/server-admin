@@ -34,7 +34,7 @@ echo "[2/3] Filtering data extract"
 $OSMIUM tags-filter -o $PLANET_FILTERED $PLANET_FILE $OSMIUM_FILTER_EXPR
 
 echo "[3/3] Import data into database"
-if [[ -v "$OSM2PGSQL_FLATNODES" ]]; then
+if [[ -v "OSM2PGSQL_FLATNODES" ]]; then
     FLATNODES_OPTION="--flat-node $FLATNODES_FILE"
 else
     FLATNODES_OPTION=""

@@ -44,7 +44,7 @@ function apply_diff_database {
     else
         FLATNODES_OPTION=""
     fi
-    if [[ -v "$OSM2PGSQL_NUMBER_PROCESSES" ]]; then
+    if [[ -v "OSM2PGSQL_NUMBER_PROCESSES" ]]; then
         NUMBER_PROCESSES_OPTION="--number-processes $OSM2PGSQL_NUMBER_PROCESSES"
     else
         NUMBER_PROCESSES_OPTION=""
