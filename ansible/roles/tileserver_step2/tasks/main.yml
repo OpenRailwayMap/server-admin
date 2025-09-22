@@ -279,7 +279,7 @@
     mode: 0664
     content: |
         name={{ item }}
-        tiledir=/var/lib/tirex/tiles/{{ item }}
+        tiledir={{ tile_cache_dir }}/{{ item }}
         minz=0
         maxz=19
         mapfile={{ cartocss_dir }}/{{ item }}.xml
@@ -294,7 +294,7 @@
 
 - name: Create tile cache directories
   file:
-    path: '/var/lib/tirex/tiles/{{ item }}'
+    path: '{{ tile_cache_dir }}/{{ item }}'
     owner: '{{ tirex_user }}'
     group: '{{ tirex_user }}'
     mode: 0755
