@@ -285,6 +285,6 @@ apache:
         <IfModule mpm_event_module>
             # MaxRequestWorkers could be raised up to ServerLimit * ThreadsPerChild (defaults to 16 and 25)
             # For default of ThreadsPerChild, see mods-available/mpm_event.conf
-            MaxRequestWorkers 450
+            MaxRequestWorkers 600
             ServerLimit 20
         </IfModule>
