@@ -92,6 +92,9 @@ apache:
         Header set Access-Control-Allow-Origin "*"
 
         Include /etc/apache2/sites-available/tileserver_blocks.inc
+        <Location /server-status>
+            Require local
+        </Location>
 
         ErrorLog /var/log/apache2/{{ tileserver.hostname }}.error.log
         CustomLog /var/log/apache2/{{ tileserver.hostname }}.access.log combined
