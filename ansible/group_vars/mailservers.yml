@@ -23,8 +23,6 @@ apache:
     ssl:
     rewrite:
   sites:
-    000-default.conf:
-      enabled: no
     this_host_imprint.conf:
       enabled: yes
       content: |

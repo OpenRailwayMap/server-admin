@@ -12,10 +12,13 @@ apache:
     mpm_event:
       state: present
   sites:
+    000-default.conf:
+      enabled: no
     redirect-http.inc:
       enabled: no
       content: |-
         RewriteEngine On
         RewriteCond %{REQUEST_URI} !^/.well-known/acme-challenge
+        RewriteCond %{REQUEST_URI} !^/server-status/?$
         RewriteCond %{HTTPS} off
         RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
