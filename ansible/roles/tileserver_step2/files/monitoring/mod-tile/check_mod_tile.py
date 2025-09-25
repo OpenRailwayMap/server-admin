@@ -69,7 +69,7 @@ parser.add_argument('-v', '--verbose', action='count', default=0)
 args = parser.parse_args()
 
 status = ServiceStatus.OK
-data_url = 'http://localhost/mod_tile'
+data_url = 'http://localhost:8082/mod_tile'
 try:
     data = get_url(data_url)
 except:
