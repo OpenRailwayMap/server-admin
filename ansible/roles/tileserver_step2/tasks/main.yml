@@ -161,10 +161,14 @@
         regexp: '^#? *syslog_facility=daemon$'
         line: 'syslog_facility=daemon'
 
+- name: Changes to Tirex configuration
+  notify:
+    - systemd reload tirex-backend-manager
+  block:
     - name: 'Tirex: Change Mapnik fonts path in /etc/tirex/renderer/mapnik.conf'
       lineinfile:
         path: /etc/tirex/renderer/mapnik.conf
-        regexp: '^fontdir=/usr/(lib/mapnik|share)/fonts/?$'
+        regexp: '^fontdir=/usr/(lib/mapnik|share)/fonts/'
         line: 'fontdir=/usr/share/fonts/'
 
     - name: 'Tirex: Enable recursive search in Mapnik fonts path in /etc/tirex/renderer/mapnik.conf'
