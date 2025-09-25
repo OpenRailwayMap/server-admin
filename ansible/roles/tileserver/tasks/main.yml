@@ -227,7 +227,7 @@
   git:
     dest: '{{ cartocss_dir }}'
     repo: https://github.com/OpenRailwayMap/OpenRailwayMap-CartoCSS.git
-    version: 550de158c874894e1c9c6ce8fe329cb68217436b
+    version: 2b47c487b914eb2f255ec9d6d83aa4aff0236b42
 
 - name: Check if osm_import runs
   include_tasks: osm_import_active.yml
