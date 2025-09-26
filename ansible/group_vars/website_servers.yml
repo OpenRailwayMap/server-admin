@@ -71,7 +71,7 @@ apache:
             Include /etc/apache2/sites-available/redirect-http.inc
         </VirtualHost>
 
-        WSGIDaemonProcess api_v2 python-path=/opt/OpenRailwayMap-api processes=4 threads=1 user=openrailwaymap
+        WSGIDaemonProcess api_v2 python-path=/opt/OpenRailwayMap-api processes=12 threads=1 user=openrailwaymap
 
         <VirtualHost *:443>
             SSLEngine on
