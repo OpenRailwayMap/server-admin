@@ -1,5 +1,16 @@
 # SPDX-License-Identifier: MIT
 # fontconfig contains fc-list to debug font issues
+- name: Set variables depending on Debian version
+  block:
+    - set_fact:
+        tile_cache_dir: "/var/lib/tirex/tiles"
+        tirex_user: tirex
+      when: 'debian_version == "buster"'
+    - set_fact:
+        tile_cache_dir: "/var/cache/tirex/tiles"
+        tirex_user: _tirex
+      when: 'debian_version != "buster"'
+
 - name: Install database packages using apt
   apt:
     name: [postgresql, postgis, 'postgresql-{{pg_version}}-postgis-{{postgis_version}}', fontconfig]
@@ -172,7 +183,7 @@
       [Service]
       Type=simple
       ExecStart=/usr/bin/tirex-batch -p 26 map=standard,maxspeed,signals,electrification,gauge z=0-9 bbox=-150,-55,180,71
-      User=tirex
+      User={{ tirex_user }}
       Group=users
       StandardOutput=journal
       StandardError=journal

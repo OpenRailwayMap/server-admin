@@ -1,15 +1,4 @@
 # SPDX-License-Identifier: MIT
-- name: Set variables depending on Debian version
-  block:
-    - set_fact:
-        tile_cache_dir: "/var/lib/tirex/tiles"
-        tirex_user: tirex
-      when: 'debian_version == "buster"'
-    - set_fact:
-        tile_cache_dir: "/var/cache/tirex/tiles"
-        tirex_user: _tirex
-      when: 'debian_version != "buster"'
-
 - name: Create database functions and views for the map style
   include_tasks: run_sql.yml
   loop:

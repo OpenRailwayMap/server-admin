@@ -4,7 +4,7 @@
 
 set -euo pipefail
 
-TILEDIR=/var/lib/tirex/tiles
+TILEDIR=/var/cache/tirex/tiles
 
 function delete_metatiles () {
     ZOOM=$1
