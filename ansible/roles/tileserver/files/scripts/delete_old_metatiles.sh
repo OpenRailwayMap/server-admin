@@ -11,7 +11,7 @@ function delete_metatiles () {
     MAX_DAYS=$2
     STYLE=$3
     DIR=$TILEDIR/$STYLE/$ZOOM
-    echo "Removing metatiles older than $MAX_DAYS from $DIR"
+    echo "Removing metatiles older than $MAX_DAYS days from $DIR"
     find $DIR -type f -mtime +$MAX_DAYS -delete
 }
 
