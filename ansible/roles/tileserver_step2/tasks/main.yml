@@ -381,13 +381,16 @@
     group: root
     mode: '0755'
 
-- name: Copy monitoring plugin for mod_tile
+- name: Copy monitoring plugins for mod_tile and Tirex
   copy:
-    src: 'monitoring/mod-tile/check_mod_tile.py'
+    src: '{{ item }}'
     dest: '/usr/lib/nagios/plugins'
     owner: root
     group: root
     mode: '0755'
+  loop:
+    - 'monitoring/mod-tile/check_mod_tile.py'
+    - 'monitoring/tirex/check_tirex.py'
 
 - debug: # noqa unnamed-task
     msg: 'Tirex is ready to render tiles now. Please start bulk-rendering of tiles on zoom levels 0 to 12 using the following command:\ntirex-batch --prio 15 map=standard,maxspeed,signals z=0-12 bbox=-180,-80,180,80'
