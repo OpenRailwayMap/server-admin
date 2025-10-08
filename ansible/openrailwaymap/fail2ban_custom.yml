@@ -36,6 +36,8 @@
       filter = apache-abusive-monitoring
       logpath  = %(apache_access_log)s
       maxretry = 30
+      # We have to use ufw because the resulting chain name f2b/apache-abusive-monitoring is too long for a name of an iptable chain.
+      banaction = ufw
       bantime = 96h
       findtime = 1h
       # Avoid accidential banning of Deutsche Bahn in order to keep email inbox small :-)
@@ -46,7 +48,8 @@
       port = http,https
       filter = apache-429
       logpath  = %(apache_access_log)s
-      maxretry = 60000
+      maxretry = 10000
+      banaction = ufw
       bantime = 12h
       findtime = 12h
       # Avoid accidential banning of Deutsche Bahn in order to keep email inbox small :-)
