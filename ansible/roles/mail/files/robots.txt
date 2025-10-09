@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: /mailman3/hyperkitty/list/mailman3-sandbox@openrailwaymap.org/
+Disallow: /mailman3/hyperkitty/search
+Disallow: /mailman3/captcha/

@@ -472,6 +472,17 @@
         regexp: '^base_url: .*$'
         line: 'base_url: http://127.0.0.1/mailman3/hyperkitty/'
 
+    - name: Copy favicon and robots to server
+      copy:
+        dest: /var/www/html
+        src: '{{ item }}'
+        owner: root
+        group: root
+        mode: 0644
+      loop:
+        - favicon.ico
+        - robots.txt
+
 - name: systemctl start postfix
   systemd:
     name: 'postfix'
