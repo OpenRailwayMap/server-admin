@@ -44,6 +44,7 @@ apache:
         # alias for imprint
         Alias /de/imprint /var/www/www.openrailwaymap.org/imprint-de.html
         Alias /en/imprint /var/www/www.openrailwaymap.org/imprint-en.html
+        Redirect permanent /josm-presets/de.zip /josm-presets/infrastructure.zip
 
         # language redirection for imprint page
         RewriteEngine On
