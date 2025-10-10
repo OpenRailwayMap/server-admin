@@ -392,6 +392,7 @@
                   }
               },
           ]
+          DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
       notify:
         - systemd restart mailman3-web
 
