@@ -1,5 +1,0 @@
-# SPDX-License-Identifier: MIT
-- name: 'systemd restart munin-node'
-  systemd:
-    name: munin-node
-    state: restarted

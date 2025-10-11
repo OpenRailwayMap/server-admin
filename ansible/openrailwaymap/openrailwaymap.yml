@@ -67,11 +67,3 @@
     - name: 'Prepare backup'
       import_role:
         name: roles/backup
-
-- hosts: munin_nodes
-  become: yes
-  tags: munin
-  tasks:
-    - name: 'Munin node'
-      import_role:
-        name: roles/munin_node
