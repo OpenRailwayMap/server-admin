@@ -95,6 +95,7 @@ apache:
 
         Alias /pipermail/ /var/lib/mailman/archives/public/
         Alias /archives/ /var/lib/mailman/archives/public/
+        Redirect permanent /lists/listinfo/openrailwaymap /mailman3/postorius/lists/openrailwaymap.openrailwaymap.org
         Alias /images/mailman/ /usr/share/images/mailman/
 
         RedirectMatch ^/mailman[/]*$ /mailman3

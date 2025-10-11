@@ -40,9 +40,12 @@ ln -s $LETSENCRYPT_ETC/$DOMAIN-$TODAY-fullchain.pem $LETSENCRYPT_ETC/$DOMAIN-cha
 mv $LETSENCRYPT_ETC/$DOMAIN-chain.crt.new $LETSENCRYPT_ETC/$DOMAIN-chain.crt
 
 # reload services
-echo "Reload Apache and Postfix"
-systemctl reload apache2.service
-systemctl reload postfix.service || echo "WARNING: Postfix reload failed, maybe not installed."
+for SERVICE in apache2.service postfix.service ; do
+    if systemctl is-active --quiet $SERVICE ; then
+        echo "Reloading $SERVICE"
+        systemctl reload $SERVICE
+    fi
+done
 
 # clean up
 rm $ACME_WORKING_DIR/domain.csr
