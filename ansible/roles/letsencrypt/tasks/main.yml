@@ -135,7 +135,7 @@
       Description=Get new LetsEncrypt SSL certificate
 
       [Timer]
-      OnCalendar=monthly
+      OnUnitActiveSec=30d
       Persistent=true
       Unit=letsencrypt-update.service
 
