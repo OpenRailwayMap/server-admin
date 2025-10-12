@@ -165,6 +165,8 @@ apache:
         RewriteCond "%{HTTP_REFERER}" "//plataforma\.mundialgps\.com/" [OR]
         # 15k requests per 16 hours, non-public tracking
         RewriteCond "%{HTTP_REFERER}" "//gps\.seccom\.ba/" [OR]
+        # HTTP 429 since 2025-05-30, still more than 50k req/day
+        RewriteCond "%{HTTP_REFERER}" "//forkagro.com/" [OR]
         # SEO website with ads and no meaningful content after a rough review (no HTTP 429 prior to black tile response)
         RewriteCond "%{HTTP_REFERER}" "//zugradar.info/"
         RewriteRule "." "/tile-util/black.png" [PT]
@@ -231,39 +233,12 @@ apache:
         RewriteCond "%{HTTP_USER_AGENT}" "^$"
         RewriteRule "." "-" [F]
 
-        # More than 20k tile requets per day but website is not public (looks like for-charge service)
-        RewriteCond "%{HTTP_REFERER}" "//tapiagps\.mx/" [OR]
-        RewriteCond "%{HTTP_REFERER}" "//atlas2\.org/" [OR]
-        # Non-public live tracking, 26k requests/day
-        RewriteCond "%{HTTP_REFERER}" "pacificnational.com\.au/" [OR]
-        # Non-public live tracking, 24k requests/day
-        RewriteCond "%{HTTP_REFERER}" "//heatmap\.zloco\.pl/" [OR]
-        # More than 20k requests/day, GitHub HTTP 404
-        RewriteCond "%{HTTP_REFERER}" "//taibeled\.github\.io/" [OR]
-        # 13k requests per 16 hours, non-public tracking
-        RewriteCond "%{HTTP_REFERER}" "tesaliagestion\.com/" [OR]
         # Stadler Rail, various referrers *.rds.stadlerrail.*, in total almost 200k requests/day, service not available to the public
         RewriteCond "%{HTTP_REFERER}" "//web\.rds\.stadlerrail\.ch/" [OR]
-        # 698k requests/day, hidden behind login, website interceptes key presses and right-clicks
-        RewriteCond "%{HTTP_REFERER}" "//urbexology.com/" [OR]
-        # 48k requests within 11 hours, service not available to the public
-        RewriteCond "%{HTTP_REFERER}" "gpsrastreo\.xyz/" [OR]
-        # 33k requests/day
-        RewriteCond "%{HTTP_REFERER}" "//forkagro.com/" [OR]
         # 32k requests/day, non-public tracking website
         RewriteCond "%{HTTP_REFERER}" "//avl1.teltopak.com.pk/" [OR]
-        # More than 10k tile requets per day but website is not public (looks like for-charge service)
-        # More than 190k tile request per IP (sometimes more then 300k requests per day) from TeleColumbus subnet, most requests with openrailwaymap.org referer, some with Internet Explorer 7 and no referrer
-        # Requests with referer requested zoom level 13 or 14 only. 2023-10
-        RewriteCond expr "%{REMOTE_ADDR} -ipmatch '158.181.72.225'" [OR]
-        RewriteCond expr "%{REMOTE_ADDR} -ipmatch '158.181.73.177'" [OR]
-        RewriteCond expr "%{REMOTE_ADDR} -ipmatch '158.181.73.249'" [OR]
-        # More than 20k tile requets per 14 hours
-        RewriteCond expr "%{REMOTE_ADDR} -ipmatch '80.156.193.26'" [OR]
         # Jiangmen Global Eyes Police Bureau, 16k requests per 10 hours
         RewriteCond expr "%{REMOTE_ADDR} -ipmatch '219.130.135.190'" [OR]
-        # Korean IP, 550k requests per 10 hours, many IE7, 2023-10-17
-        RewriteCond expr "%{REMOTE_ADDR} -ipmatch '59.31.87.129'" [OR]
         # Korean IP, 122k requests per 18 hours, many IE7, 2024-0423-
         RewriteCond expr "%{REMOTE_ADDR} -ipmatch '213.121.90.57'" [OR]
         # Vodafone West, 52k per day
