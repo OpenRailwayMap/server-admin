@@ -239,8 +239,6 @@ apache:
         RewriteCond "%{HTTP_REFERER}" "//avl1.teltopak.com.pk/" [OR]
         # Jiangmen Global Eyes Police Bureau, 16k requests per 10 hours
         RewriteCond expr "%{REMOTE_ADDR} -ipmatch '219.130.135.190'" [OR]
-        # Korean IP, 122k requests per 18 hours, many IE7, 2024-0423-
-        RewriteCond expr "%{REMOTE_ADDR} -ipmatch '213.121.90.57'" [OR]
         # Vodafone West, 52k per day
         RewriteCond expr "%{REMOTE_ADDR} -ipmatch '78.94.48.98'" [OR]
         # Vodafone West, QGIS, 45k per day
