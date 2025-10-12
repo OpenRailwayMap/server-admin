@@ -223,6 +223,8 @@ apache:
         RewriteCond "%{HTTP_USER_AGENT}" "^Wget/" [OR]
         # Go HTTP client
         RewriteCond "%{HTTP_USER_AGENT}" "^Go-http-client/" [OR]
+        # map client for Flutter
+        RewriteCond "%{HTTP_USER_AGENT}" "^flutter_map \(unknown\)$" [OR]
         # WindowsPowerShell (more than 40k requests/day from a single IP)
         RewriteCond "%{HTTP_USER_AGENT}" "WindowsPowerShell/[0-9.]+" [OR]
         # Cloudflare, referrer (b|c).tiles.openrailwaymap.org
