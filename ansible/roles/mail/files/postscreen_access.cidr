@@ -30,3 +30,6 @@
 
 # AS21100, Green Floid LLC, weight reduction spam from multiple IPs
 195.123.216.0/21 REJECT spam network
+
+# Thüringer Netkom, fettamail.de, abuse report ignored
+91.137.63.5 REJECT Spam. Shut up, you did not react on abuse reports!
