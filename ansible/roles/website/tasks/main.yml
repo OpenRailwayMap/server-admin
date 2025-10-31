@@ -92,7 +92,7 @@
   git:
     dest: '{{ api_v2.directory }}'
     repo: https://github.com/OpenRailwayMap/OpenRailwayMap-api.git
-    version: 6f8177de48a385b1f1a721f64aa6f6bed1fca59d
+    version: a3ac9fffae37e8acebdfc1d07d18824b6c5a2de6
 
 - name: Create database extension Unaccent
   become: true
