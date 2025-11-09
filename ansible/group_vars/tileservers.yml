@@ -89,7 +89,7 @@ apache:
         ModTileThrottlingRenders 128 0.2
         </IfModule>
 
-        Header set Access-Control-Allow-Origin "*"
+        Header always set Access-Control-Allow-Origin "*"
 
         Include /etc/apache2/sites-available/tileserver_blocks.inc
         <Location /server-status>
