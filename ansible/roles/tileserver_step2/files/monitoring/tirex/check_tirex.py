@@ -22,7 +22,7 @@ class ServiceStatus(Enum):
     UNKNOWN = 3
 
 
-def respond(status, message, measurements):
+def respond(status, message, measurements=None):
     if not measurements:
         line = "{}: {}\n".format(status.name, message)
     else:
