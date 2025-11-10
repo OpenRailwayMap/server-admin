@@ -100,7 +100,6 @@ apache:
         #ProxyPass /timestamp !
         Alias "/timestamp" "/var/data/timestamp.txt"
         Alias "/v2/timestamp" "/var/data/timestamp.txt"
-        Header always set Access-Control-Allow-Origin "*"
         <location /timestamp>
             ForceType text/plain
             Require all granted
