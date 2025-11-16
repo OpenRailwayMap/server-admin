@@ -64,6 +64,13 @@ apache:
 
         DirectoryIndex index.php
         ProxyPassMatch "^/(.*\.php)$" "unix:/run/php/php{{php_version}}-fpm.sock|fcgi://localhost/var/www/www.openrailwaymap.org/"
+        <Files ~ "\.(js|css)$">
+            Header set Cache-Control "max-age=3600, must-revalidate"
+        </Files>
+        <Files ~ "messages.json$">
+            Header set Cache-Control "max-age=7200, stale-while-revalidate"
+        </Files>
+
     api.openrailwaymap.org.conf:
       enabled: yes
       content: |
