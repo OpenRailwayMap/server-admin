@@ -17,6 +17,15 @@ tileserver:
     - c.tiles.openrailwaymap.org
     - tiles.buegelfalte.openrailwaymap.org
 
+ufw:
+  bans:
+    YuLinCity-IpAddressPool-1_no_referer:
+      from_ip: 123.139.243.10
+      to_port: 443
+    russian_slow_scraper:
+      from_ip: 95.27.93.166
+      to_port: 443
+
 apache:
   modules:
     remoteip:

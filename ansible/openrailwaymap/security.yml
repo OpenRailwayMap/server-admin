@@ -42,14 +42,15 @@
 
   - name: 'ufw: reject heavy users by firewall'
     ufw:
-      comment: 'ban heavy tileserver user, {{ item.comment }}'
+      comment: '{{ item.key }} - {{ item.value.description | default("") }}'
       rule: reject
       insert: 1
-      from_ip: '{{ item.from_ip }}'
-      to_port: '{{ item.to_port }}'
+      from_ip: '{{ item.value.from_ip }}'
+      to_port: '{{ item.value.to_port }}'
       proto: tcp
+      delete: '{{ item.value.delete|default(false) }}'
     notify: ufw reload
-    loop: []
+    loop: '{{ ufw.bans | default({}) | dict2items }}'
 #      - from_ip: 87.234.54.154
 #        to_port: 80
 #        comment: "SynxHealthTest, one test request per second, most frequent source IP"
