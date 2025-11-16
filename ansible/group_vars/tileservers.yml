@@ -185,7 +185,7 @@ apache:
         RewriteRule "." "/tile-util/crowded.webp" [PT]
 
         # Warn https://kozlekedesiklub.hu/ that they are running into being blocked.
-        RewriteCond "%{HTTP_REFERER}" "^kozlekedesiklub.hu"
+        RewriteCond "%{HTTP_REFERER}" "kozlekedesiklub.hu"
         # Exclude requests not for tiles. Otherwise /index.html and its assets are forbidden as well.
         RewriteRule "[38]/[0-9]+9\.png$" "/tile-util/vr0.png" [PT]
 
