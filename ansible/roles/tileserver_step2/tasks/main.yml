@@ -248,6 +248,7 @@
   loop:
     - black.png
     - crowded.webp
+    - vr0.png
     - attribution-tile.png
 
 - name: Enable Apache module tile

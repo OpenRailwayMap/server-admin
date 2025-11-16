@@ -180,6 +180,11 @@ apache:
         RewriteCond "%{HTTP_REFERER}" "//zugradar.info/"
         RewriteRule "." "/tile-util/crowded.webp" [PT]
 
+        # Warn https://kozlekedesiklub.hu/ that they are running into being blocked.
+        RewriteCond "%{HTTP_REFERER}" "^kozlekedesiklub.hu"
+        # Exclude requests not for tiles. Otherwise /index.html and its assets are forbidden as well.
+        RewriteRule "[38]/[0-9]+9\.png$" "/tile-util/vr0.png" [PT]
+
         # Lacking attribution and high traffic, friendly attribution tile as response
         # 100k tile requets per day for public realtime tracking of BDZ trains, lacking attribution
         RewriteCond "%{HTTP_REFERER}" "//radar\.bdz\.bg/"
