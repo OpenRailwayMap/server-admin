@@ -247,6 +247,7 @@
     mode: 0644
   loop:
     - black.png
+    - crowded.webp
     - attribution-tile.png
 
 - name: Enable Apache module tile

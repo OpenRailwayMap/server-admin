@@ -178,7 +178,7 @@ apache:
         RewriteCond "%{HTTP_REFERER}" "//forkagro.com/" [OR]
         # SEO website with ads and no meaningful content after a rough review (no HTTP 429 prior to black tile response)
         RewriteCond "%{HTTP_REFERER}" "//zugradar.info/"
-        RewriteRule "." "/tile-util/black.png" [PT]
+        RewriteRule "." "/tile-util/crowded.webp" [PT]
 
         # Lacking attribution and high traffic, friendly attribution tile as response
         # 100k tile requets per day for public realtime tracking of BDZ trains, lacking attribution
