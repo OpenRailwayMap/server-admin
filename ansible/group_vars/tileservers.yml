@@ -25,6 +25,10 @@ ufw:
     russian_slow_scraper:
       from_ip: 95.27.93.166
       to_port: 443
+    # more than one day until they got HTTP 503 scraping zoom level <= 12
+    OJSC_Rostelecom_scraping:
+      from_ip: "95.179.120.0/21"
+      to_port: 443
 
 apache:
   modules:
