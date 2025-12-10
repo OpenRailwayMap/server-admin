@@ -249,6 +249,7 @@
     - black.png
     - crowded.webp
     - vr0.png
+    - vr0-automatic-tile-loading.png
     - attribution-tile.png
 
 - name: Enable Apache module tile

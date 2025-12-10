@@ -189,6 +189,15 @@ apache:
         # Exclude requests not for tiles. Otherwise /index.html and its assets are forbidden as well.
         RewriteRule "[38]/[0-9]+9\.png$" "/tile-util/vr0.png" [PT]
 
+        # Warn https://168railway.com/ that they are running into being blocked.
+        # Their frontend on the login page loads lots of tiles without user
+        # interaction just for a background animation. Contact hidden behind
+        # login form.
+        RewriteCond "%{HTTP_REFERER}" "168railway.com" [OR]
+        RewriteCond "%{HTTP_REFERER}" "trainradar35.com"
+        # Exclude requests not for tiles. Otherwise /index.html and its assets are forbidden as well.
+        RewriteRule "[38]/[0-9]+[29]\.png$" "/tile-util/vr0-automatic-tile-loading.png" [PT]
+
         # Lacking attribution and high traffic, friendly attribution tile as response
         # 100k tile requets per day for public realtime tracking of BDZ trains, lacking attribution
         RewriteCond "%{HTTP_REFERER}" "//radar\.bdz\.bg/"
