@@ -250,6 +250,8 @@ apache:
         RewriteCond "%{HTTP_USER_AGENT}" "^Wget/" [OR]
         # Go HTTP client
         RewriteCond "%{HTTP_USER_AGENT}" "^Go-http-client/" [OR]
+        # Go-Tiles-API client, cannot find what this user-agent means, looks like a default user agent
+        RewriteCond "%{HTTP_USER_AGENT}" "^Go-Tiles-API/" [OR]
         # map client for Flutter
         RewriteCond "%{HTTP_USER_AGENT}" "^flutter_map \(unknown\)$" [OR]
         # generic osmdroid user agent
