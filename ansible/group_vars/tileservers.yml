@@ -201,6 +201,8 @@ apache:
 
         # Requests with invalid URLs (missing style name), 300k requests per day, user-agent is a Samsung TV
         RewriteCond "%{HTTP_USER_AGENT}" "SMART-TV; Linux; Tizen 4.0"
+        # Generic user-agent
+        RewriteCond "%{HTTP_USER_AGENT}" "^flutter_map \(unknown\)$" [OR]
         RewriteRule "^/[0-9]" "/tile-util/black.png" [PT]
 
         # Embedded, unpatched software
@@ -250,8 +252,6 @@ apache:
         RewriteCond "%{HTTP_USER_AGENT}" "^Go-http-client/" [OR]
         # Go-Tiles-API client, cannot find what this user-agent means, looks like a default user agent
         RewriteCond "%{HTTP_USER_AGENT}" "^Go-Tiles-API/" [OR]
-        # map client for Flutter
-        RewriteCond "%{HTTP_USER_AGENT}" "^flutter_map \(unknown\)$" [OR]
         # generic osmdroid user agent
         RewriteCond "%{HTTP_USER_AGENT}" "^com.osmdroid.maps$" [OR]
         # WindowsPowerShell (more than 40k requests/day from a single IP)
