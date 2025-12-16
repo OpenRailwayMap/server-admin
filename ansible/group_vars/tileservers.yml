@@ -25,10 +25,6 @@ ufw:
     russian_slow_scraper:
       from_ip: 95.27.93.166
       to_port: 443
-    # more than one day until they got HTTP 503 scraping zoom level <= 12
-    OJSC_Rostelecom_scraping:
-      from_ip: "95.179.120.0/21"
-      to_port: 443
 
 apache:
   modules:
@@ -276,6 +272,10 @@ apache:
         RewriteCond expr "%{REMOTE_ADDR} -ipmatch '78.94.48.98'" [OR]
         # Vodafone West, QGIS, 45k per day
         RewriteCond expr "%{REMOTE_ADDR} -ipmatch '95.223.72.184'" [OR]
+        # tile scraping from Rostelecom, about 1 million requests per day
+        RewriteCond expr "%{REMOTE_ADDR} -ipmatch '95.179.116.0/22'" [OR]
+        # tile scraping from Rostelecom, about 1 million requests per day
+        RewriteCond expr "%{REMOTE_ADDR} -ipmatch '95.179.120.0/21'" [OR]
         # More than 20k tile request per IP and day but strange user agents and no referers
         RewriteCond "%{HTTP_USER_AGENT}" "Mozilla/4.7[35]"
         RewriteRule "." "-" [R=429,L]
