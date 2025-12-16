@@ -180,8 +180,8 @@ apache:
         RewriteCond "%{HTTP_REFERER}" "//zugradar.info/"
         RewriteRule "." "/tile-util/crowded.webp" [PT]
 
-        # Warn https://kozlekedesiklub.hu/ that they are running into being blocked.
-        RewriteCond "%{HTTP_REFERER}" "kozlekedesiklub.hu"
+        # Warn pages that they are running into being blocked.
+        RewriteCond "%{HTTP_REFERER}" "(megisholavonat\.info|holavonat\.is|kozlekedesiklub\.hu|vonatinfo-production\.up\.railway\.app)"
         # Exclude requests not for tiles. Otherwise /index.html and its assets are forbidden as well.
         RewriteRule "[38]/[0-9]+9\.png$" "/tile-util/vr0.png" [PT]
 
@@ -244,6 +244,8 @@ apache:
         RewriteCond "%{HTTP_USER_AGENT}" "^MOBAC/" [OR]
         # Wget, non-interactive network downloader
         RewriteCond "%{HTTP_USER_AGENT}" "^Wget/" [OR]
+        # generic Mozilla
+        RewriteCond "%{HTTP_USER_AGENT}" "^Mozilla/5.0$" [OR]
         # Go HTTP client
         RewriteCond "%{HTTP_USER_AGENT}" "^Go-http-client/" [OR]
         # Go-Tiles-API client, cannot find what this user-agent means, looks like a default user agent
