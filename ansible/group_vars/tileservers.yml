@@ -246,6 +246,8 @@ apache:
         RewriteCond "%{HTTP_USER_AGENT}" "^MOBAC/" [OR]
         # Wget, non-interactive network downloader
         RewriteCond "%{HTTP_USER_AGENT}" "^Wget/" [OR]
+        # Curl, HTTP library and command line utility
+        RewriteCond "%{HTTP_USER_AGENT}" "^curl/" [OR]
         # generic Mozilla
         RewriteCond "%{HTTP_USER_AGENT}" "^Mozilla/5.0$" [OR]
         # Go HTTP client
