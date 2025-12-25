@@ -176,6 +176,8 @@ apache:
         RewriteCond "%{HTTP_REFERER}" "//gps\.seccom\.ba/" [OR]
         # HTTP 429 since 2025-05-30, still more than 50k req/day
         RewriteCond "%{HTTP_REFERER}" "//forkagro.com/" [OR]
+        # HTTP 429 since 2025-02 but still >100k accesses per day, various referrers *.rds.stadlerrail.*, service not available to the public
+        RewriteCond "%{HTTP_REFERER}" "rds\.stadlerrail\.ch/" [OR]
         # SEO website with ads and no meaningful content after a rough review (no HTTP 429 prior to black tile response)
         RewriteCond "%{HTTP_REFERER}" "//zugradar.info/"
         RewriteRule "." "/tile-util/crowded.webp" [PT]
@@ -266,8 +268,6 @@ apache:
         RewriteCond "%{HTTP_USER_AGENT}" "^$"
         RewriteRule "." "-" [F]
 
-        # Stadler Rail, various referrers *.rds.stadlerrail.*, in total almost 200k requests/day, service not available to the public
-        RewriteCond "%{HTTP_REFERER}" "//web\.rds\.stadlerrail\.ch/" [OR]
         # 32k requests/day, non-public tracking website
         RewriteCond "%{HTTP_REFERER}" "//avl1.teltopak.com.pk/" [OR]
         # Jiangmen Global Eyes Police Bureau, 16k requests per 10 hours
