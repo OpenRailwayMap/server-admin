@@ -282,6 +282,8 @@ apache:
         RewriteCond expr "%{REMOTE_ADDR} -ipmatch '95.179.120.0/21'" [OR]
         # tile scraping from Rostelecom, more than 100k requests per day
         RewriteCond expr "%{REMOTE_ADDR} -ipmatch '85.208.139.0/24'" [OR]
+        # tile scraping, 2025-12-25
+        RewriteCond expr "%{REMOTE_ADDR} -ipmatch '95.27.97.0/24'" [OR]
         # More than 20k tile request per IP and day but strange user agents and no referers
         RewriteCond "%{HTTP_USER_AGENT}" "Mozilla/4.7[35]"
         RewriteRule "." "-" [R=429,L]
