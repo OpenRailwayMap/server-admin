@@ -48,9 +48,9 @@
       port = http,https
       filter = apache-429
       logpath  = %(apache_access_log)s
-      maxretry = 10000
+      maxretry = 5000
       banaction = ufw
-      bantime = 12h
+      bantime = 24h
       findtime = 12h
       # Avoid accidential banning of Deutsche Bahn in order to keep email inbox small :-)
       ignoreips = 81.200.197.0/24
