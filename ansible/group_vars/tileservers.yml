@@ -183,9 +183,16 @@ apache:
         RewriteRule "." "/tile-util/crowded.webp" [PT]
 
         # Warn pages that they are running into being blocked.
-        RewriteCond "%{HTTP_REFERER}" "(holavonat\.is|kozlekedesiklub\.hu|vonatinfo-production\.up\.railway\.app)"
+        RewriteCond "%{HTTP_REFERER}" "(holavonat\.is|vonatinfo-production\.up\.railway\.app)"
         # Exclude requests not for tiles. Otherwise /index.html and its assets are forbidden as well.
-        RewriteRule "[38]/[0-9]+9\.png$" "/tile-util/vr0.png" [PT]
+        RewriteRule "[38]/[0-9]+9\.png" "/tile-util/vr0.png" [PT]
+        # Special message for the operator of kozlekedesiklub.hu who "struggle" :-) to set up a cache.
+        RewriteCond "%{HTTP_REFERER}" "kozlekedesiklub\.hu"
+        # Exclude requests not for tiles. Otherwise /index.html and its assets are forbidden as well.
+        RewriteRule "/7/70/44\.png" "/tile-util/please-contact.png" [PT]
+        RewriteRule "/8/141/89\.png" "/tile-util/please-contact.png" [PT]
+        RewriteRule "[50]/[0-9]+[27]\.png" "/tile-util/please-contact.png" [PT]
+        RewriteRule "[38]/[0-9]+[18]\.png" "/tile-util/vr0.png" [PT]
 
         # Warn https://168railway.com/ that they are running into being blocked.
         # Their frontend on the login page loads lots of tiles without user

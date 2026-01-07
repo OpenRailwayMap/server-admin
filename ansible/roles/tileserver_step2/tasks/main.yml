@@ -251,6 +251,7 @@
     - vr0.png
     - vr0-automatic-tile-loading.png
     - attribution-tile.png
+    - please-contact.png
 
 - name: Enable Apache module tile
   apache2_module:
