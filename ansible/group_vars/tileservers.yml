@@ -269,6 +269,8 @@ apache:
         RewriteCond "%{HTTP_USER_AGENT}" "WindowsPowerShell/[0-9.]+" [OR]
         # Cloudflare, referrer (b|c).tiles.openrailwaymap.org
         RewriteCond "%{HTTP_USER_AGENT}" "^Cloudflare-Workers" [OR]
+        # Service for charge, > 50k requests/day
+        RewriteCond "%{HTTP_USER_AGENT}" "com\.virtualrailfan" [OR]
         # unset
         RewriteCond "%{HTTP_USER_AGENT}" "^-$" [OR]
         # Empty user agents
