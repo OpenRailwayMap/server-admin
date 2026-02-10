@@ -13,13 +13,16 @@
 
 - name: Add filter for clients which get a lot of HTTP 429
   copy:
-    dest: '/etc/fail2ban/filter.d/apache-429.local'
+    dest: '/etc/fail2ban/filter.d/apache-{{ item }}.local'
     mode: 0644
     owner: root
     group: root
     content: |
       [Definition]
-      failregex = ^<HOST> .* 429 [0-9]+ ".+" ".+"$
+      failregex = ^<HOST> .* {{ item }} [0-9]+ ".+" ".+"$
+  loop:
+    - "403"
+    - "429"
   notify:
     - reload fail2ban
 
@@ -40,6 +43,18 @@
       banaction = ufw
       bantime = 96h
       findtime = 1h
+      # Avoid accidential banning of Deutsche Bahn in order to keep email inbox small :-)
+      ignoreips = 81.200.197.0/24
+
+      [apache-403]
+      enabled = true
+      port = http,https
+      filter = apache-403
+      logpath  = %(apache_access_log)s
+      maxretry = 10000
+      banaction = ufw
+      bantime = 12h
+      findtime = 12h
       # Avoid accidential banning of Deutsche Bahn in order to keep email inbox small :-)
       ignoreips = 81.200.197.0/24
 
