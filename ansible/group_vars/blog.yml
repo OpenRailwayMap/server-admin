@@ -26,6 +26,7 @@ apache:
         DocumentRoot /var/www/blog
         ServerName blog.openrailwaymap.org
 
+        Alias /robots.txt /var/www/common/ban_bad_robots.txt
         <Directory /var/www/blog>
             AllowOverride None
         </Directory>
