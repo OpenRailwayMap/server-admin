@@ -100,3 +100,11 @@
     content: |
       User-agent: *
       Disallow: /
+
+- name: Create /var/www/common/ban_bad_robots.txt
+  copy:
+    dest: /var/www/common/ban_bad_robots.txt
+    owner: root
+    group: root
+    mode: '0644'
+    content: '{{ robots_txt }}'

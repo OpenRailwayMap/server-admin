@@ -41,6 +41,7 @@ apache:
 
         AddType application/json .json
 
+        Alias /robots.txt /var/www/common/ban_bad_robots.txt
         # alias for imprint
         Alias /de/imprint /var/www/www.openrailwaymap.org/imprint-de.html
         Alias /en/imprint /var/www/www.openrailwaymap.org/imprint-en.html
@@ -132,6 +133,8 @@ apache:
         RewriteCond "%{HTTP_USER_AGENT}" "^Wget/" [OR]
         # Go HTTP client
         RewriteCond "%{HTTP_USER_AGENT}" "^Go-http-client/" [OR]
+        # Bots not following robots.txt
+        RewriteCond "%{HTTP_USER_AGENT}" "^AhrefsBot/" [OR]
         # Empty user agents
         RewriteCond "%{HTTP_USER_AGENT}" "^$"
         RewriteRule "." "-" [F]
