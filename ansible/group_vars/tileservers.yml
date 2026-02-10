@@ -283,8 +283,6 @@ apache:
         RewriteCond "%{HTTP_REFERER}" "//avl1.teltopak.com.pk/" [OR]
         # Jiangmen Global Eyes Police Bureau, 16k requests per 10 hours
         RewriteCond expr "%{REMOTE_ADDR} -ipmatch '219.130.135.190'" [OR]
-        # Vodafone West, 52k per day
-        RewriteCond expr "%{REMOTE_ADDR} -ipmatch '78.94.48.98'" [OR]
         # Vodafone West, QGIS, 45k per day
         RewriteCond expr "%{REMOTE_ADDR} -ipmatch '95.223.72.184'" [OR]
         # tile scraping from Rostelecom, about 1 million requests per day
