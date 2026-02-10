@@ -271,6 +271,8 @@ apache:
         RewriteCond "%{HTTP_USER_AGENT}" "^Cloudflare-Workers" [OR]
         # Service for charge, > 50k requests/day
         RewriteCond "%{HTTP_USER_AGENT}" "com\.virtualrailfan" [OR]
+        # Monitoring without consent
+        RewriteCond "%{HTTP_USER_AGENT}" "^InstatusBot/" [OR]
         # unset
         RewriteCond "%{HTTP_USER_AGENT}" "^-$" [OR]
         # Empty user agents
