@@ -44,7 +44,7 @@
       bantime = 96h
       findtime = 1h
       # Avoid accidential banning of Deutsche Bahn in order to keep email inbox small :-)
-      ignoreips = 81.200.197.0/24
+      ignoreip = 81.200.197.0/24
 
       [apache-403]
       enabled = true
@@ -55,8 +55,8 @@
       banaction = ufw
       bantime = 12h
       findtime = 12h
-      # Avoid accidential banning of Deutsche Bahn in order to keep email inbox small :-)
-      ignoreips = 81.200.197.0/24
+      # Avoid accidential banning of major railway operators: DB, CFL, SNCF
+      ignoreip = 81.200.197.0/24 194.154.213.0/24 171.16.0.0/18
 
       [apache-429]
       enabled = true
@@ -68,7 +68,7 @@
       bantime = 24h
       findtime = 12h
       # Avoid accidential banning of Deutsche Bahn in order to keep email inbox small :-)
-      ignoreips = 81.200.197.0/24
+      ignoreip = 81.200.197.0/24
   notify:
     - reload fail2ban
 
