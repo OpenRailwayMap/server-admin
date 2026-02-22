@@ -2,7 +2,32 @@ osm_dbname: gis
 tileserver_script_dir: /opt/OpenRailwayMap-server-config
 cartocss_dir: /opt/OpenRailwayMap-CartoCSS
 
+git:
+  "OpenRailwayMap-CartoCSS":
+    repo: "https://github.com/OpenRailwayMap/OpenRailwayMap-CartoCSS.git"
+    version: "2b47c487b914eb2f255ec9d6d83aa4aff0236b42"
+    directory: "/opt/OpenRailwayMap-CartoCSS"
+
 tileserver:
+  vector: false
+  post_import_sql_scripts:
+    - '/opt/OpenRailwayMap-CartoCSS/sql/functions.sql'
+    - '/opt/OpenRailwayMap-CartoCSS/sql/osm_carto_views.sql'
+    - '/opt/OpenRailwayMap-CartoCSS/sql/get_station_importance.sql'
+  additional_indices:
+    - name: 'openrailwaymap_line_all_but_ab_raz_prop'
+      where: "railway IN ('rail', 'tram', 'light_rail', 'subway', 'narrow_gauge', 'disused', 'construction')"
+      table: planet_osm_line
+    - name: 'openrailwaymap_line_low'
+      where: "railway = 'rail' AND tags->'usage' IN ('main', 'branch') AND service IS NULL"
+      table: planet_osm_line
+    - name: 'openrailwaymap_line_med'
+      where: "railway = 'rail' AND tags->'usage' = 'main' AND service IS NULL"
+      table: planet_osm_line
+    - name: 'openrailwaymap_electrification_signals'
+      where: "railway = 'signal' AND tags ? 'railway:signal:electricity'"
+      table: planet_osm_line
+
   styles:
     - standard
     - maxspeed
@@ -16,6 +41,12 @@ tileserver:
     - b.tiles.openrailwaymap.org
     - c.tiles.openrailwaymap.org
     - tiles.buegelfalte.openrailwaymap.org
+
+osm2pgsql:
+  osmium_filter: "nwr/railway r/route=train r/route=light_rail r/route=tram r/route=subway nwr/disused:railway nwr/abandoned:railway nwr/razed:railway nwr/construction:railway nwr/proposed:railway"
+  osmium_filter_file: ""
+  style: "/opt/OpenRailwayMap-CartoCSS/setup/openstreetmap-carto.style"
+  tag_transform: "/opt/OpenRailwayMap-CartoCSS/setup/openstreetmap-carto.lua"
 
 ufw:
   bans:

@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: MIT
+- hosts: all
+  name: Clone and update Git repositories
+  tags: git
+
+  tasks:
+    - name: Install Git
+      apt:
+        name: git
+    - name: Create directories for Git repositories
+      loop: '{{ git|dict2items }}'
+      file:
+        path: '{{ item.value.directory }}'
+        owner: root
+        group: root
+        mode: 0755
+        state: directory
+    - name: Clone Git repositories
+      loop: '{{ git|dict2items }}'
+      git:
+        dest: '{{ item.value.directory }}'
+        repo: '{{ item.value.repo }}'
+        version: '{{ item.value.version }}'
+        force: '{{ item.value.force|default(False) }}'

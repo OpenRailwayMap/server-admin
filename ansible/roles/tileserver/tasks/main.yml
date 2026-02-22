@@ -97,6 +97,10 @@
   apt:
     name: wget,gdal-bin,nodejs,npm,libwww-perl,mapnik-utils,bc,git,osmium-tool,python3-pyosmium,pyosmium
 
+- name: Build Lua configuration for import of vectortile port
+  when: tileserver.vector
+  include_tasks: vector.yml
+
 - name: Create directories for scripts
   file:
     path: '{{ item }}'
@@ -224,21 +228,6 @@
       when: 'debian_version != "buster"'
       apt:
         name: [fonts-unifont]
-
-- name: Create directory for CartoCSS map style repository
-  file:
-    path: '{{ cartocss_dir }}'
-    owner: osmimport
-    group: osmimport
-    state: directory
-    mode: '0755'
-
-- name: Clone CartoCSS map style repository
-  become_user: osmimport
-  git:
-    dest: '{{ cartocss_dir }}'
-    repo: https://github.com/OpenRailwayMap/OpenRailwayMap-CartoCSS.git
-    version: 2b47c487b914eb2f255ec9d6d83aa4aff0236b42
 
 - name: Check if osm_import runs
   include_tasks: osm_import_active.yml

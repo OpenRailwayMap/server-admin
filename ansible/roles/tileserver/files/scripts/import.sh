@@ -27,19 +27,48 @@ source $(dirname ${0})/config.cfg
 
 echo "Started processing at $(date)"
 
-echo "[1/3] Downloading planet file"
-wget --progress=dot:giga --no-clobber -O $PLANET_FILE https://planet.openstreetmap.org/pbf/planet-latest.osm.pbf
+echo "[1/4] Downloading planet file"
+wget --progress=dot:giga --no-clobber -O $PLANET_FILE --continue https://planet.openstreetmap.org/pbf/planet-latest.osm.pbf || true
+RET_CODE=$?
+if [ $RET_CODE -eq 1 ]; then
+    PLANET_SIZE=$(stat --printf="%s" "$PLANET_FILE")
+    if [ "$PLANET_SIZE" -lt 91279000000 ]; then
+         echo "ERROR: Planet download failed with return code $RET_CODE and found file is too small."
+	 exit 1
+    fi
+elif [ $RET_CODE -gt 0 ]; then
+    echo "ERROR: Planet download failed with return code $RET_CODE and found file is too small."
+    exit 1
+fi
 
-echo "[2/3] Filtering data extract"
-$OSMIUM tags-filter -o $PLANET_FILTERED $PLANET_FILE $OSMIUM_FILTER_EXPR
+echo "[2/4] Filtering data extract"
+FILTER_ARG=""
+if [[ -n "OSMIUM_FILTER_EXPR_FILE" ]]; then
+    FILTER_ARG="-e $OSMIUM_FILTER_EXPR_FILE"
+fi
+$OSMIUM tags-filter $FILTER_ARG -o $PLANET_FILTERED $PLANET_FILE $OSMIUM_FILTER_EXPR
 
-echo "[3/3] Import data into database"
+echo "[3/4] Import data into database"
 if [[ -v "OSM2PGSQL_FLATNODES" ]]; then
-    FLATNODES_OPTION="--flat-node $FLATNODES_FILE"
+    FLATNODES_OPTION="--flat-node $OSM2PGSQL_FLATNODES"
 else
     FLATNODES_OPTION=""
 fi
-$OSM2PGSQL -d $DATABASE_NAME --merc --multi-geometry --hstore --style $OSM2PGSQL_STYLE --tag-transform $OSM2PGSQL_LUA --slim $FLATNODES_OPTION $PLANET_FILTERED
+if [[ -n "OSM2PGSQL_TAG_TRANSFORM" ]]; then
+    TAG_TRANSFORM_OPTION="--tag-transform $OSM2PGSQL_TAG_TRANSFORM"
+else
+    TAG_TRANSFORM_OPTION=""
+fi
+if [ "$OSM2PGSQL_OUTPUT" = "pgsql" ]; then
+    EXTRA_OPTS="--merc --hstore"
+else
+    EXTRA_OPTS=""
+fi
+
+$OSM2PGSQL --create -d $DATABASE_NAME --output $OSM2PGSQL_OUTPUT $EXTRA_OPTS --multi-geometry --style $OSM2PGSQL_STYLE $TAG_TRANSFORM_OPTION --slim $FLATNODES_OPTION $PLANET_FILTERED
+
+echo "[4/4] Running additional update scripts in /opt/OpenRailwayMap-server-config/post-update.d/"
+run-parts --exit-on-error -v /opt/OpenRailwayMap-server-config/post-import.d/
 
 REPLICATION_TIMESTAMP=$($OSMIUM fileinfo -g header.option.osmosis_replication_timestamp $PLANET_FILE)
 echo "replication timestamp is $REPLICATION_TIMESTAMP"

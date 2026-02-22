@@ -13,5 +13,5 @@
   register: timestamp_file
 
 - set_fact: # noqa unnamed-task
-    osm_import_status: "{% if not osm_import or (osm_import.stdout == 'inactive' and timestamp_file.stat.exists) %}complete{% else %}incomplete{% endif %}"
+    osm_import_status: "{% if not osm_import or (osm_import.stdout == 'inactive' and timestamp_file.stat.exists) %}complete{% elif osm_import.stdout == 'inactive' %}inactive{% else %}incomplete{% endif %}"
   check_mode: no

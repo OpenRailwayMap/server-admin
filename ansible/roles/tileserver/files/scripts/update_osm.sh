@@ -44,13 +44,23 @@ function apply_diff_database {
     else
         FLATNODES_OPTION=""
     fi
+    if [[ -n "OSM2PGSQL_TAG_TRANSFORM" ]]; then
+        TAG_TRANSFORM_OPTION="--tag-transform $OSM2PGSQL_TAG_TRANSFORM"
+    else
+        TAG_TRANSFORM_OPTION=""
+    fi
+    if [ "$OSM2PGSQL_OUTPUT" = "pgsql" ]; then
+        EXTRA_OPTS="--merc --hstore"
+    else
+        EXTRA_OPTS=""
+    fi
     if [[ -v "OSM2PGSQL_NUMBER_PROCESSES" ]]; then
         NUMBER_PROCESSES_OPTION="--number-processes $OSM2PGSQL_NUMBER_PROCESSES"
     else
         NUMBER_PROCESSES_OPTION=""
     fi
     OSM2PGSQL_RETURNCODE=0
-    $OSM2PGSQL --append -d $DATABASE_NAME --merc --multi-geometry --hstore --style $OSM2PGSQL_STYLE --tag-transform $OSM2PGSQL_LUA --slim $FLATNODES_OPTION $NUMBER_PROCESSES_OPTION $DERIVED_DIFF || OSM2PGSQL_RETURNCODE=$?
+    $OSM2PGSQL --append -d $DATABASE_NAME  --output $OSM2PGSQL_OUTPUT $EXTRA_OPTS --multi-geometry --style $OSM2PGSQL_STYLE $TAG_TRANSFORM_OPTION --slim $FLATNODES_OPTION $NUMBER_PROCESSES_OPTION $DERIVED_DIFF || OSM2PGSQL_RETURNCODE=$?
 
     if [ "$OSM2PGSQL_RETURNCODE" -gt 0 ] ; then
         echo "Osm2pgsql failed with return code $OSM2PGSQL_RETURNCODE, storing diff file in $LAST_DERIVED_DIFF"
@@ -105,7 +115,11 @@ echo "filtering planet"
 if [ -f "$PLANET_FILTERED" ]; then
     mv $PLANET_FILTERED $PLANET_FILTERED_OLD
 fi
-$OSMIUM tags-filter -o $PLANET_FILTERED $PLANET_FILE $OSMIUM_FILTER_EXPR
+FILTER_ARG=""
+if [[ -n "OSMIUM_FILTER_EXPR_FILE" ]]; then
+    FILTER_ARG="-e $OSMIUM_FILTER_EXPR_FILE"
+fi
+$OSMIUM tags-filter $FILTER_ARG -o $PLANET_FILTERED $PLANET_FILE $OSMIUM_FILTER_EXPR
 
 if [ "$TILE_RENDERING" = 1 ]; then
     apply_diff_database

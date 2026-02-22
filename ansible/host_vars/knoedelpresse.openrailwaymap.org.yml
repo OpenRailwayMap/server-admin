@@ -1,0 +1,24 @@
+pg_version: 17
+postgis_version: 3
+php_version: 8.4
+debian_version: 'trixie'
+osm2pgsql:
+  output: "flex"
+  osmium_filter: ""
+  osmium_filter_file: "/opt/OpenRailwayMap-vector/import/osmium-tags-filter"
+  style: "/opt/OpenRailwayMap-vector/import/openrailwaymap.lua"
+  tag_transform: ""
+
+git:
+  "OpenRailwayMap-vector":
+    repo: "https://github.com/OpenRailwayMap/OpenRailwayMap-CartoCSS.git"
+    version: "7ddccefaa7e602e2e24a7ab929ee6baf35eb57e8"
+    directory: "/opt/OpenRailwayMap-vector"
+
+tileserver:
+  post_import_sql_scripts: []
+  additional_indices: []
+  vector: true
+  styles:
+    - standard
+    - maxspeed

@@ -1,0 +1,53 @@
+- name: "Create Debian packages"
+  apt:
+    name: "node-yaml"
+
+- name: "Create build directory"
+  file:
+    path: "/opt/OpenRailwayMap-vector/build"
+    owner: root
+    mode: '0755'
+    group: root
+    state: directory
+
+- name: "Create symlink to global Node module path"
+  file:
+    src: "/usr/share/node_modules"
+    dest: "/opt/OpenRailwayMap-vector/import/node_modules"
+    state: "link"
+    owner: root
+    group: root
+
+- name: "Build Lua and SQL files"
+  shell:
+    chdir: /opt/OpenRailwayMap-vector/features
+    creates: '/opt/OpenRailwayMap-vector/build/{{ item.output }}'
+    cmd: 'node "/opt/OpenRailwayMap-vector/import/{{ item.input }}" {{ item.optargs|default("") }} > "/opt/OpenRailwayMap-vector/build/{{ item.output }}"'
+  loop:
+    - output: "tags.lua"
+      input: "tags.lua.js"
+    - output: "signal_features.sql"
+      input: "sql/signal_features.sql"
+      optargs: "/opt/OpenRailwayMap-vector"
+    - output: "operators.sql"
+      input: "sql/operators.sql.js"
+
+- name: Create script directory for post-import scripts
+  file:
+    path: '{{ tileserver_script_dir }}/post-import.d'
+    owner: root
+    group: root
+    state: directory
+    mode: '0755'
+
+- name: Create post-import scripts
+  copy:
+    dest: '{{ tileserver_script_dir }}/post-import.d/'
+    src: '{{ item }}'
+    owner: root
+    group: root
+    mode: '0755'
+  loop:
+    - 01_reduce_data.sh
+    - 02_transform_data.sh
+    - 03_create_update_functions_views.sh

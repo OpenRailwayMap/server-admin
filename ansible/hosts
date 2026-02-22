@@ -1,4 +1,5 @@
 knallfrosch.openrailwaymap.org
+knoedelpresse.openrailwaymap.org
 wal.openrailwaymap.org
 
 [webservers]
@@ -9,6 +10,7 @@ website_servers
 
 [tileservers]
 knallfrosch.openrailwaymap.org
+knoedelpresse.openrailwaymap.org
 
 [letsencrypt]
 knallfrosch.openrailwaymap.org

@@ -1,10 +1,7 @@
 # SPDX-License-Identifier: MIT
 - name: Create database functions and views for the map style
   include_tasks: run_sql.yml
-  loop:
-    - '{{ cartocss_dir }}/sql/functions.sql'
-    - '{{ cartocss_dir }}/sql/osm_carto_views.sql'
-    - '{{ cartocss_dir }}/sql/get_station_importance.sql'
+  loop: '{{ tileserver.post_import_sql_scripts }}'
 
 - name: Create indexes to boost up rendering
   become: true
@@ -13,22 +10,10 @@
     db: '{{ osm_dbname }}'
     idxname: '{{ item.name }}'
     idxtype: gist
-    columns: way
+    columns: '{{ item.geometry_column|default("way") }}'
     cond: '{{ item.where }}'
     table: '{{ item.table }}'
-  loop:
-    - name: 'openrailwaymap_line_all_but_ab_raz_prop'
-      where: "railway IN ('rail', 'tram', 'light_rail', 'subway', 'narrow_gauge', 'disused', 'construction')"
-      table: planet_osm_line
-    - name: 'openrailwaymap_line_low'
-      where: "railway = 'rail' AND tags->'usage' IN ('main', 'branch') AND service IS NULL"
-      table: planet_osm_line
-    - name: 'openrailwaymap_line_med'
-      where: "railway = 'rail' AND tags->'usage' = 'main' AND service IS NULL"
-      table: planet_osm_line
-    - name: 'openrailwaymap_electrification_signals'
-      where: "railway = 'signal' AND tags ? 'railway:signal:electricity'"
-      table: planet_osm_line
+  loop: '{{ tileserver.additional_indices }}'
 
 - name: Create database user for tile rendering
   become: true
