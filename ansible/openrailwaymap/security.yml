@@ -33,13 +33,6 @@
       - {'comment': 'HTTP+HTTPS', 'protocol': 'WWW Full'}
       - {'comment': 'SMTP', 'protocol': 'SMTP'}
 
-  - name: 'ufw: allow Munin'
-    ufw:
-      comment: 'allow Munin'
-      rule: allow
-      port: '4949'
-      proto: tcp
-
   - name: 'ufw: reject heavy users by firewall'
     ufw:
       comment: '{{ item.key }} - {{ item.value.description | default("") }}'

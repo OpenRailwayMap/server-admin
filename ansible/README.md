@@ -40,7 +40,6 @@ The following playbooks are optional:
 * mail (Postfix and Mailman 3, you very likely do not need this)
 * backup_access (not recommended for use because it prepares the server for access by Nakaner's
   backup machine)
-* munin_node (not recommened for use because it sends data to Nakaner's personal Munin master)
 
 All other services (Blog, Mailman, Munin etc.) are installed only if you add the hostname to the
 specific group.
