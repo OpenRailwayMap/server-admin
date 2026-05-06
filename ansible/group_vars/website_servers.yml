@@ -103,6 +103,8 @@ apache:
             Require all granted
         </Directory>
 
+        Header always set Access-Control-Allow-Origin "*"
+
         #ProxyPass /server-status !
 
         #ProxyPass /timestamp !
