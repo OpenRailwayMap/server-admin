@@ -10,6 +10,7 @@ users:
       - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICojyfDNHs8VB2nRxXoRb1AAOYYaufTJcWvmdrkgPeS3 Michael Reichert 2020-02-22"
       - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOiPfgaYNvZsRo+ToTyQITD6fmWAY4gD9+UR7EZIETFN michael@hopscotch.geofabrik.de 2020-03-19"
       - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIsVV8pnea1n+aDvu2GxT2p7tmkJZ0o+MTw0tJh2AL2F michael@ortelius"
+      - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIH296HqzcJU6xeACj5VdMLjVmK897Mi6by+Uwk6sArPp michael@michael-tp.michreichert.de 2026-07-18"
   - name: eike
     # TODO
     email: michael@michreichert.de
