@@ -1,5 +1,10 @@
 # SPDX-License-Identifier: MIT
+- name: Check if Apache log exists
+  stat:
+    path: /var/log/apache/access.log
+  register: stat_result
 - name: Add filter for unwanted monitoring tools
+  when: stat_result.stat.exists
   copy:
     dest: '/etc/fail2ban/filter.d/apache-abusive-monitoring.local'
     mode: 0644
@@ -12,6 +17,7 @@
     - reload fail2ban
 
 - name: Add filter for clients which get a lot of HTTP 429
+  when: stat_result.stat.exists
   copy:
     dest: '/etc/fail2ban/filter.d/apache-{{ item }}.local'
     mode: 0644
@@ -27,6 +33,7 @@
     - reload fail2ban
 
 - name: Customise fail2ban
+  when: stat_result.stat.exists
   copy:
     dest: '/etc/fail2ban/jail.d/apache-abusive-monitoring.local'
     mode: 0644
