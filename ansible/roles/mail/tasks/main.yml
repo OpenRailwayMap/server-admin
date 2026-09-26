@@ -484,6 +484,63 @@
         - favicon.ico
         - robots.txt
 
+    - name: Copy script to remove spammy subscription request from honeypot mailing list
+      copy:
+        dest: /usr/local/bin/drop_subscription_requests.py
+        owner: root
+        group: root
+        mode: 0755
+        src: drop_subscription_requests.py
+
+    - name: Write Systemd Unit file for drop-subscription-requests
+      copy:
+        dest: '/etc/systemd/system/drop-subscription-requests.service'
+        mode: 0644
+        owner: root
+        group: root
+        content: |
+          [Unit]
+          Description=Remove Mailman subscription requests for honeypot list
+          After=syslog.target network.target
+          Requires=mailman3.service
+ 
+          [Service]
+          Type=simple
+          ExecStart=/usr/bin/python3 /usr/local/bin/drop_subscription_requests.py
+          User=list
+          Group=list
+          StandardOutput=journal
+          StandardError=journal
+          SyslogIdentifier=drop_subscription_requests
+      notify:
+        - systemd daemon-reload
+
+    - name: Write Systemd Timer file for drop-subscription-requests
+      copy:
+        dest: '/etc/systemd/system/drop-subscription-requests.timer'
+        mode: 0644
+        owner: root
+        group: root
+        content: |
+          [Unit]
+          Description=Remove Mailman subscription requests for honeypot list
+ 
+          [Timer]
+          OnCalendar=*-*-* 08:45
+          Unit=drop-subscription-requests.service
+ 
+          [Install]
+          WantedBy=default.target
+      notify:
+        - systemd daemon-reload
+        - systemd restart drop-subscription-requests.timer
+
+    - name: Enable and start drop-subscription-requests.timer 
+      systemd:
+        name: 'drop-subscription-requests.timer'
+        state: started
+        enabled: yes
+
 - name: systemctl start postfix
   systemd:
     name: 'postfix'
