@@ -46,15 +46,19 @@ FILTER_ARG=""
 if [[ -n "OSMIUM_FILTER_EXPR_FILE" ]]; then
     FILTER_ARG="-e $OSMIUM_FILTER_EXPR_FILE"
 fi
-$OSMIUM tags-filter $FILTER_ARG -o $PLANET_FILTERED $PLANET_FILE $OSMIUM_FILTER_EXPR
+if [ ! -f $PLANET_FILTERED ]; then
+    $OSMIUM tags-filter $FILTER_ARG -o $PLANET_FILTERED $PLANET_FILE $OSMIUM_FILTER_EXPR
+else
+    echo "Skipping filtering because target file exists already."
+fi
 
 echo "[3/4] Import data into database"
 if [[ -v "OSM2PGSQL_FLATNODES" ]]; then
-    FLATNODES_OPTION="--flat-node $OSM2PGSQL_FLATNODES"
+    FLATNODES_OPTION="--flat-nodes $OSM2PGSQL_FLATNODES"
 else
     FLATNODES_OPTION=""
 fi
-if [[ -n "OSM2PGSQL_TAG_TRANSFORM" ]]; then
+if [[ "OSM2PGSQL_TAG_TRANSFORM" != "" ]]; then
     TAG_TRANSFORM_OPTION="--tag-transform $OSM2PGSQL_TAG_TRANSFORM"
 else
     TAG_TRANSFORM_OPTION=""
@@ -65,6 +69,7 @@ else
     EXTRA_OPTS=""
 fi
 
+echo Executing $OSM2PGSQL --create -d $DATABASE_NAME --output $OSM2PGSQL_OUTPUT $EXTRA_OPTS --multi-geometry --style $OSM2PGSQL_STYLE $TAG_TRANSFORM_OPTION --slim $FLATNODES_OPTION $PLANET_FILTERED
 $OSM2PGSQL --create -d $DATABASE_NAME --output $OSM2PGSQL_OUTPUT $EXTRA_OPTS --multi-geometry --style $OSM2PGSQL_STYLE $TAG_TRANSFORM_OPTION --slim $FLATNODES_OPTION $PLANET_FILTERED
 
 echo "[4/4] Running additional update scripts in /opt/OpenRailwayMap-server-config/post-update.d/"
