@@ -20,7 +20,7 @@
 
 - name: "Build Lua and SQL files using Make"
   make:
-    chdir: /opt/OpenRailwayMap-vector/features
+    chdir: /opt/OpenRailwayMap-vector
     target: all
 
 - name: Create script directory for post-import scripts
