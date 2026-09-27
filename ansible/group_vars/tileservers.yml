@@ -209,14 +209,22 @@ apache:
         RewriteCond "%{HTTP_REFERER}" "//forkagro.com/" [OR]
         # HTTP 429 since 2025-02 but still >100k accesses per day, various referrers *.rds.stadlerrail.*, service not available to the public
         RewriteCond "%{HTTP_REFERER}" "rds\.stadlerrail\.ch/" [OR]
+        # 32k requests/day, non-public tracking website, 429 ignored
+        RewriteCond "%{HTTP_REFERER}" "//avl1.teltopak.com.pk/" [OR]
         # SEO website with ads and no meaningful content after a rough review (no HTTP 429 prior to black tile response)
         RewriteCond "%{HTTP_REFERER}" "//zugradar.info/"
         RewriteRule "." "/tile-util/crowded.webp" [PT]
 
         # Warn pages that they are running into being blocked.
         RewriteCond "%{HTTP_REFERER}" "(holavonat\.is|vonatinfo-production\.up\.railway\.app)" [OR]
-        # Warn pages that they are running into being blocked.
-        RewriteCond "%{HTTP_REFERER}" "pakistanrailway.org"
+        # 91k requests on 2026-09-26, login wall
+        RewriteCond "%{HTTP_REFERER}" "pakistanrailway\.org" [OR]
+        # game, 700k requests per day
+        RewriteCond "%{HTTP_USER_AGENT}" "^NIMBYRails" [OR]
+        # 67k requests on 2026-09-26, login wall
+        RewriteCond "%{HTTP_REFERER}" "corporate\.digitrans\.com" [OR]
+        # 93k requests on 2026-09-26
+        RewriteCond "%{HTTP_REFERER}" "radar\.bdz\.bg"
         # Exclude requests not for tiles. Otherwise /index.html and its assets are forbidden as well.
         RewriteRule "[38]/[0-9]+9\.png" "/tile-util/vr0.png" [PT]
         # Special message for the operator of kozlekedesiklub.hu who "struggle" :-) to set up a cache.
@@ -236,10 +244,10 @@ apache:
         # Exclude requests not for tiles. Otherwise /index.html and its assets are forbidden as well.
         RewriteRule "[38]/[0-9]+[29]\.png$" "/tile-util/vr0-automatic-tile-loading.png" [PT]
 
-        # Lacking attribution and high traffic, friendly attribution tile as response
-        # 100k tile requets per day for public realtime tracking of BDZ trains, lacking attribution
-        RewriteCond "%{HTTP_REFERER}" "//radar\.bdz\.bg/"
-        RewriteRule "." "/tile-util/attribution-tile.png" [PT]
+        ## Lacking attribution and high traffic, friendly attribution tile as response
+        ## 100k tile requets per day for public realtime tracking of BDZ trains, lacking attribution
+        #RewriteCond "%{HTTP_REFERER}" "//radar\.bdz\.bg/"
+        #RewriteRule "." "/tile-util/attribution-tile.png" [PT]
 
         # Requests with invalid URLs (missing style name), 300k requests per day, user-agent is a Samsung TV
         RewriteCond "%{HTTP_USER_AGENT}" "SMART-TV; Linux; Tizen 4.0"
@@ -313,8 +321,6 @@ apache:
         RewriteCond "%{HTTP_USER_AGENT}" "^$"
         RewriteRule "." "-" [F]
 
-        # 32k requests/day, non-public tracking website
-        RewriteCond "%{HTTP_REFERER}" "//avl1.teltopak.com.pk/" [OR]
         # Jiangmen Global Eyes Police Bureau, 16k requests per 10 hours
         RewriteCond expr "%{REMOTE_ADDR} -ipmatch '219.130.135.190'" [OR]
         # Vodafone West, QGIS, 45k per day
@@ -329,6 +335,15 @@ apache:
         RewriteCond expr "%{REMOTE_ADDR} -ipmatch '95.27.97.0/24'" [OR]
         # More than 20k tile request per IP and day but strange user agents and no referers
         RewriteCond "%{HTTP_USER_AGENT}" "Mozilla/4.7[35]"
+        RewriteRule "." "-" [R=429,L]
+
+        # DataCamp network but referrer from openrailwaymap.org and browser user-agent -> faked except railmap
+        RewriteCond expr "%{REMOTE_ADDR} -ipmatch '185.24.11.19/24' && %{HTTP_REFERER} == 'https://openrailwaymap.org/' && %{HTTP_USER_AGENT} !~ /^railmap/" [OR]
+        RewriteCond expr "%{REMOTE_ADDR} -ipmatch '185.93.3.244/24' && %{HTTP_REFERER} == 'https://openrailwaymap.org/' && %{HTTP_USER_AGENT} !~ /^railmap/" [OR]
+        RewriteCond expr "%{REMOTE_ADDR} -ipmatch '185.152.64.17/24' && %{HTTP_REFERER} == 'https://openrailwaymap.org/' && %{HTTP_USER_AGENT} !~ /^railmap/" [OR]
+        RewriteCond expr "%{REMOTE_ADDR} -ipmatch '79.127.237.132/24' && %{HTTP_REFERER} == 'https://openrailwaymap.org/' && %{HTTP_USER_AGENT} !~ /^railmap/" [OR]
+        RewriteCond expr "%{REMOTE_ADDR} -ipmatch '79.127.243.187/24' && %{HTTP_REFERER} == 'https://openrailwaymap.org/' && %{HTTP_USER_AGENT} !~ /^railmap/" [OR]
+        RewriteCond expr "%{REMOTE_ADDR} -ipmatch '89.187.165.194/24' && %{HTTP_REFERER} == 'https://openrailwaymap.org/' && %{HTTP_USER_AGENT} !~ /^railmap/"
         RewriteRule "." "-" [R=429,L]
 
         # Monitoring tool doing test requests every second for three map styles
