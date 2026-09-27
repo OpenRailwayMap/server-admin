@@ -116,6 +116,9 @@ apache:
             ForceType text/plain
             Require all granted
         </location>
+        <Directory /var/data>
+            Header always set Access-Control-Allow-Origin "*"
+        </Directory>
 
         #ProxyPass /.well-known !
 
