@@ -214,7 +214,9 @@ apache:
         RewriteRule "." "/tile-util/crowded.webp" [PT]
 
         # Warn pages that they are running into being blocked.
-        RewriteCond "%{HTTP_REFERER}" "(holavonat\.is|vonatinfo-production\.up\.railway\.app)"
+        RewriteCond "%{HTTP_REFERER}" "(holavonat\.is|vonatinfo-production\.up\.railway\.app)" [OR]
+        # Warn pages that they are running into being blocked.
+        RewriteCond "%{HTTP_REFERER}" "pakistanrailway.org"
         # Exclude requests not for tiles. Otherwise /index.html and its assets are forbidden as well.
         RewriteRule "[38]/[0-9]+9\.png" "/tile-util/vr0.png" [PT]
         # Special message for the operator of kozlekedesiklub.hu who "struggle" :-) to set up a cache.
