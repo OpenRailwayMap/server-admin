@@ -332,7 +332,7 @@
       Description=Delete old metatiles every month
 
       [Timer]
-      OnUnitActiveSec=30d
+      OnUnitActiveSec=20d
       OnBootSec=15d
       Unit=delete_old_metatiles.service
 
