@@ -53,13 +53,13 @@ else
 fi
 
 echo "[3/4] Import data into database"
-if [[ -v "OSM2PGSQL_FLATNODES" ]]; then
+if [[ -n "$OSM2PGSQL_FLATNODES" ]]; then
     FLATNODES_OPTION="--flat-nodes $OSM2PGSQL_FLATNODES"
 else
     FLATNODES_OPTION=""
 fi
-if [[ "OSM2PGSQL_TAG_TRANSFORM" != "" ]]; then
-    TAG_TRANSFORM_OPTION="--tag-transform $OSM2PGSQL_TAG_TRANSFORM"
+if [[ -n "$OSM2PGSQL_TAG_TRANSFORM" ]]; then
+    TAG_TRANSFORM_OPTION="--tag-transform-script $OSM2PGSQL_TAG_TRANSFORM"
 else
     TAG_TRANSFORM_OPTION=""
 fi
