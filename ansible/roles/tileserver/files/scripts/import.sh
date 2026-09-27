@@ -64,13 +64,23 @@ else
     TAG_TRANSFORM_OPTION=""
 fi
 if [ "$OSM2PGSQL_OUTPUT" = "pgsql" ]; then
-    EXTRA_OPTS="--merc --hstore"
+    EXTRA_OPTS="--merc --hstore --multi-geometry"
 else
     EXTRA_OPTS=""
 fi
+if [[ -n "$LUA_PATH" ]]; then
+    export LUA_PATH="$LUA_PATH"
+fi
 
-echo Executing $OSM2PGSQL --create -d $DATABASE_NAME --output $OSM2PGSQL_OUTPUT $EXTRA_OPTS --multi-geometry --style $OSM2PGSQL_STYLE $TAG_TRANSFORM_OPTION --slim $FLATNODES_OPTION $PLANET_FILTERED
-$OSM2PGSQL --create -d $DATABASE_NAME --output $OSM2PGSQL_OUTPUT $EXTRA_OPTS --multi-geometry --style $OSM2PGSQL_STYLE $TAG_TRANSFORM_OPTION --slim $FLATNODES_OPTION $PLANET_FILTERED
+if [[ ! -z "$PRE_IMPORT_SCRIPTS" && ${#PRE_IMPORT_SCRIPTS[@]} -gt 0 ]]; then
+    for ITEM in "${PRE_IMPORT_SCRIPTS[@]}"; do
+        echo "Running pre-import script $ITEM"
+	psql -d  $DATABASE_NAME --variable ON_ERROR_STOP=on --pset pager=off -f "$ITEM"
+    done
+fi
+
+echo Executing $OSM2PGSQL --create -d $DATABASE_NAME --output $OSM2PGSQL_OUTPUT $EXTRA_OPTS --style $OSM2PGSQL_STYLE $TAG_TRANSFORM_OPTION --slim $FLATNODES_OPTION $PLANET_FILTERED
+$OSM2PGSQL --create -d $DATABASE_NAME --output $OSM2PGSQL_OUTPUT $EXTRA_OPTS --style $OSM2PGSQL_STYLE $TAG_TRANSFORM_OPTION --slim $FLATNODES_OPTION $PLANET_FILTERED
 
 echo "[4/4] Running additional update scripts in /opt/OpenRailwayMap-server-config/post-update.d/"
 run-parts --exit-on-error -v /opt/OpenRailwayMap-server-config/post-import.d/

@@ -8,6 +8,7 @@ osm2pgsql:
   osmium_filter_file: "/opt/OpenRailwayMap-vector/import/osmium-tags-filter"
   style: "/opt/OpenRailwayMap-vector/import/openrailwaymap.lua"
   tag_transform: ""
+  lua_path: "/opt/OpenRailwayMap-vector/build/tags.lua"
 
 git:
   "OpenRailwayMap-vector":
