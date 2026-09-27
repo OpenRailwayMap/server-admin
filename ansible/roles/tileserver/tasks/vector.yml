@@ -18,19 +18,10 @@
     owner: root
     group: root
 
-- name: "Build Lua and SQL files"
-  shell:
+- name: "Build Lua and SQL files using Make"
+  make:
     chdir: /opt/OpenRailwayMap-vector/features
-    creates: '/opt/OpenRailwayMap-vector/build/{{ item.output }}'
-    cmd: 'node "/opt/OpenRailwayMap-vector/import/{{ item.input }}" {{ item.optargs|default("") }} > "/opt/OpenRailwayMap-vector/build/{{ item.output }}"'
-  loop:
-    - output: "tags.lua"
-      input: "tags.lua.js"
-    - output: "signal_features.sql"
-      input: "sql/signal_features.sql"
-      optargs: "/opt/OpenRailwayMap-vector"
-    - output: "operators.sql"
-      input: "sql/operators.sql.js"
+    target: all
 
 - name: Create script directory for post-import scripts
   file:

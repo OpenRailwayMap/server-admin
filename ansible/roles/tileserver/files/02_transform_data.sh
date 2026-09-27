@@ -5,5 +5,4 @@
 
 set -euo pipefail
 
-psql -c "update stations s set way = l.way from landuse l where ST_Within(s.way, l.way) and feature = 'yard' and GeometryType(s.way) = 'POINT' and s.osm_type = 'N';"
-
+psql --dbname gis --variable ON_ERROR_STOP=on --pset pager=off -f /opt/OpenRailwayMap-vector/import/sql/transform_data.sql

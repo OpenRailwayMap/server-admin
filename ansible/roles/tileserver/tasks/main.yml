@@ -13,7 +13,7 @@
 
 - name: Install database packages using apt
   apt:
-    name: [postgresql, postgis, 'postgresql-{{pg_version}}-postgis-{{postgis_version}}', fontconfig]
+    name: [postgresql, postgis, 'postgresql-{{pg_version}}-postgis-{{postgis_version}}', fontconfig, make]
 
 - name: Install pyscopg2 because it is a dependency for Ansible's PostgreSQL module
   apt:
