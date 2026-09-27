@@ -32,4 +32,4 @@
 
   - name: Install some other utility packages
     apt:
-      name: [vim, htop, tmux, time]
+      name: [vim, htop, tmux, time, ripgrep]
