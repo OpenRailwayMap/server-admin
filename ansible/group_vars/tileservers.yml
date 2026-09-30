@@ -344,7 +344,7 @@ apache:
         RewriteCond expr "%{REMOTE_ADDR} -ipmatch '79.127.237.132/24' && %{HTTP_REFERER} == 'https://openrailwaymap.org/' && %{HTTP_USER_AGENT} !~ /^railmap/" [OR]
         RewriteCond expr "%{REMOTE_ADDR} -ipmatch '79.127.243.187/24' && %{HTTP_REFERER} == 'https://openrailwaymap.org/' && %{HTTP_USER_AGENT} !~ /^railmap/" [OR]
         RewriteCond expr "%{REMOTE_ADDR} -ipmatch '89.187.165.194/24' && %{HTTP_REFERER} == 'https://openrailwaymap.org/' && %{HTTP_USER_AGENT} !~ /^railmap/"
-        RewriteRule "." "-" [R=429,L]
+        RewriteRule "." "-" [F]
 
         # Monitoring tool doing test requests every second for three map styles
         # Running on a DB IP, therefore difficult to ban
