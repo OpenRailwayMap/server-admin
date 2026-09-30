@@ -63,7 +63,8 @@
       bantime = 12h
       findtime = 12h
       # Avoid accidential banning of major railway operators: DB, CFL, SNCF
-      ignoreip = 81.200.197.0/24 194.154.213.0/24 171.16.0.0/18
+      # Avoid accidential banning of Datacamp customers because railmap uses it, too.
+      ignoreip = 81.200.197.0/24 194.154.213.0/24 171.16.0.0/18 185.24.11.19/24 185.93.3.244/24 185.152.64.17/24 79.127.237.132/24 79.127.243.187/24 89.187.165.194/24
 
       [apache-429]
       enabled = true
@@ -75,7 +76,8 @@
       bantime = 24h
       findtime = 12h
       # Avoid accidential banning of Deutsche Bahn in order to keep email inbox small :-)
-      ignoreip = 81.200.197.0/24
+      # Avoid accidential banning of Datacamp customers because railmap uses it, too.
+      ignoreip = 81.200.197.0/24 185.24.11.19/24 185.93.3.244/24 185.152.64.17/24 79.127.237.132/24 79.127.243.187/24 89.187.165.194/24
   notify:
     - reload fail2ban
 
