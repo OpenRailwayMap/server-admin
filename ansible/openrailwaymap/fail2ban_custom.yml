@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
 - name: Check if Apache log exists
   stat:
-    path: /var/log/apache/access.log
+    path: /var/log/apache2/access.log
   register: stat_result
 - name: Add filter for unwanted monitoring tools
   when: stat_result.stat.exists
