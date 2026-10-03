@@ -7,7 +7,7 @@ cd /opt/OpenRailwayMap-vector/import
 
 run_sql() {
     echo "Running $1 ..."
-    psql -f "$1"
+    psql --dbname gis --variable ON_ERROR_STOP=on --pset pager=off -f "$1"
 }
 
 # Functions
