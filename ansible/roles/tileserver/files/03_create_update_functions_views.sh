@@ -23,9 +23,9 @@ run_sql build/operators.sql
 run_sql import/sql/get_station_importance.sql
 run_sql import/sql/update_station_importance.sql
 echo "Running osm2pgsql-gen ..."
-osm2pgsql-gen \
+LUA_PATH=/opt/OpenRailwayMap-vector/build/tags.lua osm2pgsql-gen \
   --database gis \
-  --style openrailwaymap.lua
+  --style /opt/OpenRailwayMap-vector/import/openrailwaymap.lua
 run_sql import/sql/stations_clustered.sql
 
 # Tile and API views on processed data
