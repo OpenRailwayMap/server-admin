@@ -13,7 +13,7 @@ osm2pgsql:
 git:
   "OpenRailwayMap-vector":
     repo: "https://github.com/OpenRailwayMap/OpenRailwayMap-CartoCSS.git"
-    version: "42e5d191ae95052f13cda8702fa0417a0276e4b2"
+    version: "3b9f8d18749f27f7e4e36dffc3fa1c2f61d0aefb"
     directory: "/opt/OpenRailwayMap-vector"
 
 tileserver:
