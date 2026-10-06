@@ -167,6 +167,8 @@ apache:
         # 50k to 200k tile requets per day but website is not public (looks like for-charge service)
         # Responding with HTTP status 429 for about 5 days did not make this client to go away.
         RewriteCond "%{HTTP_REFERER}" "//rastreobusmen\.geovoy\.com/" [OR]
+        # 62k tile requets in 13 hours but website is not public (looks like for-charge service)
+        RewriteCond "%{HTTP_REFERER}" "os\.innofreight\.com" [OR]
         # more than 20k tile requets per day, website is not public
         # Responding with HTTP status 429 for multiple weeks did not make this client to go away.
         RewriteCond "%{HTTP_REFERER}" "//live1.trackandsnap.com/" [OR]
@@ -217,8 +219,6 @@ apache:
 
         # Warn pages that they are running into being blocked.
         RewriteCond "%{HTTP_REFERER}" "(holavonat\.is|vonatinfo-production\.up\.railway\.app)" [OR]
-        # 91k requests on 2026-09-26, login wall
-        RewriteCond "%{HTTP_REFERER}" "pakistanrailway\.org" [OR]
         # game, 700k requests per day
         RewriteCond "%{HTTP_USER_AGENT}" "^NIMBYRails" [OR]
         # 67k requests on 2026-09-26, login wall
@@ -227,6 +227,12 @@ apache:
         RewriteCond "%{HTTP_REFERER}" "radar\.bdz\.bg"
         # Exclude requests not for tiles. Otherwise /index.html and its assets are forbidden as well.
         RewriteRule "[38]/[0-9]+9\.png" "/tile-util/vr0.png" [PT]
+        # Special message for the operator of pakistanirailway.org who did not understand the message
+        # 91k requests on 2026-09-26, login wall
+        # No improvment as of 2026-10-06
+        RewriteCond "%{HTTP_REFERER}" "pakistanrailway\.org"
+        RewriteRule "[37]/[0-9]+[149]\.png" "/tile-util/vr0.png" [PT]
+        RewriteRule "[59]/[0-9]+[360]\.png" "/tile-util/crowded.webp" [PT]
         # Special message for the operator of kozlekedesiklub.hu who "struggle" :-) to set up a cache.
         RewriteCond "%{HTTP_REFERER}" "kozlekedesiklub\.hu"
         RewriteRule "/(8/141/89|7/70/44)\.png" "/tile-util/please-contact.png" [PT]
@@ -282,6 +288,8 @@ apache:
 
         # generic referer, likely not public accessible
         RewriteCond "%{HTTP_REFERER}" "\[0-9]\.amazonaws\.com/"
+        # Invalid referer
+        RewriteCond "%{HTTP_REFERER}" "appassets.androidplatform.net" [OR]
         RewriteRule "." "-" [F]
 
         # Generic user agents
