@@ -232,6 +232,7 @@ apache:
         # No improvment as of 2026-10-06
         RewriteCond "%{HTTP_REFERER}" "pakistanrailway\.org"
         RewriteRule "[37]/[0-9]+[149]\.png" "/tile-util/vr0.png" [PT]
+        RewriteCond "%{HTTP_REFERER}" "pakistanrailway\.org"
         RewriteRule "[59]/[0-9]+[360]\.png" "/tile-util/crowded.webp" [PT]
         # Special message for the operator of kozlekedesiklub.hu who "struggle" :-) to set up a cache.
         RewriteCond "%{HTTP_REFERER}" "kozlekedesiklub\.hu"
