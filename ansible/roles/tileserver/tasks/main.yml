@@ -97,10 +97,6 @@
   apt:
     name: wget,gdal-bin,nodejs,npm,libwww-perl,mapnik-utils,bc,git,osmium-tool,python3-pyosmium,pyosmium
 
-- name: Build Lua configuration for import of vectortile port
-  when: tileserver.vector
-  include_tasks: vector.yml
-
 - name: Create directories for scripts
   file:
     path: '{{ item }}'
@@ -111,6 +107,10 @@
   loop:
     - '{{ tileserver_script_dir }}/scripts'
     - '{{ tileserver_script_dir }}/post-update.d'
+
+- name: Build Lua configuration for import of vectortile port
+  when: tileserver.vector
+  include_tasks: vector.yml
 
 - name: Copy scripts # noqa risky-file-permissions
   ansible.builtin.copy:

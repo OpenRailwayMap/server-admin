@@ -82,8 +82,8 @@ fi
 echo Executing $OSM2PGSQL --create -d $DATABASE_NAME --output $OSM2PGSQL_OUTPUT $EXTRA_OPTS --style $OSM2PGSQL_STYLE $TAG_TRANSFORM_OPTION --slim $FLATNODES_OPTION $PLANET_FILTERED
 $OSM2PGSQL --create -d $DATABASE_NAME --output $OSM2PGSQL_OUTPUT $EXTRA_OPTS --style $OSM2PGSQL_STYLE $TAG_TRANSFORM_OPTION --slim $FLATNODES_OPTION $PLANET_FILTERED
 
-echo "[4/4] Running additional update scripts in /opt/OpenRailwayMap-server-config/post-update.d/"
-run-parts --exit-on-error -v /opt/OpenRailwayMap-server-config/post-import.d/
+echo "[4/4] Running additional update scripts in /opt/OpenRailwayMap-server-config/post-import.d/"
+run-parts --exit-on-error --debug /opt/OpenRailwayMap-server-config/post-import.d/
 
 REPLICATION_TIMESTAMP=$($OSMIUM fileinfo -g header.option.osmosis_replication_timestamp $PLANET_FILE)
 echo "replication timestamp is $REPLICATION_TIMESTAMP"

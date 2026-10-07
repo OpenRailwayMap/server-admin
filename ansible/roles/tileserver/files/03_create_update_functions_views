@@ -20,6 +20,7 @@ run_sql build/signal_features.sql
 run_sql build/operators.sql
 
 # Post processing
+run_sql import/sql/linking_views.sql
 run_sql import/sql/get_station_importance.sql
 run_sql import/sql/update_station_importance.sql
 echo "Running osm2pgsql-gen ..."

@@ -39,18 +39,18 @@ function apply_diff_database {
     fi
 
     echo "apply diff"
-    if [[ -v "OSM2PGSQL_FLATNODES" ]]; then
-        FLATNODES_OPTION="--flat-node $OSM2PGSQL_FLATNODES"
+    if [[ -n "$OSM2PGSQL_FLATNODES" ]]; then
+        FLATNODES_OPTION="--flat-nodes $OSM2PGSQL_FLATNODES"
     else
         FLATNODES_OPTION=""
     fi
-    if [[ -n "OSM2PGSQL_TAG_TRANSFORM" ]]; then
-        TAG_TRANSFORM_OPTION="--tag-transform $OSM2PGSQL_TAG_TRANSFORM"
+    if [[ -n "$OSM2PGSQL_TAG_TRANSFORM" ]]; then
+        TAG_TRANSFORM_OPTION="--tag-transform-script $OSM2PGSQL_TAG_TRANSFORM"
     else
         TAG_TRANSFORM_OPTION=""
     fi
     if [ "$OSM2PGSQL_OUTPUT" = "pgsql" ]; then
-        EXTRA_OPTS="--merc --hstore"
+        EXTRA_OPTS="--merc --hstore --multi-geometry"
     else
         EXTRA_OPTS=""
     fi
@@ -59,8 +59,11 @@ function apply_diff_database {
     else
         NUMBER_PROCESSES_OPTION=""
     fi
+    if [[ -n "$LUA_PATH" ]]; then
+        export LUA_PATH="$LUA_PATH"
+    fi
     OSM2PGSQL_RETURNCODE=0
-    $OSM2PGSQL --append -d $DATABASE_NAME  --output $OSM2PGSQL_OUTPUT $EXTRA_OPTS --multi-geometry --style $OSM2PGSQL_STYLE $TAG_TRANSFORM_OPTION --slim $FLATNODES_OPTION $NUMBER_PROCESSES_OPTION $DERIVED_DIFF || OSM2PGSQL_RETURNCODE=$?
+    $OSM2PGSQL --append -d $DATABASE_NAME  --output $OSM2PGSQL_OUTPUT $EXTRA_OPTS --style $OSM2PGSQL_STYLE $TAG_TRANSFORM_OPTION --slim $FLATNODES_OPTION $NUMBER_PROCESSES_OPTION $DERIVED_DIFF || OSM2PGSQL_RETURNCODE=$?
 
     if [ "$OSM2PGSQL_RETURNCODE" -gt 0 ] ; then
         echo "Osm2pgsql failed with return code $OSM2PGSQL_RETURNCODE, storing diff file in $LAST_DERIVED_DIFF"
@@ -68,7 +71,11 @@ function apply_diff_database {
 	exit $OSM2PGSQL_RETURNCODE
     else
         echo "updating materialized views"
-        psql -v ON_ERROR_STOP=1 --echo-errors -d $DATABASE_NAME -f $MAPSTYLE_DIR/sql/update_station_importance.sql
+        if [ "$OSM2PGSQL_OUTPUT" = "pgsql" ]; then
+            psql -v ON_ERROR_STOP=1 --echo-errors -d $DATABASE_NAME -f $MAPSTYLE_DIR/sql/update_station_importance.sql
+        else
+            run-parts --exit-on-error --debug /opt/OpenRailwayMap-server-config/post-import.d/
+	fi
 
         echo "Expiring tiles"
         $PYTHON $EXPIRE_TILES --min $EXPIRE_TILES_MINZOOM --max $EXPIRE_TILES_MAXZOOM --meta-tile-size 8 --node-cache $OSM2PGSQL_FLATNODES $DERIVED_DIFF | sed -re "s;^([0-9]+)/([0-9]+)/([0-9]+)$;map=$TIREX_MAPS x=\\2 y=\\3 z=\\1;g" | tirex-batch -f exists -p $TIREX_RERENDER_PRIO

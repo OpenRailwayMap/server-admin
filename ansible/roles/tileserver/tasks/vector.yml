@@ -39,6 +39,18 @@
     group: root
     mode: '0755'
   loop:
-    - 01_reduce_data.sh
-    - 02_transform_data.sh
-    - 03_create_update_functions_views.sh
+    - 01_reduce_data
+    - 02_transform_data
+    - 03_create_update_functions_views
+
+- name: Create post-update scripts
+  copy:
+    dest: '{{ tileserver_script_dir }}/post-update.d/'
+    src: '{{ item }}'
+    owner: root
+    group: root
+    mode: '0755'
+  loop:
+    - 01_reduce_data
+    - 02_transform_data
+    - 3_refresh_after_diff_update

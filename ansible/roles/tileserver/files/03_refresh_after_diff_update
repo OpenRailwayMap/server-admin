@@ -1,0 +1,21 @@
+#!/bin/bash
+
+set -euo pipefail
+
+echo "Post processing imported data"
+cd /opt/OpenRailwayMap-vector/
+
+run_sql() {
+    echo "Running $1 ..."
+    psql --dbname gis --variable ON_ERROR_STOP=on --pset pager=off -c '\timing on' -f "$1"
+}
+
+run_sql import/sql/update_signal_features.sql
+run_sql import/sql/update_linking_views.sql
+run_sql import/sql/update_station_importance.sql
+echo "Running osm2pgsql-gen ..."
+LUA_PATH=/opt/OpenRailwayMap-vector/build/tags.lua osm2pgsql-gen \
+  --database gis \
+  --append \
+  --style /opt/OpenRailwayMap-vector/import/openrailwaymap.lua
+run_sql import/sql/update_stations_clustered.sql
