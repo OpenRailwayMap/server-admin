@@ -213,6 +213,14 @@ apache:
         RewriteCond "%{HTTP_REFERER}" "rds\.stadlerrail\.ch/" [OR]
         # 32k requests/day, non-public tracking website, 429 ignored
         RewriteCond "%{HTTP_REFERER}" "//avl1.teltopak.com.pk/" [OR]
+        # 2026-10-20: 91k requests in 14 hours, mainly zoom >=14, login wall
+        RewriteCond "%{HTTP_USER_AGENT}" "iot\.nrail\.de" [OR]
+        # 67k requests on 2026-09-26 from corporate.* subdomain, login wall; nothing changed on 2026-10-20; +26k/14h from b2b.* subdomain
+        RewriteCond "%{HTTP_REFERER}" "digitrans\.com" [OR]
+        # 28k per 14 hours on 2026-10-20, login wall
+        RewriteCond "%{HTTP_REFERER}" "trainlog\.me" [OR]
+        # 21k per 14 hours on 2026-10-20, login wall
+        RewriteCond "%{HTTP_REFERER}" "opticloud\.io" [OR]
         # SEO website with ads and no meaningful content after a rough review (no HTTP 429 prior to black tile response)
         RewriteCond "%{HTTP_REFERER}" "//zugradar.info/"
         RewriteRule "." "/tile-util/crowded.webp" [PT]
@@ -221,8 +229,6 @@ apache:
         RewriteCond "%{HTTP_REFERER}" "(holavonat\.is|vonatinfo-production\.up\.railway\.app)" [OR]
         # game, 700k requests per day
         RewriteCond "%{HTTP_USER_AGENT}" "^NIMBYRails" [OR]
-        # 67k requests on 2026-09-26, login wall
-        RewriteCond "%{HTTP_REFERER}" "corporate\.digitrans\.com" [OR]
         # 93k requests on 2026-09-26
         RewriteCond "%{HTTP_REFERER}" "radar\.bdz\.bg"
         # Exclude requests not for tiles. Otherwise /index.html and its assets are forbidden as well.
@@ -232,8 +238,11 @@ apache:
         # No improvment as of 2026-10-06; 53k on 2026-10-19
         RewriteCond "%{HTTP_REFERER}" "pakistanrailway\.org"
         RewriteRule "^/[0-9]" "/tile-util/crowded.webp" [PT]
-        RewriteCond "%{HTTP_REFERER}" "onenetwork\.pk"
-        RewriteRule "[59]/[0-9]+[360]\.png" "/tile-util/crowded.webp" [PT]
+        # 2 million requests per 14 hours on 2026-10-20
+        RewriteCond "%{HTTP_REFERER}" "wizualizacje-infrastrukturalne\.pl"
+        # 2026-10-20: 29k requets in 14 hours; loads beyond map view
+        RewriteCond "%{HTTP_REFERER}" "zuniz\.com" [OR]
+        RewriteRule "[259]/[0-9]+[360]\.png" "/tile-util/crowded.webp" [PT]
         # Special message for the operator of kozlekedesiklub.hu who "struggle" :-) to set up a cache.
         RewriteCond "%{HTTP_REFERER}" "kozlekedesiklub\.hu"
         RewriteRule "/(8/141/89|7/70/44)\.png" "/tile-util/please-contact.png" [PT]
@@ -289,6 +298,8 @@ apache:
 
         # generic referer, likely not public accessible
         RewriteCond "%{HTTP_REFERER}" "\[0-9]\.amazonaws\.com/"
+        # Fake referrer (179k/17h from 115.186.151.102)
+        RewriteCond "%{HTTP_REFERER}" "google\.com/maps" [OR]
         # Invalid referer
         RewriteCond "%{HTTP_REFERER}" "appassets.androidplatform.net" [OR]
         RewriteRule "." "-" [F]
@@ -340,6 +351,8 @@ apache:
         RewriteCond expr "%{REMOTE_ADDR} -ipmatch '95.179.120.0/21'" [OR]
         # tile scraping from Rostelecom, more than 100k requests per day
         RewriteCond expr "%{REMOTE_ADDR} -ipmatch '85.208.139.0/24'" [OR]
+        # 179k/17h on 2026-10-20 from that IP
+        RewriteCond expr "%{REMOTE_ADDR} -ipmatch '115.186.151.102/24'" [OR]
         # tile scraping, 2025-12-25
         # tile scraping from Corbina Telecom (Russia), 63k requests in 15 hours on 2026-10-20
         RewriteCond expr "%{REMOTE_ADDR} -ipmatch '95.27.96.0/23'" [OR]
