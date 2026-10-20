@@ -229,10 +229,10 @@ apache:
         RewriteRule "[38]/[0-9]+9\.png" "/tile-util/vr0.png" [PT]
         # Special message for the operator of pakistanirailway.org who did not understand the message
         # 91k requests on 2026-09-26, login wall
-        # No improvment as of 2026-10-06
+        # No improvment as of 2026-10-06; 53k on 2026-10-19
         RewriteCond "%{HTTP_REFERER}" "pakistanrailway\.org"
-        RewriteRule "[37]/[0-9]+[149]\.png" "/tile-util/vr0.png" [PT]
-        RewriteCond "%{HTTP_REFERER}" "pakistanrailway\.org"
+        RewriteRule "^/[0-9]" "/tile-util/crowded.webp" [PT]
+        RewriteCond "%{HTTP_REFERER}" "onenetwork\.pk"
         RewriteRule "[59]/[0-9]+[360]\.png" "/tile-util/crowded.webp" [PT]
         # Special message for the operator of kozlekedesiklub.hu who "struggle" :-) to set up a cache.
         RewriteCond "%{HTTP_REFERER}" "kozlekedesiklub\.hu"
@@ -341,7 +341,8 @@ apache:
         # tile scraping from Rostelecom, more than 100k requests per day
         RewriteCond expr "%{REMOTE_ADDR} -ipmatch '85.208.139.0/24'" [OR]
         # tile scraping, 2025-12-25
-        RewriteCond expr "%{REMOTE_ADDR} -ipmatch '95.27.97.0/24'" [OR]
+        # tile scraping from Corbina Telecom (Russia), 63k requests in 15 hours on 2026-10-20
+        RewriteCond expr "%{REMOTE_ADDR} -ipmatch '95.27.96.0/23'" [OR]
         # More than 20k tile request per IP and day but strange user agents and no referers
         RewriteCond "%{HTTP_USER_AGENT}" "Mozilla/4.7[35]"
         RewriteRule "." "-" [R=429,L]
@@ -353,6 +354,10 @@ apache:
         RewriteCond expr "%{REMOTE_ADDR} -ipmatch '79.127.237.132/24' && %{HTTP_REFERER} == 'https://openrailwaymap.org/' && %{HTTP_USER_AGENT} !~ /^railmap/" [OR]
         RewriteCond expr "%{REMOTE_ADDR} -ipmatch '79.127.243.187/24' && %{HTTP_REFERER} == 'https://openrailwaymap.org/' && %{HTTP_USER_AGENT} !~ /^railmap/" [OR]
         RewriteCond expr "%{REMOTE_ADDR} -ipmatch '89.187.165.194/24' && %{HTTP_REFERER} == 'https://openrailwaymap.org/' && %{HTTP_USER_AGENT} !~ /^railmap/"
+        RewriteRule "." "-" [F]
+
+        # Monitoring from Amazon Web Services
+        RewriteCond "%{HTTP_USER_AGENT}" "CloudWatchSynthetics/arn:aws:synthetics"
         RewriteRule "." "-" [F]
 
         # Monitoring tool doing test requests every second for three map styles
