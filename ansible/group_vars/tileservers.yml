@@ -238,8 +238,6 @@ apache:
         # No improvment as of 2026-10-06; 53k on 2026-10-19
         RewriteCond "%{HTTP_REFERER}" "pakistanrailway\.org"
         RewriteRule "^/[0-9]" "/tile-util/crowded.webp" [PT]
-        # 2 million requests per 14 hours on 2026-10-20
-        RewriteCond "%{HTTP_REFERER}" "wizualizacje-infrastrukturalne\.pl"
         # 2026-10-20: 29k requets in 14 hours; loads beyond map view
         RewriteCond "%{HTTP_REFERER}" "zuniz\.com" [OR]
         RewriteRule "[259]/[0-9]+[360]\.png" "/tile-util/crowded.webp" [PT]
