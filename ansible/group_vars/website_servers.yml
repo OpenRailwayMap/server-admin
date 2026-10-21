@@ -60,7 +60,7 @@ apache:
         RewriteRule ^/imprint$ /imprint-en.html [L,R=307]
 
         # Ban POST requests
-        RewriteCond %{REQUEST_METHOD} POST
+        RewriteCond %{REQUEST_METHOD} POST [NC]
         RewriteRule "." "-" [F]
 
         ErrorLog /var/log/apache2/www.openrailwaymap.org.error.log
