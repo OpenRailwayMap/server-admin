@@ -59,6 +59,10 @@ apache:
         RewriteCond %{HTTP:Accept-Language} [,;]en[-,;].*$ [NC]
         RewriteRule ^/imprint$ /imprint-en.html [L,R=307]
 
+        # Ban POST requests
+        RewriteCond %{REQUEST_METHOD} POST
+        RewriteRule "." "-" [F]
+
         ErrorLog /var/log/apache2/www.openrailwaymap.org.error.log
         LogLevel info ssl:warn
         CustomLog /var/log/apache2/www.openrailwaymap.org.access.log combined
