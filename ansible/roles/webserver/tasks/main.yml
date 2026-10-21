@@ -75,6 +75,19 @@
       notify:
         - systemd reload apache2
 
+- name: Copy Apache Rewrite validator
+  copy:
+    dest: /usr/local/bin/apache_rewrite_validator
+    src: apache_rewrite_validator
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Validate Apache sites
+  command: "apache_rewrite_validator"
+  args:
+    stdin: '{{ apache.sites | to_json }}'
+
 - name: Enable/Disable Apache modules
   apache2_module:
     name: '{{ item.key }}'

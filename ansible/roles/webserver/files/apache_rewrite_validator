@@ -1,0 +1,65 @@
+#! /usr/bin/env python3
+
+description = """Validate Apache rewrite rules before deployment.
+
+This script checks for:
+
+- RewriteRule statements without preceeding RewriteCond statements
+- RewriteRule statements with [OR] without preceeding RewriteCond statements
+
+Returns exit code 0 in case of success, 1 in case of validation failure.
+"""
+
+import argparse
+import json
+import os.path
+import sys
+
+
+def log_error(lineno, message, line):
+    sys.stderr.write("ERROR at line {}: {}\nLine contents: '{}'\n".format(lineno, message, line))
+    sys.exit(1)
+
+
+def validate(path):
+    sys.stderr.write("Validating {}\n".format(path))
+    rewrite_cond = False
+    rewrite_rule = False
+    rule_or = False
+    first = True
+    
+    count = 0
+    with open(path, "r") as f:
+        for line in f.readlines():
+            count += 1
+            stripped = line.strip()
+            lowered = stripped.lower()
+            if lowered.startswith("rewriterule "):
+                if not rewrite_cond:
+                    log_error(count, "RewriteRule not preceeded by a RewriteCond", stripped)
+                rewrite_rule = True
+                rewrite_cond = False
+            elif lowered.startswith("rewritecond "):
+#                if not rewrite_rule and not first:
+#                    log_error(count, "RewriteCond not preceeded by a RewriteRule", stripped)
+                if lowered.endswith(" [OR]"):
+                    if first or rewrite_rule:
+                        log_error(count, "RewriteCond with modifier [OR] not preceeded by another RewriteCond", stripped)
+                    rule_or = True
+                elif rewrite_cond and rule_or:
+                    log_error(count, "RewriteCond without modifier [OR] preceeded by another RewriteCond with modifier [OR]", stripped)
+                first = False
+                rewrite_cond = True
+                rewrite_rule = False
+    sys.stderr.write("{} passed rewrite check\n".format(path))
+
+
+parser = argparse.ArgumentParser(description=description)
+args = parser.parse_args()
+
+# Read config from stdin
+config = json.loads(sys.stdin.read())
+for key, value in config.items():
+    if value.get("validate_rewrite", False):
+        filepath = os.path.join("/etc/apache2/sites-available", key)
+        validate(filepath)

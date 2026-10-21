@@ -140,6 +140,7 @@ apache:
         CustomLog /var/log/apache2/{{ tileserver.hostname }}.access.log combined
     tileserver_blocks.inc:
       enabled: no
+      validate_rewrite: true
       content: |
         <Location />
             <RequireAll>
