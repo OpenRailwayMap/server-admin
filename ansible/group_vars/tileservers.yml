@@ -239,7 +239,7 @@ apache:
         RewriteCond "%{HTTP_REFERER}" "pakistanrailway\.org"
         RewriteRule "^/[0-9]" "/tile-util/crowded.webp" [PT]
         # 2026-10-20: 29k requets in 14 hours; loads beyond map view
-        RewriteCond "%{HTTP_REFERER}" "zuniz\.com" [OR]
+        RewriteCond "%{HTTP_REFERER}" "zuniz\.com"
         RewriteRule "[259]/[0-9]+[360]\.png" "/tile-util/crowded.webp" [PT]
         # Special message for the operator of kozlekedesiklub.hu who "struggle" :-) to set up a cache.
         RewriteCond "%{HTTP_REFERER}" "kozlekedesiklub\.hu"
