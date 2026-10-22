@@ -215,7 +215,7 @@ apache:
         # 32k requests/day, non-public tracking website, 429 ignored
         RewriteCond "%{HTTP_REFERER}" "//avl1.teltopak.com.pk/" [OR]
         # 2026-10-20: 91k requests in 14 hours, mainly zoom >=14, login wall
-        RewriteCond "%{HTTP_USER_AGENT}" "iot\.nrail\.de" [OR]
+        RewriteCond "%{HTTP_REFERER}" "iot\.nrail\.de" [OR]
         # 67k requests on 2026-09-26 from corporate.* subdomain, login wall; nothing changed on 2026-10-20; +26k/14h from b2b.* subdomain
         RewriteCond "%{HTTP_REFERER}" "digitrans\.com" [OR]
         # 28k per 14 hours on 2026-10-20, login wall
